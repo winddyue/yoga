@@ -104,10 +104,14 @@ def test_v2_flow():
         assert r.status_code == 403, r.text
 
         # ---- 4. 约课签到主流程 ----
+        # 课程时间动态生成（开课前 5 分钟），保证落在签到时间窗内，测试任何时候跑都成立
+        import datetime as _dt
+        _start = (_dt.datetime.now() + _dt.timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M")
+        _end = (_dt.datetime.now() + _dt.timedelta(minutes=65)).strftime("%Y-%m-%d %H:%M")
         r = client.post("/api/courses",
                         json={"title": "晨间瑜伽", "course_type": "瑜伽",
-                              "start_time": "2026-10-07 07:00",
-                              "end_time": "2026-10-07 08:00", "capacity": 1},
+                              "start_time": _start,
+                              "end_time": _end, "capacity": 1},
                         headers=coach_h)
         assert r.status_code == 200, r.text
         course = r.json()

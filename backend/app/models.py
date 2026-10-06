@@ -258,3 +258,13 @@ class AiUsage(Base):
     kind: Mapped[str] = mapped_column(String(32), default="extract")
     amount: Mapped[float] = mapped_column(Float, default=1)  # 用量单位数（voice=分钟，其余=1）
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class WxBinding(Base):
+    """微信绑定：一个微信 openid 绑定一个系统账号，用于 wx.login 免密登录。"""
+    __tablename__ = "wx_bindings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, index=True)
+    openid: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)

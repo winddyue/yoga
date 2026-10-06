@@ -1,10 +1,37 @@
 <view class="container">
-  <view class="title">约课</view>
-  <view wx:for="{{courses}}" wx:key="id" class="card">
-    <view class="t">{{item.title}}</view>
-    <view class="sub">{{item.start_time}} · {{item.location}} · 已约{{item.booked_count}}/{{item.capacity}}</view>
-    <button size="mini" type="primary" data-id="{{item.id}}" bindtap="book">预约</button>
-    <button size="mini" data-id="{{item.id}}" bindtap="scanCheckin">扫码签到</button>
-    <button size="mini" data-id="{{item.id}}" bindtap="cancel">取消</button>
+  <view class="title-row">
+    <view class="title">约课</view>
+    <button size="mini" type="primary" bindtap="scanCheckin">扫码签到</button>
   </view>
+
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+
+  <!-- 加载失败：给重试入口，不给假数据 -->
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+
+  <!-- 空态 -->
+  <view wx:elif="{{!courses.length}}" class="tip">暂无课程，请稍后再来</view>
+
+  <block wx:else>
+    <view wx:for="{{courses}}" wx:key="id" class="card">
+      <view class="t">{{item.title}}</view>
+      <view class="sub">{{item.start_time}} · {{item.location}} · 已约{{item.booked_count}}/{{item.capacity}}</view>
+      <!-- 我的预约状态 -->
+      <view wx:if="{{item.my_status_text}}" class="status s-{{item.my_status}}">{{item.my_status_text}}</view>
+
+      <view class="btns">
+        <!-- 未预约：可约/候补 -->
+        <button wx:if="{{!item.my_status}}" size="mini" type="primary"
+                data-id="{{item.id}}" bindtap="book">{{item.full ? '候补' : '预约'}}</button>
+        <!-- 已约/候补：可取消、可签到 -->
+        <button wx:if="{{item.my_status === 'booked' || item.my_status === 'waitlist'}}"
+                size="mini" data-id="{{item.id}}" bindtap="cancel">取消</button>
+        <!-- 已签到/爽约：状态展示，无操作 -->
+      </view>
+    </view>
+  </block>
 </view>

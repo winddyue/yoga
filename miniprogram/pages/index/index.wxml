@@ -1,9 +1,15 @@
 <view class="container">
   <view class="title">我的进展</view>
-  <view wx:if="{{s}}">
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+  <view wx:elif="{{s}}">
     <view>目标：{{s.goal}}</view>
     <view>出勤率：{{s.attendance_rate}}</view>
     <view>体重变化：{{s.weight_change}}kg</view>
     <view>待上课程：{{s.upcoming_bookings}}节</view>
   </view>
+  <view wx:else class="tip">暂无数据</view>
 </view>

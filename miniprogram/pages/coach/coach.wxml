@@ -1,14 +1,30 @@
 <view class="container">
   <view class="title">教练工作台</view>
+  <view wx:if="{{!courses.length}}" class="tip">暂无课程</view>
   <view wx:for="{{courses}}" wx:key="id" class="card">
     <view class="t">{{item.title}}</view>
-    <button size="mini" data-id="{{item.id}}" bindtap="openRoster">名单/签到</button>
+    <view class="sub">{{item.start_time}} · 已约{{item.booked_count}}/{{item.capacity}}</view>
+    <view class="btns">
+      <button size="mini" type="primary" data-id="{{item.id}}" bindtap="showQr">签到码</button>
+      <button size="mini" data-id="{{item.id}}" bindtap="openRoster">名单/补签</button>
+    </view>
   </view>
+
   <view wx:if="{{roster.length}}">
     <view class="sec">名单</view>
     <view wx:for="{{roster}}" wx:key="id" class="card">
       <view>{{item.client_name}} · {{item.status}}</view>
-      <button size="mini" data-cid="{{item.client_id}}" bindtap="checkin">确认签到</button>
+      <button wx:if="{{item.status === 'booked' || item.status === 'waitlist'}}"
+              size="mini" data-cid="{{item.client_id}}" bindtap="checkin">确认签到</button>
+    </view>
+  </view>
+
+  <!-- 签到二维码弹层：学员扫码 -->
+  <view wx:if="{{qr}}" class="qr-mask" bindtap="hideQr">
+    <view class="qr-panel" catchtap="">
+      <view class="qr-title">{{qrTitle}} · 签到码</view>
+      <image class="qr-img" src="{{qr}}" mode="aspectFit" />
+      <view class="qr-tip">请学员在「约课」页点"扫码签到"扫描</view>
     </view>
   </view>
 </view>

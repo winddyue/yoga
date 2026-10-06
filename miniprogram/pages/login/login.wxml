@@ -3,5 +3,6 @@
   <input placeholder="用户名" data-k="username" bindinput="onInput" />
   <input placeholder="密码" password data-k="password" bindinput="onInput" />
   <button type="primary" bindtap="doLogin">登录</button>
+  <button class="wx-btn" open-type="none" loading="{{wxLogging}}" bindtap="doWxLogin">微信一键登录</button>
   <view class="err">{{err}}</view>
 </view>

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """约课签到：课程表、预约/取消（含候补）、二维码签到、教练手动确认、爽约标记。
 出勤率自动写回客户档案，供训练计划调整参考。"""
+import datetime
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from .. import auth as auth_lib
 from .. import models, schemas
+from ..config import settings
 from ..database import get_db
 from ..services import audit as audit_service
 
@@ -20,6 +22,21 @@ ST_CANCELLED = "cancelled"
 ST_CHECKED_IN = "checked_in"
 ST_NO_SHOW = "no_show"
 ACTIVE_BOOKING = (ST_BOOKED, ST_CHECKED_IN)
+
+# 课程时间字符串的两种格式："2026-10-07 07:00"（v2 起默认）/ ISO "2026-10-07T07:00:00"
+_TIME_FORMATS = ("%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M", "%Y-%m-%dT%H:%M:%S")
+
+
+def _parse_course_time(value: str):
+    """课程时间字符串 -> naive datetime；解析失败返回 None（不阻断签到）。"""
+    if not value:
+        return None
+    for fmt in _TIME_FORMATS:
+        try:
+            return datetime.datetime.strptime(value.strip(), fmt)
+        except ValueError:
+            continue
+    return None
 
 
 def _booked_count(db: Session, course_id: int) -> int:
@@ -185,6 +202,21 @@ def checkin(course_id: int, data: schemas.CheckInIn,
         client = auth_lib.get_own_client(db, user)
         if not data.code or data.code != course.checkin_code:
             raise HTTPException(status_code=400, detail="签到码无效")
+        # 签到时间窗：客户自助扫码仅允许开课前 30 分钟 ~ 开课后 60 分钟
+        #（窗口大小可配置）；教练手动补签不受此限制
+        start = _parse_course_time(course.start_time)
+        if start is not None:
+            now = datetime.datetime.now()
+            opens = start - datetime.timedelta(minutes=settings.CHECKIN_OPEN_MIN)
+            closes = start + datetime.timedelta(minutes=settings.CHECKIN_CLOSE_MIN)
+            if now < opens:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"还未到签到时间，开课前 {settings.CHECKIN_OPEN_MIN} 分钟开放")
+            if now > closes:
+                raise HTTPException(
+                    status_code=400,
+                    detail="签到时间已结束，请联系教练补签")
         method = "qr"
     else:
         if not data.client_id:
@@ -203,6 +235,31 @@ def checkin(course_id: int, data: schemas.CheckInIn,
     update_attendance(db, client.id)
     audit_service.log(db, user.id, "booking.checkin", "booking", booking.id)
     return {"ok": True, "method": method}
+
+
+@router.get("/courses/{course_id}/qrcode")
+def course_qrcode(course_id: int,
+                  db: Session = Depends(get_db),
+                  user: models.User = Depends(auth_lib.require_staff)):
+    """签到二维码（仅工作人员）：教练出示给客户扫。
+
+    二维码内容为 "yoga:checkin:课程id:签到码"，客户端扫码后调签到接口。
+    返回 PNG 的 base64（小程序 image 标签无法带 Authorization 头，
+    由页面用 wx.request 取回后以 data URL 渲染）。
+    """
+    import base64
+    import io
+
+    import qrcode
+
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="课程不存在")
+    content = f"yoga:checkin:{course.id}:{course.checkin_code}"
+    img = qrcode.make(content)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return {"content": content, "png_base64": base64.b64encode(buf.getvalue()).decode()}
 
 
 @router.post("/courses/{course_id}/mark-noshow")

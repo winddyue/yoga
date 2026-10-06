@@ -43,6 +43,18 @@ class Settings(BaseSettings):
     # 单个上传文件大小上限（字节），默认 10MB
     MAX_UPLOAD_BYTES: int = 10 * 1024 * 1024
 
+    # 微信小程序登录：AppID/Secret 从公众平台获取，只走环境变量
+    WX_APPID: str = ""
+    WX_SECRET: str = ""
+    # 开发模式模拟：true 时 wx.login 的 code 用 "mock:任意标识" 即可换取
+    # mock openid，方便本地/CI 无真实微信环境时联调。生产模式禁止开启。
+    WX_DEV_MOCK: bool = False
+
+    # 签到时间窗（分钟）：客户扫码签到仅允许 [开课前 CHECKIN_OPEN_MIN,
+    # 开课后 CHECKIN_CLOSE_MIN] 内进行；教练手动补签不受限制
+    CHECKIN_OPEN_MIN: int = 30
+    CHECKIN_CLOSE_MIN: int = 60
+
     class Config:
         env_file = ".env"  # 同时支持从 .env 文件读取
         extra = "ignore"
@@ -68,6 +80,8 @@ def validate_prod():
         problems.append("ADMIN_PASSWORD 仍是默认值，生产环境必须修改")
     if not settings.DATA_ENC_KEY:
         problems.append("未设置 DATA_ENC_KEY，手机号等敏感字段将明文存储")
+    if settings.WX_DEV_MOCK:
+        problems.append("WX_DEV_MOCK 已开启（微信登录模拟），生产环境必须关闭")
     if not problems:
         return
     msg = "生产环境安全检查不通过：\n- " + "\n- ".join(problems)
