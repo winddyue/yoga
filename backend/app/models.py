@@ -14,17 +14,21 @@ def _now():
 
 
 class User(Base):
-    """系统用户：馆主（owner）或教练（coach）。"""
+    """系统用户：馆主（owner）、教练（coach）或客户（client）。"""
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(256))
-    role: Mapped[str] = mapped_column(String(16), default="coach")  # owner / coach
+    role: Mapped[str] = mapped_column(String(16), default="coach")  # owner / coach / client
     name: Mapped[str] = mapped_column(String(64), default="")
+    # 客户角色账号关联的客户档案（教练/馆主账号为空）
+    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), nullable=True)
+    is_active: Mapped[bool] = mapped_column(default=True)  # 注销后置 False
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
 
-    clients: Mapped[list["Client"]] = relationship("Client", back_populates="coach")
+    clients: Mapped[list["Client"]] = relationship(
+        "Client", back_populates="coach", foreign_keys="Client.coach_id")
 
 
 class Client(Base):
@@ -41,9 +45,15 @@ class Client(Base):
     notes: Mapped[str] = mapped_column(Text, default="")
     coach_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
     custom_values: Mapped[dict] = mapped_column(JSON, default=dict)  # 客户级自定义字段值
+    # 出勤率（0~1）：签到/爽约后自动更新，供训练计划调整参考
+    attendance_rate: Mapped[float] = mapped_column(Float, default=0)
+    # 未成年人标记：14 岁以下需监护人同意（合规）
+    is_minor: Mapped[bool] = mapped_column(default=False)
+    guardian_consent: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
 
-    coach: Mapped["User"] = relationship("User", back_populates="clients")
+    coach: Mapped["User"] = relationship(
+        "User", back_populates="clients", foreign_keys="Client.coach_id")
     assessments: Mapped[list["Assessment"]] = relationship(
         "Assessment", back_populates="client", cascade="all, delete-orphan"
     )
@@ -131,3 +141,91 @@ class Setting(Base):
 
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     value: Mapped[str] = mapped_column(String(512), default="")
+
+
+class Course(Base):
+    """课程：约课签到的课程表。"""
+    __tablename__ = "courses"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(128), default="")       # 如"流瑜伽·晚间班"
+    course_type: Mapped[str] = mapped_column(String(32), default="")   # 瑜伽/普拉提/私教…
+    coach_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
+    start_time: Mapped[str] = mapped_column(String(32), default="")    # YYYY-MM-DD HH:MM
+    end_time: Mapped[str] = mapped_column(String(32), default="")
+    location: Mapped[str] = mapped_column(String(64), default="")
+    capacity: Mapped[int] = mapped_column(Integer, default=20)         # 人数上限
+    checkin_code: Mapped[str] = mapped_column(String(16), default="")  # 签到二维码码值
+    created_by: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class Booking(Base):
+    """预约记录：booked（已约）/ waitlist（候补）/ cancelled（取消）
+    / checked_in（已签到）/ no_show（爽约）。"""
+    __tablename__ = "bookings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)
+    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), index=True)
+    status: Mapped[str] = mapped_column(String(16), default="booked")
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class CheckIn(Base):
+    """签到记录：二维码扫码或教练手动确认。"""
+    __tablename__ = "checkins"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)
+    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), index=True)
+    method: Mapped[str] = mapped_column(String(16), default="qr")  # qr / manual
+    checked_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class Consent(Base):
+    """用户同意记录：敏感个人信息需单独同意（合规）。"""
+    __tablename__ = "consents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), index=True, nullable=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)  # 记录操作人
+    consent_type: Mapped[str] = mapped_column(String(32), default="sensitive_info")
+    # sensitive_info（敏感信息处理）/ ai_processing（AI 功能处理）
+    version: Mapped[str] = mapped_column(String(16), default="v1")
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class AuditLog(Base):
+    """审计日志：关键写操作留痕（合规）。"""
+    __tablename__ = "audit_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, default=0)
+    action: Mapped[str] = mapped_column(String(64), default="")       # 如 client.create
+    target_type: Mapped[str] = mapped_column(String(32), default="")  # 如 client
+    target_id: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class Subscription(Base):
+    """AI 订阅：按客户，馆主定价（月/年）。"""
+    __tablename__ = "subscriptions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), index=True)
+    plan: Mapped[str] = mapped_column(String(16), default="monthly")  # monthly / yearly
+    started_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+    status: Mapped[str] = mapped_column(String(16), default="active")  # active / expired
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class AiUsage(Base):
+    """AI 调用用量统计：按用户/类型计数。"""
+    __tablename__ = "ai_usage"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(32), default="extract")  # extract / voice / diet / plan
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)

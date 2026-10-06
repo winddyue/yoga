@@ -59,11 +59,63 @@ def require_owner(user: models.User = Depends(get_current_user)) -> models.User:
     return user
 
 
+def require_staff(user: models.User = Depends(get_current_user)) -> models.User:
+    """馆主或教练可访问（客户不可）。"""
+    if user.role not in ("owner", "coach"):
+        raise HTTPException(status_code=403, detail="仅工作人员可操作")
+    return user
+
+
+def get_own_client(db: Session, user: models.User) -> models.Client:
+    """客户角色：取自己关联的客户档案；未绑定则 404。"""
+    if user.role != "client" or not user.client_id:
+        raise HTTPException(status_code=403, detail="仅客户账号可操作")
+    client = db.query(models.Client).filter(models.Client.id == user.client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="未绑定客户档案")
+    return client
+
+
 def client_visible_to(db: Session, user: models.User, client_id: int) -> models.Client:
-    """按角色判断客户是否可见：馆主看全馆，教练只看自己的客户。"""
+    """按角色判断客户是否可见：
+    馆主看全馆，教练只看自己的客户，客户只看自己的档案。"""
     client = db.query(models.Client).filter(models.Client.id == client_id).first()
     if not client:
         raise HTTPException(status_code=404, detail="客户不存在")
-    if user.role != "owner" and client.coach_id != user.id:
-        raise HTTPException(status_code=403, detail="无权查看该客户")
-    return client
+    if user.role == "owner":
+        return client
+    if user.role == "coach" and client.coach_id == user.id:
+        return client
+    if user.role == "client" and user.client_id == client_id:
+        return client
+    raise HTTPException(status_code=403, detail="无权查看该客户")
+
+
+# 客户角色不可见的敏感字段（教练内部备注等）
+CLIENT_HIDDEN_FIELDS = {"notes"}
+
+
+def filter_client_for_role(client: models.Client, user: models.User) -> dict:
+    """字段级权限：客户角色看不到敏感字段。返回可序列化的字典。"""
+    data = {
+        "id": client.id, "name": client.name, "gender": client.gender,
+        "age": client.age, "height_cm": client.height_cm, "phone": client.phone,
+        "goal": client.goal, "coach_id": client.coach_id,
+        "custom_values": client.custom_values or {},
+        "attendance_rate": client.attendance_rate or 0,
+        "is_minor": client.is_minor,
+    }
+    if user.role != "client":
+        data["notes"] = client.notes or ""
+    return data
+
+
+def require_sensitive_consent(db: Session, client: models.Client):
+    """敏感信息录入前校验：需有单独同意记录；14 岁以下需监护人同意。"""
+    consent = (db.query(models.Consent)
+               .filter(models.Consent.client_id == client.id,
+                       models.Consent.consent_type == "sensitive_info").first())
+    if not consent:
+        raise HTTPException(status_code=400, detail="需先完成敏感信息单独授权（合规要求）")
+    if client.age and client.age < 14 and not client.guardian_consent:
+        raise HTTPException(status_code=400, detail="未满 14 岁，需监护人同意后方可录入")

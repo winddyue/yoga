@@ -1,0 +1,4 @@
+[
+  "app/tests/test_smoke.py::test_full_flow",
+  "app/tests/test_v2.py::test_v2_flow"
+]

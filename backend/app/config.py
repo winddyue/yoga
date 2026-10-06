@@ -19,9 +19,14 @@ class Settings(BaseSettings):
     # 第三方 API：密钥只能从环境变量读取，前端/日志绝不出现明文
     OCR_API_URL: str = ""   # 拍照识别接口地址（预留）
     OCR_API_KEY: str = ""   # 拍照识别密钥（环境变量）
-    AI_API_URL: str = ""    # AI 接口地址（预留）
+    AI_API_URL: str = ""    # AI 接口地址（预留，OpenAI 兼容）
     AI_API_KEY: str = ""    # AI 接口密钥（环境变量）
     AI_MODEL: str = ""      # AI 模型名（非密钥，可在设置页修改）
+    ASR_API_URL: str = ""   # 语音识别接口地址（预留）
+    ASR_API_KEY: str = ""   # 语音识别密钥（环境变量）
+
+    # 敏感字段加密密钥（Fernet 格式）；未配置时为开发模式（文档标注风险）
+    DATA_ENC_KEY: str = ""
 
     # 上传文件存放目录
     UPLOAD_DIR: str = "./uploads"

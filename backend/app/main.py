@@ -11,7 +11,7 @@ from . import models
 from .auth import hash_password
 from .config import settings
 from .database import Base, SessionLocal, engine
-from .routers import assessments, auth, clients, custom_fields, dashboard, diets, plans, settings as settings_router
+from .routers import assessments, auth, bookings, clients, consents, custom_fields, dashboard, diets, intake, plans, settings as settings_router, subscriptions
 
 
 @asynccontextmanager
@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="瑜伽馆/健身房客户管理", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="瑜伽馆/健身房客户管理", version="0.2.0", lifespan=lifespan)
 
 # 跨域：允许前端开发服务器与同域部署访问
 app.add_middleware(
@@ -55,6 +55,10 @@ app.include_router(plans.router)
 app.include_router(diets.router)
 app.include_router(settings_router.router)
 app.include_router(dashboard.router)
+app.include_router(bookings.router)
+app.include_router(intake.router)
+app.include_router(subscriptions.router)
+app.include_router(consents.router)
 
 
 @app.on_event("startup")

@@ -1,0 +1,14 @@
+<view class="container">
+  <view class="title">教练工作台</view>
+  <view wx:for="{{courses}}" wx:key="id" class="card">
+    <view class="t">{{item.title}}</view>
+    <button size="mini" data-id="{{item.id}}" bindtap="openRoster">名单/签到</button>
+  </view>
+  <view wx:if="{{roster.length}}">
+    <view class="sec">名单</view>
+    <view wx:for="{{roster}}" wx:key="id" class="card">
+      <view>{{item.client_name}} · {{item.status}}</view>
+      <button size="mini" data-cid="{{item.client_id}}" bindtap="checkin">确认签到</button>
+    </view>
+  </view>
+</view>

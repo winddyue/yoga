@@ -1,0 +1,7 @@
+<view class="container">
+  <view class="title">我的训练与饮食</view>
+  <view class="sec">训练计划（{{plans.length}}）</view>
+  <view wx:for="{{plans}}" wx:key="id" class="card"><view class="t">第 {{item.week_start }} 周计划</view></view>
+  <view class="sec">饮食方案（{{diets.length}}）</view>
+  <view wx:for="{{diets}}" wx:key="id" class="card"><view class="t">{{item.date}} · {{item.status === 'confirmed' ? '已确认' : '待确认'}}</view></view>
+</view>

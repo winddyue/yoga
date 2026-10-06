@@ -1,0 +1,10 @@
+<view class="container">
+  <view class="title">约课</view>
+  <view wx:for="{{courses}}" wx:key="id" class="card">
+    <view class="t">{{item.title}}</view>
+    <view class="sub">{{item.start_time}} · {{item.location}} · 已约{{item.booked_count}}/{{item.capacity}}</view>
+    <button size="mini" type="primary" data-id="{{item.id}}" bindtap="book">预约</button>
+    <button size="mini" data-id="{{item.id}}" bindtap="scanCheckin">扫码签到</button>
+    <button size="mini" data-id="{{item.id}}" bindtap="cancel">取消</button>
+  </view>
+</view>

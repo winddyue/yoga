@@ -10,6 +10,7 @@ from .. import auth as auth_lib
 from .. import models, schemas
 from ..config import settings
 from ..database import get_db
+from ..services import audit as audit_service
 from ..services import ocr as ocr_service
 from ..services.training import health_warnings
 
@@ -23,12 +24,14 @@ ALLOWED_IMG = {"image/jpeg", "image/png", "image/webp"}
 def create_assessment(client_id: int, data: schemas.AssessmentIn,
                       db: Session = Depends(get_db),
                       user: models.User = Depends(auth_lib.get_current_user)):
-    """新增一次评估记录。"""
+    """新增一次评估记录：录入前校验敏感信息单独同意（合规）。"""
     client = auth_lib.client_visible_to(db, user, client_id)
+    auth_lib.require_sensitive_consent(db, client)
     a = models.Assessment(client_id=client.id, **data.model_dump())
     db.add(a)
     db.commit()
     db.refresh(a)
+    audit_service.log(db, user.id, "assessment.create", "assessment", a.id)
     return a
 
 

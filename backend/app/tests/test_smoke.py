@@ -8,6 +8,13 @@ import sys
 os.environ["DATABASE_URL"] = "sqlite:///./test_smoke.db"
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+# 与 test_v2.py 共用进程运行时（无论谁先导入），刷新已导入的 app 模块，
+# 使 settings/engine 按本文件的 DATABASE_URL 重新初始化，避免库文件打架
+#（保留 app.tests 下的测试模块本身，避免破坏 pytest 收集）
+for _mod in [m for m in list(sys.modules)
+             if (m == "app" or m.startswith("app.")) and not m.startswith("app.tests")]:
+    del sys.modules[_mod]
+
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app.config import settings  # noqa: E402
@@ -50,6 +57,12 @@ def test_full_flow():
                         headers=coach_h)
         assert r.status_code == 200, r.text
         cid = r.json()["id"]
+
+        # 3.5 登记敏感信息单独同意（合规要求，录入评估前必须）
+        r = client.post("/api/consents",
+                        json={"client_id": cid, "consent_type": "sensitive_info"},
+                        headers=coach_h)
+        assert r.status_code == 200, r.text
 
         # 4. 新增两次评估
         for payload in ({"date": "2026-10-01", "weight_kg": 80, "body_fat_pct": 25,

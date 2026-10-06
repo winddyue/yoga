@@ -2,21 +2,29 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 
 // 顶部导航 + 侧边菜单（极简）：按角色显示不同入口
+const ROLE_NAME = { owner: '馆主', coach: '教练', client: '客户' };
+
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   if (!user) { nav('/login'); return null; }
-  const owner = user.role === 'owner';
-  const items = [
-    ['/', '总览'],
-    ['/clients', '客户'],
-    ...(owner ? [['/users', '教练账号'], ['/fields', '自定义字段'], ['/settings', '设置']] : []),
-  ];
+  const role = user.role;
+  const items = role === 'client'
+    ? [['/', '我的进展'], ['/courses', '约课']]
+    : [
+        ['/', role === 'owner' ? '经营概况' : '工作台'],
+        ['/clients', '客户'],
+        ['/courses', '约课签到'],
+        ['/intake', '智能录入'],
+        ...(role === 'owner'
+          ? [['/users', '账号管理'], ['/fields', '自定义字段'], ['/settings', '设置']]
+          : []),
+      ];
   return (
     <div className="min-h-screen flex">
       <aside className="w-44 bg-white border-r p-4 space-y-1 shrink-0">
         <div className="font-bold text-teal-700 mb-1">客户管理</div>
-        <div className="text-xs text-gray-400 mb-4">{user.name || user.username}（{owner ? '馆主' : '教练'}）</div>
+        <div className="text-xs text-gray-400 mb-4">{user.name || user.username}（{ROLE_NAME[role] || role}）</div>
         {items.map(([to, label]) => (
           <Link key={to} to={to} className="block px-3 py-2 rounded hover:bg-teal-50 text-sm">{label}</Link>
         ))}

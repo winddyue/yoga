@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
-"""经营概况路由：馆主看全馆数据（客户数、教练数、本周新增评估等极简指标）。"""
+"""经营概况路由：按角色返回汇总数据。
+
+- /api/dashboard：兼容旧版（馆主看全馆，教练看自己）
+- /api/me/summary：客户看自己的进展
+- /api/coach/overview：教练看名下客户状态灯 + 待办
+- /api/owner/overview：馆主看经营数据
+"""
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .. import auth as auth_lib
@@ -32,4 +39,115 @@ def overview(db: Session = Depends(get_db),
         "coach_count": db.query(models.User).filter(models.User.role == "coach").count(),
         "week_assessments": recent_assessments,
         "pending_diets": pending_diets,  # 待确认的饮食方案数
+    }
+
+
+def _client_status(db: Session, client: models.Client) -> str:
+    """客户状态灯：红（长期未评估/出勤差）/ 黄（30 天未复测）/ 绿（正常）。"""
+    latest = (db.query(models.Assessment)
+              .filter(models.Assessment.client_id == client.id)
+              .order_by(models.Assessment.date.desc()).first())
+    if not latest:
+        return "red"
+    try:
+        last_date = datetime.strptime(latest.date, "%Y-%m-%d")
+    except (ValueError, TypeError):
+        return "yellow"
+    days = (datetime.now() - last_date).days
+    if days > 60:
+        return "red"
+    if days > 30:
+        return "yellow"
+    if (client.attendance_rate or 0) < 0.5:
+        return "yellow"
+    return "green"
+
+
+@router.get("/me/summary")
+def my_summary(db: Session = Depends(get_db),
+               user: models.User = Depends(auth_lib.get_current_user)):
+    """客户看自己的进展：出勤率、饮食确认数、体重变化、目标。"""
+    client = auth_lib.get_own_client(db, user)
+    rows = (db.query(models.Assessment)
+            .filter(models.Assessment.client_id == client.id)
+            .order_by(models.Assessment.date.asc()).all())
+    weights = [r.weight_kg for r in rows if r.weight_kg]
+    weight_change = round(weights[-1] - weights[0], 1) if len(weights) >= 2 else 0
+    diet_done = (db.query(models.DietPlan)
+                 .filter(models.DietPlan.client_id == client.id,
+                         models.DietPlan.status == "confirmed").count())
+    bookings = (db.query(models.Booking)
+                .filter(models.Booking.client_id == client.id,
+                        models.Booking.status.in_(("booked", "waitlist"))).count())
+    return {
+        "name": client.name, "goal": client.goal,
+        "attendance_rate": client.attendance_rate or 0,
+        "weight_change": weight_change,
+        "assessment_count": len(rows),
+        "diet_confirmed": diet_done,
+        "upcoming_bookings": bookings,
+        "status": _client_status(db, client),
+    }
+
+
+@router.get("/coach/overview")
+def coach_overview(db: Session = Depends(get_db),
+                   user: models.User = Depends(auth_lib.require_staff)):
+    """教练工作台：名下客户状态灯 + 待办（待确认饮食、到期复测）。"""
+    q = db.query(models.Client)
+    if user.role != "owner":
+        q = q.filter(models.Client.coach_id == user.id)
+    clients = q.all()
+    cids = [c.id for c in clients] or [0]
+    pending_diets = (db.query(models.DietPlan)
+                     .filter(models.DietPlan.client_id.in_(cids),
+                             models.DietPlan.status == "pending").count())
+    due = sum(1 for c in clients if _client_status(db, c) in ("red", "yellow"))
+    return {
+        "clients": [{"id": c.id, "name": c.name, "goal": c.goal,
+                     "attendance_rate": c.attendance_rate or 0,
+                     "status": _client_status(db, c)} for c in clients],
+        "todos": {"pending_diets": pending_diets, "due_reassess": due},
+    }
+
+
+@router.get("/owner/overview")
+def owner_overview(db: Session = Depends(get_db),
+                   _: models.User = Depends(auth_lib.require_owner)):
+    """馆主经营页：新增/活跃客户、课程量、教练业绩、订阅统计。"""
+    month_ago = datetime.now() - timedelta(days=30)
+    new_clients = (db.query(models.Client)
+                   .filter(models.Client.created_at >= month_ago).count())
+    total_clients = db.query(models.Client).count()
+    active_cids = {r[0] for r in
+                   db.query(models.Booking.client_id)
+                   .filter(models.Booking.created_at >= month_ago).all()}
+    course_count = db.query(models.Course).count()
+    booking_count = (db.query(models.Booking)
+                     .filter(models.Booking.created_at >= month_ago).count())
+    checkins = (db.query(models.Booking)
+                .filter(models.Booking.status == "checked_in").count())
+    # 教练业绩：名下客户数 + 课程数 + 签到数
+    coaches = db.query(models.User).filter(models.User.role == "coach").all()
+    perf = []
+    for co in coaches:
+        cids = [c.id for c in co.clients]
+        perf.append({
+            "coach_id": co.id, "name": co.name or co.username,
+            "clients": len(co.clients),
+            "courses": db.query(models.Course).filter(
+                models.Course.coach_id == co.id).count(),
+            "checkins": (db.query(models.CheckIn)
+                         .filter(models.CheckIn.client_id.in_(cids)).count()
+                         if cids else 0),
+        })
+    active_subs = (db.query(models.Subscription)
+                   .filter(models.Subscription.status == "active").count())
+    ai_calls = db.query(func.count(models.AiUsage.id)).scalar() or 0
+    return {
+        "new_clients_30d": new_clients, "total_clients": total_clients,
+        "active_clients_30d": len(active_cids),
+        "course_count": course_count, "bookings_30d": booking_count,
+        "total_checkins": checkins, "coach_perf": perf,
+        "active_subscriptions": active_subs, "ai_calls": ai_calls,
     }

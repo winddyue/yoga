@@ -22,7 +22,7 @@ export default function ClientDetail() {
   return (
     <Layout>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">{client.name} <span className="text-sm font-normal text-gray-500">{client.gender} {client.age}岁 · 目标{client.goal}</span></h1>
+        <h1 className="text-xl font-bold">{client.name} <span className="text-sm font-normal text-gray-500">{client.gender} {client.age}岁 · 目标{client.goal} · 出勤{Math.round((client.attendance_rate || 0) * 100)}%</span></h1>
         <div className="space-x-2">
           <Link to={`/clients/${id}/assess`} className="btn-primary inline-block">新增评估</Link>
           <Link to={`/clients/${id}/plans`} className="btn-ghost inline-block">训练计划</Link>

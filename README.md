@@ -4,10 +4,21 @@
 
 设计参考了开源项目 wger（训练编排）、SparkyFitness（身体指标追踪）、Fud AI（热量与营养素公式）的思路，只保留最简核心。
 
+## v2 新增
+
+- **三角色权限**：馆主 / 教练 / 客户。客户只能看自己的数据（看不到教练内部备注、欠费等敏感字段）；教练只能管自己带的客户；越权返回 403
+- **约课签到**：课程发布、预约/取消（满员自动候补）、二维码签到 + 教练手动确认、爽约记录；出勤率回写客户档案
+- **三路录入**：拍照 OCR、语音上传（ASR 可配）、聊天框自由文本，大模型抽字段 → 人工确认 → 入库
+- **AI 付费版**：馆主在设置页开关 AI 功能、定包月/包年价；客户订阅后可用；用量按人统计
+- **汇总页**：客户看身体趋势/完成率/目标进度；教练看名下客户红黄绿灯 + 待办；馆主看新增/活跃/课程量/教练业绩
+- **合规**：敏感信息单独同意（含 14 岁以下监护人同意）、用户数据查看/更正/删除/注销、关键操作审计日志、手机号加密存储、HTTPS 部署说明
+- **小程序脚手架**：`miniprogram/` 微信小程序原生结构（客户首页、约课、训练/饮食、教练工作台、我的），复用同一后端
+
 ## 技术栈
 
 - 后端：Python FastAPI + SQLAlchemy，默认 SQLite（零配置），可通过 `DATABASE_URL` 切换 Postgres
 - 前端：React 18 + Vite + Tailwind CSS + react-router-dom
+- 小程序：微信小程序原生（`miniprogram/`）
 - 部署：docker-compose 一键部署（2核4G 轻量云服务器足够）
 
 ## 目录结构
@@ -28,11 +39,21 @@ yoga-app/
 │       ├── routers/        # 各业务接口
 │       ├── services/       # 营养计算 / 训练计划生成 / OCR 预留
 │       └── tests/          # 冒烟测试
-└── frontend/               # 前端
-    ├── Dockerfile / nginx.conf
-    └── src/
-        ├── pages/          # 登录、总览、客户、评估、计划、饮食、设置等
-        └── components/     # 布局、趋势图、扫码、上传
+├── frontend/               # 前端
+│   ├── Dockerfile / nginx.conf
+│   └── src/
+│       ├── pages/          # 登录、总览、客户、评估、计划、饮食、约课、智能录入、设置等
+│       └── components/     # 布局、趋势图、扫码、上传
+├── miniprogram/            # 微信小程序脚手架（原生）
+│   ├── app.js / app.json / api.js
+│   ├── pages/              # login / index / booking / training / coach / mine
+│   └── README.md           # 开发者工具导入步骤
+└── docs/                   # 文档
+    ├── privacy-policy.md   # 隐私政策（初稿，需律师审核）
+    ├── user-agreement.md   # 用户协议（初稿，需律师审核）
+    ├── deployment.md       # 部署运维（含 HTTPS、备份、加密方案）
+    ├── compliance-checklist.md  # 合规清单
+    └── ocr-integration.md  # OCR/ASR/大模型对接文档
 ```
 
 ## 快速启动（本地开发）
