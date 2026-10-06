@@ -1,6 +1,5 @@
 <view class="container">
   <view class="title">我的</view>
   <view wx:if="{{user}}">{{user.name || user.username}}</view>
-  <view>AI 订阅：{{sub ? sub.plan : '未订阅'}}</view>
   <button bindtap="logout">退出登录</button>
 </view>

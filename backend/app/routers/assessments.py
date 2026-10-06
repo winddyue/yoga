@@ -80,17 +80,32 @@ def warnings(client_id: int,
 def upload_photo(client_id: int, file: UploadFile = File(...),
                  db: Session = Depends(get_db),
                  user: models.User = Depends(auth_lib.get_current_user)):
-    """上传体测单照片：保存到本地 uploads 目录，返回路径供评估记录引用。"""
+    """上传体测单照片：大小限制 10MB，校验真实图片类型，随机文件名保存。"""
     auth_lib.client_visible_to(db, user, client_id)
     if file.content_type not in ALLOWED_IMG:
         raise HTTPException(status_code=400, detail="仅支持 JPG/PNG/WebP 图片")
+    data = file.file.read()
+    if len(data) > settings.MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"文件过大，上限 {settings.MAX_UPLOAD_BYTES // 1024 // 1024}MB")
+    # 校验真实文件类型（防伪造 content-type 的恶意文件）
+    from io import BytesIO
+    from PIL import Image
+    try:
+        img = Image.open(BytesIO(data))
+        img.verify()
+    except Exception:
+        raise HTTPException(status_code=400, detail="文件不是有效图片")
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-    ext = os.path.splitext(file.filename or "")[1] or ".jpg"
+    ext = os.path.splitext(file.filename or "")[1].lower() or ".jpg"
+    if ext not in (".jpg", ".jpeg", ".png", ".webp"):
+        ext = ".jpg"
     name = f"{uuid.uuid4().hex}{ext}"
     path = os.path.join(settings.UPLOAD_DIR, name)
     with open(path, "wb") as f:
-        f.write(file.file.read())
-    return {"photo_path": path}
+        f.write(data)
+    return {"photo_path": path, "download_url": f"/api/files/{name}"}
 
 
 @router.post("/ocr-extract")

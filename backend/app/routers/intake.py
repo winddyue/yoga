@@ -50,7 +50,7 @@ def voice_to_text(file: UploadFile = File(...),
                    db: Session = Depends(get_db),
                    user: models.User = Depends(auth_lib.get_current_user)):
     """语音录入：上传音频 -> 转文字（AI 准入校验 + 用量统计）。"""
-    ai_gate.check_ai_access(db, user)
+    ai_gate.check_ai_access(db, user, "voice")
     if file.content_type not in ALLOWED_AUDIO:
         raise HTTPException(status_code=400, detail="仅支持 MP3/WAV/M4A/WebM/OGG 音频")
     try:
@@ -68,7 +68,7 @@ def extract_from_text(data: schemas.ExtractIn,
                       db: Session = Depends(get_db),
                       user: models.User = Depends(auth_lib.get_current_user)):
     """聊天框录入：自由文本 -> 大模型抽取结构化字段（待确认，不入库）。"""
-    ai_gate.check_ai_access(db, user)
+    ai_gate.check_ai_access(db, user, "extract")
     if not data.text.strip():
         raise HTTPException(status_code=400, detail="输入文本不能为空")
     try:

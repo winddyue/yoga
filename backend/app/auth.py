@@ -49,6 +49,9 @@ def get_current_user(
     user = db.query(models.User).filter(models.User.username == username).first()
     if not user:
         raise exc
+    if not user.is_active:
+        # 已注销账号的旧 token 立即失效
+        raise exc
     return user
 
 

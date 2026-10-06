@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from .. import auth as auth_lib
 from .. import models
 from ..database import get_db
+from ..services import ai_gate as ai_gate_service
 
 router = APIRouter(prefix="/api/dashboard", tags=["经营概况"])
 
@@ -141,13 +142,16 @@ def owner_overview(db: Session = Depends(get_db),
                          .filter(models.CheckIn.client_id.in_(cids)).count()
                          if cids else 0),
         })
-    active_subs = (db.query(models.Subscription)
-                   .filter(models.Subscription.status == "active").count())
+    active_subs = (db.query(models.AiSubscription)
+                   .filter(models.AiSubscription.status.in_(("trialing", "active"))).count())
     ai_calls = db.query(func.count(models.AiUsage.id)).scalar() or 0
+    ai_summary = ai_gate_service.subscription_summary(db)
     return {
         "new_clients_30d": new_clients, "total_clients": total_clients,
         "active_clients_30d": len(active_cids),
         "course_count": course_count, "bookings_30d": booking_count,
         "total_checkins": checkins, "coach_perf": perf,
         "active_subscriptions": active_subs, "ai_calls": ai_calls,
+        "ai_subscription": ai_summary.get("subscription"),
+        "ai_quotas": ai_summary.get("quotas", {}),
     }

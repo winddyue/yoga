@@ -164,8 +164,6 @@ class SettingsOut(BaseModel):
     ai_model: str = ""
     asr_api_url: str = ""
     ai_enabled: bool = False
-    ai_price_monthly: float = 0
-    ai_price_yearly: float = 0
     ocr_configured: bool = False  # 密钥是否已配置（只返回状态，不返回明文）
     ai_configured: bool = False
     asr_configured: bool = False
@@ -177,8 +175,6 @@ class SettingsIn(BaseModel):
     ai_model: Optional[str] = None
     asr_api_url: Optional[str] = None
     ai_enabled: Optional[bool] = None
-    ai_price_monthly: Optional[float] = None
-    ai_price_yearly: Optional[float] = None
 
 
 # ---------- 约课签到 ----------
@@ -226,25 +222,43 @@ class IntakeConfirmIn(BaseModel):
     fields: Dict[str, Any]  # 确认后的字段，写入评估记录
 
 
-# ---------- AI 订阅 ----------
-class SubscriptionIn(BaseModel):
-    client_id: int
-    plan: str = "monthly"  # monthly / yearly
+# ---------- AI 订阅（门店级 SaaS） ----------
+class AiPlanIn(BaseModel):
+    name: Optional[str] = None
+    monthly_price: Optional[float] = None
+    yearly_price: Optional[float] = None
+    ocr_per_month: Optional[int] = None
+    voice_minutes_per_month: Optional[int] = None
+    llm_calls_per_month: Optional[int] = None
+    features: Optional[Dict[str, bool]] = None  # 如 {"ocr": True, ...}
 
 
-class SubscriptionOut(BaseModel):
+class AiPlanOut(BaseModel):
     id: int
-    client_id: int
-    plan: str
+    name: str
+    monthly_price: float = 0
+    yearly_price: float = 0
+    ocr_per_month: int = 0
+    voice_minutes_per_month: int = 0
+    llm_calls_per_month: int = 0
+    features: Dict[str, bool] = {}
+
+
+class AiSubscriptionIn(BaseModel):
+    plan_id: int
+    days: int = 30  # 有效天数
+    status: str = "active"  # trialing / active / paused
+    note: str = ""
+
+
+class AiSubscriptionOut(BaseModel):
+    id: int
+    plan_id: int
+    plan_name: str = ""
+    status: str
     started_at: Any = None
     expires_at: Any = None
-    status: str
-
-
-class PricingOut(BaseModel):
-    ai_enabled: bool = False
-    ai_price_monthly: float = 0
-    ai_price_yearly: float = 0
+    note: str = ""
 
 
 # ---------- 同意记录 ----------

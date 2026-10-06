@@ -25,8 +25,8 @@ def _latest_assessment(db: Session, client_id: int):
 @router.post("/clients/{client_id}/diets/generate", response_model=schemas.DietPlanOut)
 def generate(client_id: int, data: schemas.DietGenerateIn,
              db: Session = Depends(get_db),
-             user: models.User = Depends(auth_lib.get_current_user)):
-    """生成饮食方案：按最新评估 + 目标计算热量与营养素，给出三餐加餐搭配。"""
+             user: models.User = Depends(auth_lib.require_staff)):
+    """生成饮食方案：按最新评估 + 目标计算热量与营养素，给出三餐加餐搭配。仅工作人员可写。"""
     client = auth_lib.client_visible_to(db, user, client_id)
     a = _latest_assessment(db, client_id)
     if not a or not a.weight_kg:
@@ -61,8 +61,8 @@ def list_diets(client_id: int,
 @router.post("/diets/{diet_id}/confirm", response_model=schemas.DietPlanOut)
 def confirm(diet_id: int,
             db: Session = Depends(get_db),
-            user: models.User = Depends(auth_lib.get_current_user)):
-    """教练确认饮食方案：确认后的方案作为后续推荐的学习依据。"""
+            user: models.User = Depends(auth_lib.require_staff)):
+    """教练确认饮食方案：确认后的方案作为后续推荐的学习依据。仅工作人员可写。"""
     diet = db.query(models.DietPlan).filter(models.DietPlan.id == diet_id).first()
     if not diet:
         raise HTTPException(status_code=404, detail="方案不存在")

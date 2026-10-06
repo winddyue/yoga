@@ -208,24 +208,53 @@ class AuditLog(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
 
 
-class Subscription(Base):
-    """AI 订阅：按客户，馆主定价（月/年）。"""
-    __tablename__ = "subscriptions"
+class AiPlan(Base):
+    """AI 套餐：门店级订阅的套餐配置（免费版/专业版/旗舰版）。
+
+    价格先填占位 0，由馆主在设置页修改；features 为功能开关字典，
+    如 {"extract": true, "ocr": false, ...}。
+    """
+    __tablename__ = "ai_plans"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), index=True)
-    plan: Mapped[str] = mapped_column(String(16), default="monthly")  # monthly / yearly
-    started_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
-    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
-    status: Mapped[str] = mapped_column(String(16), default="active")  # active / expired
+    name: Mapped[str] = mapped_column(String(32), default="")        # 免费版/专业版/旗舰版
+    monthly_price: Mapped[float] = mapped_column(Float, default=0)   # 月价（元，占位）
+    yearly_price: Mapped[float] = mapped_column(Float, default=0)    # 年价（元，占位）
+    ocr_per_month: Mapped[int] = mapped_column(Integer, default=0)   # 每月 OCR 次数
+    voice_minutes_per_month: Mapped[int] = mapped_column(Integer, default=0)  # 每月语音分钟数
+    llm_calls_per_month: Mapped[int] = mapped_column(Integer, default=0)  # 每月模型调用次数
+    features: Mapped[dict] = mapped_column(JSON, default=dict)       # 功能开关
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
 
 
+class AiSubscription(Base):
+    """AI 订阅：以门店为单位（owner 级别），不是按客户。
+
+    开通目前由工作人员后台手动创建（原型）；未来在线收款时改为
+    支付回调确认后激活（见 routers/subscriptions.py 的 TODO）。
+    """
+    __tablename__ = "ai_subscriptions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    plan_id: Mapped[int] = mapped_column(ForeignKey("ai_plans.id"), nullable=True)
+    # trialing（试用中）/ active（有效）/ expired（过期）/ paused（暂停）
+    status: Mapped[str] = mapped_column(String(16), default="active")
+    started_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+    note: Mapped[str] = mapped_column(String(128), default="")  # 备注（如手动开通原因）
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+    plan: Mapped["AiPlan"] = relationship("AiPlan")
+
+
 class AiUsage(Base):
-    """AI 调用用量统计：按用户/类型计数。"""
+    """AI 调用用量统计：按用户/类型计数；voice 按分钟数记 amount。"""
     __tablename__ = "ai_usage"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
-    kind: Mapped[str] = mapped_column(String(32), default="extract")  # extract / voice / diet / plan
+    # extract（自然语言录入）/ ocr（体测单识别）/ voice（语音转记录）
+    # / plan_diet（生成训练/饮食建议）/ summary（客户总结）
+    kind: Mapped[str] = mapped_column(String(32), default="extract")
+    amount: Mapped[float] = mapped_column(Float, default=1)  # 用量单位数（voice=分钟，其余=1）
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)

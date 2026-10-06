@@ -5,18 +5,19 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
 from . import models
 from .auth import hash_password
-from .config import settings
+from .config import settings, validate_prod
 from .database import Base, SessionLocal, engine
-from .routers import assessments, auth, bookings, clients, consents, custom_fields, dashboard, diets, intake, plans, settings as settings_router, subscriptions
+from .routers import assessments, auth, bookings, clients, consents, custom_fields, dashboard, diets, files, intake, plans, settings as settings_router, subscriptions
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """启动时：建表、建上传目录、首次启动自动创建默认馆主账号。"""
+    """启动时：生产安全检查、建表、建上传目录、首次启动自动创建默认馆主账号、
+    预置 AI 套餐。"""
+    validate_prod()  # 生产模式下密钥未配置则直接报错退出
     Base.metadata.create_all(bind=engine)
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     db = SessionLocal()
@@ -26,25 +27,27 @@ async def lifespan(app: FastAPI):
                                password_hash=hash_password(settings.ADMIN_PASSWORD),
                                role="owner", name="馆主"))
             db.commit()
+        from .services import ai_gate
+        ai_gate.ensure_default_plans(db)
     finally:
         db.close()
     yield
 
 
-app = FastAPI(title="瑜伽馆/健身房客户管理", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="瑜伽馆/健身房客户管理", version="0.3.0", lifespan=lifespan)
 
-# 跨域：允许前端开发服务器与同域部署访问
+# 跨域：白名单从环境变量 CORS_ORIGINS 读取（逗号分隔），默认仅本地开发源
+_cors_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 上传文件静态访问（目录必须在挂载前存在）
+# 注意：上传目录不再静态挂载，文件下载走 /api/files/{filename} 鉴权接口
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
 # 挂载全部路由
 app.include_router(auth.router)
@@ -59,6 +62,7 @@ app.include_router(bookings.router)
 app.include_router(intake.router)
 app.include_router(subscriptions.router)
 app.include_router(consents.router)
+app.include_router(files.router)
 
 
 @app.on_event("startup")

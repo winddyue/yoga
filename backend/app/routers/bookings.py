@@ -29,11 +29,15 @@ def _booked_count(db: Session, course_id: int) -> int:
                     models.Booking.status.in_((ST_BOOKED, ST_CHECKED_IN))).count())
 
 
-def _course_out(db: Session, course: models.Course) -> dict:
-    return {**{c.name: getattr(course, c.name)
-               for c in course.__table__.columns if c.name != "checkin_code"},
-            "checkin_code": course.checkin_code,
-            "booked_count": _booked_count(db, course.id)}
+def _course_out(db: Session, course: models.Course,
+                user: models.User) -> dict:
+    """课程输出：签到码只给工作人员（馆主/教练），客户不可见。"""
+    out = {c.name: getattr(course, c.name)
+           for c in course.__table__.columns if c.name != "checkin_code"}
+    if user.role in ("owner", "coach"):
+        out["checkin_code"] = course.checkin_code
+    out["booked_count"] = _booked_count(db, course.id)
+    return out
 
 
 def update_attendance(db: Session, client_id: int):
@@ -51,7 +55,8 @@ def update_attendance(db: Session, client_id: int):
         db.commit()
 
 
-@router.post("/courses", response_model=schemas.CourseOut)
+@router.post("/courses", response_model=schemas.CourseOut,
+            response_model_exclude_unset=True)
 def create_course(data: schemas.CourseIn,
                   db: Session = Depends(get_db),
                   user: models.User = Depends(auth_lib.require_staff)):
@@ -67,18 +72,20 @@ def create_course(data: schemas.CourseIn,
     db.commit()
     db.refresh(course)
     audit_service.log(db, user.id, "course.create", "course", course.id)
-    return _course_out(db, course)
+    return _course_out(db, course, user)
 
 
-@router.get("/courses", response_model=list[schemas.CourseOut])
+@router.get("/courses", response_model=list[schemas.CourseOut],
+            response_model_exclude_unset=True)
 def list_courses(db: Session = Depends(get_db),
                  user: models.User = Depends(auth_lib.get_current_user)):
     """课程列表（按开始时间倒序）。"""
     courses = db.query(models.Course).order_by(models.Course.start_time.desc()).all()
-    return [_course_out(db, c) for c in courses]
+    return [_course_out(db, c, user) for c in courses]
 
 
-@router.get("/courses/{course_id}", response_model=schemas.CourseOut)
+@router.get("/courses/{course_id}", response_model=schemas.CourseOut,
+            response_model_exclude_unset=True)
 def get_course(course_id: int,
                db: Session = Depends(get_db),
                user: models.User = Depends(auth_lib.get_current_user)):
@@ -86,7 +93,7 @@ def get_course(course_id: int,
     course = db.query(models.Course).filter(models.Course.id == course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="课程不存在")
-    return _course_out(db, course)
+    return _course_out(db, course, user)
 
 
 def _resolve_client(db: Session, user: models.User,

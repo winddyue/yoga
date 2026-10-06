@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 """全局配置：所有配置统一从环境变量读取，绝不在代码里写密钥。"""
+import sys
+
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    # 运行环境：dev（开发）/ prod（生产）。生产模式下安全检查更严格。
+    # 用 ENV=prod 或 PROD=true 开启生产模式。
+    ENV: str = "dev"
+    PROD: bool = False
+
     # 数据库连接串：默认 SQLite 零配置；
     # 如需切换 Postgres，设置 DATABASE_URL=postgresql://用户名:密码@主机:5432/库名
     DATABASE_URL: str = "sqlite:///./yoga.db"
@@ -15,6 +22,9 @@ class Settings(BaseSettings):
     # 默认管理员账号：首次启动且用户表为空时自动创建
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = "admin123"
+
+    # CORS 白名单：逗号分隔。默认只允许本地开发源，生产必须配置为真实域名。
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
 
     # 第三方 API：密钥只能从环境变量读取，前端/日志绝不出现明文
     OCR_API_URL: str = ""   # 拍照识别接口地址（预留）
@@ -30,6 +40,8 @@ class Settings(BaseSettings):
 
     # 上传文件存放目录
     UPLOAD_DIR: str = "./uploads"
+    # 单个上传文件大小上限（字节），默认 10MB
+    MAX_UPLOAD_BYTES: int = 10 * 1024 * 1024
 
     class Config:
         env_file = ".env"  # 同时支持从 .env 文件读取
@@ -37,3 +49,28 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def is_prod() -> bool:
+    """是否生产模式。"""
+    return settings.PROD or settings.ENV.lower() == "prod"
+
+
+def validate_prod():
+    """生产模式安全基线检查：不通过直接抛错，阻止应用启动。
+
+    开发模式下仅打印警告，不阻止启动。
+    """
+    problems = []
+    if settings.SECRET_KEY == "change-me-in-production":
+        problems.append("SECRET_KEY 仍是默认值，生产环境必须设置随机密钥")
+    if settings.ADMIN_PASSWORD == "admin123":
+        problems.append("ADMIN_PASSWORD 仍是默认值，生产环境必须修改")
+    if not settings.DATA_ENC_KEY:
+        problems.append("未设置 DATA_ENC_KEY，手机号等敏感字段将明文存储")
+    if not problems:
+        return
+    msg = "生产环境安全检查不通过：\n- " + "\n- ".join(problems)
+    if is_prod():
+        raise RuntimeError(msg)
+    print("[警告] " + msg.replace("\n", "\n[警告] "), file=sys.stderr)

@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/settings", tags=["设置"])
 
 # 允许在设置页修改的非密钥项
 EDITABLE = ("ocr_api_url", "ai_api_url", "ai_model", "asr_api_url",
-            "ai_enabled", "ai_price_monthly", "ai_price_yearly")
+            "ai_enabled")
 
 
 def _stored(db: Session, key: str, fallback: str) -> str:
@@ -46,8 +46,6 @@ def get_settings(db: Session = Depends(get_db),
         "ai_model": _stored(db, "ai_model", settings.AI_MODEL),
         "asr_api_url": _stored(db, "asr_api_url", settings.ASR_API_URL),
         "ai_enabled": _stored_bool(db, "ai_enabled"),
-        "ai_price_monthly": _stored_float(db, "ai_price_monthly"),
-        "ai_price_yearly": _stored_float(db, "ai_price_yearly"),
         "ocr_configured": bool(settings.OCR_API_KEY),
         "ai_configured": bool(settings.AI_API_KEY),
         "asr_configured": bool(settings.ASR_API_KEY),
@@ -77,8 +75,4 @@ def ai_enabled(db: Session) -> bool:
     return _stored_bool(db, "ai_enabled")
 
 
-def ai_pricing(db: Session) -> dict:
-    """AI 订阅定价（供内部调用）。"""
-    return {"ai_enabled": _stored_bool(db, "ai_enabled"),
-            "ai_price_monthly": _stored_float(db, "ai_price_monthly"),
-            "ai_price_yearly": _stored_float(db, "ai_price_yearly")}
+

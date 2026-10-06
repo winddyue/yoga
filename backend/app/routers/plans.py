@@ -14,8 +14,8 @@ router = APIRouter(prefix="/api", tags=["训练计划"])
 @router.post("/clients/{client_id}/plans/generate", response_model=schemas.TrainingPlanOut)
 def generate(client_id: int, week_start: str = "",
              db: Session = Depends(get_db),
-             user: models.User = Depends(auth_lib.get_current_user)):
-    """按客户目标自动生成一周训练计划（旧计划自动归档）。"""
+             user: models.User = Depends(auth_lib.require_staff)):
+    """按客户目标自动生成一周训练计划（旧计划自动归档）。仅工作人员可写。"""
     client = auth_lib.client_visible_to(db, user, client_id)
     db.query(models.TrainingPlan).filter(
         models.TrainingPlan.client_id == client.id,
@@ -42,8 +42,8 @@ def list_plans(client_id: int,
 @router.put("/plans/{plan_id}", response_model=schemas.TrainingPlanOut)
 def update_plan(plan_id: int, data: schemas.TrainingPlanIn,
                 db: Session = Depends(get_db),
-                user: models.User = Depends(auth_lib.get_current_user)):
-    """手动调整训练计划：增删训练日、改时间、换动作，全量覆盖 days。"""
+                user: models.User = Depends(auth_lib.require_staff)):
+    """手动调整训练计划：增删训练日、改时间、换动作，全量覆盖 days。仅工作人员可写。"""
     plan = db.query(models.TrainingPlan).filter(models.TrainingPlan.id == plan_id).first()
     if not plan:
         from fastapi import HTTPException
