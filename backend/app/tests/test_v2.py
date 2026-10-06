@@ -17,6 +17,7 @@ for _mod in [m for m in list(sys.modules)
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app.config import settings  # noqa: E402
+from app.database import engine  # noqa: E402
 from app.main import app  # noqa: E402
 
 if os.path.exists("test_v2.db"):
@@ -174,5 +175,7 @@ def test_v2_flow():
         r = client.post("/api/auth/login", data={"username": "stuA", "password": "pw123456"})
         assert r.status_code == 403, r.text
 
+    # 清理测试库（Windows 上必须先释放连接池，否则文件被占用删不掉）
+    engine.dispose()
     if os.path.exists("test_v2.db"):
         os.remove("test_v2.db")
