@@ -1,0 +1,10 @@
+# 依赖与构建产物
+backend/.venv/
+frontend/node_modules/
+frontend/dist/
+# 本地数据与密钥（绝不提交）
+.env
+*.db
+uploads/
+# 系统文件
+.DS_Store

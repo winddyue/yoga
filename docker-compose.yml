@@ -1,0 +1,20 @@
+# 一键部署：docker compose up -d --build
+# 首次启动后用 ADMIN_USERNAME / ADMIN_PASSWORD 登录（记得改密码）
+services:
+  backend:
+    build: ./backend
+    env_file: .env
+    volumes:
+      - yoga-data:/code/data   # 数据库与上传文件持久化
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  yoga-data:
