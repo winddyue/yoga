@@ -66,12 +66,12 @@ def test_security_scenarios():
         r = client.get("/api/courses", headers=coach_h)
         mine = [c for c in r.json() if c["id"] == course_id][0]
         assert mine["checkin_code"], "教练应能看到签到码"
-        # 客户视角：列表和详情都拿不到签到码
+        # 客户视角：列表和详情都不返回签到码字段
         r = client.get("/api/courses", headers=usera_h)
         mine = [c for c in r.json() if c["id"] == course_id][0]
-        assert mine["checkin_code"] == "", "客户不应从课程列表拿到签到码"
+        assert "checkin_code" not in mine, "客户不应从课程列表拿到签到码"
         r = client.get(f"/api/courses/{course_id}", headers=usera_h)
-        assert r.json()["checkin_code"] == "", "客户不应从课程详情拿到签到码"
+        assert "checkin_code" not in r.json(), "客户不应从课程详情拿到签到码"
         # 客户拿不到码就无法凭空签到
         r = client.post(f"/api/courses/{course_id}/checkin", json={}, headers=usera_h)
         assert r.status_code == 400, r.text

@@ -6,6 +6,9 @@ import os
 import sys
 
 os.environ["DATABASE_URL"] = "sqlite:///./test_v3.db"
+# 上传目录指向临时目录，避免测试产物污染仓库（backend/uploads/）
+os.environ["UPLOAD_DIR"] = os.path.join(os.environ.get("TEMP", "/tmp"),
+                                        "yoga_test_uploads")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # 与其他测试文件共用进程运行时，刷新已导入的 app 模块，
@@ -18,7 +21,7 @@ for _mod in [m for m in list(sys.modules)
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app.config import settings, validate_prod, is_prod  # noqa: E402
-from app.database import SessionLocal  # noqa: E402
+from app.database import SessionLocal, engine  # noqa: E402
 from app import models  # noqa: E402
 from app.main import app  # noqa: E402
 from app.services import ai_gate  # noqa: E402
@@ -268,5 +271,7 @@ def test_v3_flow():
         assert r.status_code == 403, r.text
         settings.AI_API_KEY = ""
 
+    # 清理测试库（Windows 上必须先释放连接池，否则文件被占用删不掉）
+    engine.dispose()
     if os.path.exists("test_v3.db"):
         os.remove("test_v3.db")
