@@ -20,6 +20,12 @@ function networkError(err) {
   return new Error('网络连接失败，请检查网络');
 }
 
+// 小程序环境没有 FormData 全局对象，必须先判断存在性再 instanceof，
+// 否则直接 ReferenceError，导致所有 req() 请求失败（登录成功也无法跳转首页）
+function isFormData(d) {
+  return typeof FormData !== 'undefined' && d instanceof FormData;
+}
+
 function req(path, { method = 'GET', data = null } = {}) {
   return new Promise((resolve, reject) => {
     wx.request({
@@ -27,7 +33,7 @@ function req(path, { method = 'GET', data = null } = {}) {
       method,
       data,
       timeout: TIMEOUT,
-      header: headers(!(data instanceof FormData)),
+      header: headers(!isFormData(data)),
       success(res) {
         if (res.statusCode === 401) {
           wx.removeStorageSync('token');
