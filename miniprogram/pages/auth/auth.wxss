@@ -19,6 +19,7 @@
 .dev-toggle{display:block;color:#a9b4b1;font-size:23rpx}
 .dev-input{height:84rpx;border:2rpx solid #e7eeec;border-radius:14rpx;margin:16rpx 0 10rpx;padding:0 22rpx;font-size:28rpx;box-sizing:border-box}
 .dev-tip{display:block;color:#c0cac7;font-size:21rpx}
+.cap-note{display:block;color:#b0bab7;font-size:21rpx;text-align:center;margin-top:14rpx}
 .error{color:#c44f4f;background:#fff3f1;padding:18rpx;border-radius:12rpx;font-size:25rpx;margin-top:20rpx}
 .agree{display:flex;align-items:center;gap:12rpx;margin-top:26rpx;color:#8a9694;font-size:23rpx}
 .check{width:30rpx;height:30rpx;line-height:30rpx;text-align:center;border-radius:50%;border:2rpx solid #cfd8d5;color:#fff;font-size:20rpx;flex:none}

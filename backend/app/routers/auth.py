@@ -25,13 +25,15 @@ class ClientRegisterIn(BaseModel):
 
 
 class PhoneRegisterIn(BaseModel):
-    """手机号快捷注册/登录：手机号 + 短信验证码。
+    """手机号快捷注册/登录。
 
-    生产环境手机号由微信 getPhoneNumber 换取，或短信验证码校验；
-    code 字段在开发模式下配合 WX_DEV_MOCK / SMS_DEV_MOCK 使用。
+    手机号来源由 code 决定：
+      - "mock:11位手机号"：仅 WX_DEV_MOCK=true 时可用（本地联调）
+      - 其它值：当作微信 getPhoneNumber 的 code 换取手机号（需企业主体 + 已配 AppSecret）
+    注意：短信验证码方式尚未实现（见 _get_phone_by_code 的 TODO）。
     """
     code: str            # getPhoneNumber 的 code，或 mock:手机号
-    phone: str = ""      # 兼容短信验证码方式直接传手机号
+    phone: str = ""      # 预留：短信验证码方式直接传手机号（未实现）
     name: str = ""       # 可选，首次注册作为姓名
     wx_code: str = ""    # wx.login 的 code，注册时顺带绑定微信实现免密登录
 
@@ -67,9 +69,13 @@ def _code2session(code: str) -> str:
 def _get_phone_by_code(code: str) -> str:
     """getPhoneNumber 的 code -> 手机号。
 
-    生产：调微信 phonenumber.getPhoneNumber 接口（需 access_token）。
-    开发：WX_DEV_MOCK=true 时接受 "mock:11位手机号" 直接取号，
-          方便本地无真实微信环境时联调注册流程。
+    开发：WX_DEV_MOCK=true 时接受 "mock:11位手机号" 直接取号，方便本地无真实微信环境时联调。
+
+    TODO: 生产路径未实现。需要先拿 access_token（GET /cgi-bin/token，
+    用 appid+secret，应带缓存，有效期 7200s），再调
+    POST https://api.weixin.qq.com/wxa/business/getuserphonenumber
+    传 {"code": code} 取 phone_info.purePhoneNumber。
+    另外该接口要求小程序主体为企业/组织，个人主体无法获取手机号。
     """
     if settings.WX_DEV_MOCK and code.startswith("mock:"):
         raw = code[5:].strip()
@@ -80,7 +86,7 @@ def _get_phone_by_code(code: str) -> str:
     if not settings.WX_APPID or not settings.WX_SECRET:
         raise HTTPException(status_code=400,
                             detail="服务器未配置微信 AppID/Secret（WX_APPID/WX_SECRET）")
-    raise HTTPException(status_code=400, detail="手机号获取失败，请重试")
+    raise HTTPException(status_code=501, detail="手机号快捷登录尚未接入，请先用账号密码登录")
 
 
 def _phone_ok(phone: str) -> bool:

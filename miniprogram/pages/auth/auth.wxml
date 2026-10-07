@@ -19,13 +19,14 @@
               loading="{{loading}}" disabled="{{loading}}">
         {{loading ? '登录中…' : '微信手机号快捷登录'}}
       </button>
+      <text class="cap-note">该功能需小程序主体为企业/组织，且后端已接入取号接口</text>
 
       <!-- 开发者工具不支持手机号授权，展开手输用于联调 -->
       <view class="dev">
         <text class="dev-toggle">开发者工具联调（可选填手机号）</text>
         <input class="dev-input" type="number" maxlength="11" placeholder="如 13800000000"
                data-k="phone" value="{{phone}}" bindinput="onInput" />
-        <text class="dev-tip">填好后点上面按钮即可模拟授权；真机请忽略此项</text>
+        <text class="dev-tip">仅在后端 WX_DEV_MOCK=true 时生效</text>
       </view>
     </block>
 
