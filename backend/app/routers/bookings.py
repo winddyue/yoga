@@ -226,9 +226,13 @@ def checkin(course_id: int, data: schemas.CheckInIn,
     booking = (db.query(models.Booking)
                .filter(models.Booking.course_id == course_id,
                        models.Booking.client_id == client.id,
-                       models.Booking.status.in_((ST_BOOKED, ST_WAITLIST))).first())
+                       models.Booking.status.in_(
+                           (ST_BOOKED, ST_WAITLIST, ST_CHECKED_IN))).first())
     if not booking:
         raise HTTPException(status_code=400, detail="该客户未预约本课程")
+    # 已签到时给出准确提示，避免重复扫码被误报成"未预约"
+    if booking.status == ST_CHECKED_IN:
+        raise HTTPException(status_code=400, detail="您已签到，无需重复签到")
     booking.status = ST_CHECKED_IN
     db.add(models.CheckIn(course_id=course_id, client_id=client.id, method=method))
     db.commit()

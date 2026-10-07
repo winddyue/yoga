@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """经营概况路由：按角色返回汇总数据。
 
-- /api/dashboard：兼容旧版（馆主看全馆，教练看自己）
-- /api/me/summary：客户看自己的进展
-- /api/coach/overview：教练看名下客户状态灯 + 待办
-- /api/owner/overview：馆主看经营数据
+- /api/dashboard：兼容旧版，仅工作人员（馆主看全馆，教练看自己）
+- /api/dashboard/me/summary：客户看自己的进展
+- /api/dashboard/coach/overview：教练看名下客户状态灯 + 待办
+- /api/dashboard/owner/overview：馆主看经营数据
 """
 from datetime import datetime, timedelta
 
@@ -22,8 +22,11 @@ router = APIRouter(prefix="/api/dashboard", tags=["经营概况"])
 
 @router.get("")
 def overview(db: Session = Depends(get_db),
-             user: models.User = Depends(auth_lib.get_current_user)):
-    """经营概况：馆主看全馆，教练看自己的客户。"""
+             user: models.User = Depends(auth_lib.require_staff)):
+    """经营概况：馆主看全馆，教练看自己的客户。
+
+    客户角色不允许访问（前端应走 /api/dashboard/me/summary）。
+    """
     q = db.query(models.Client)
     if user.role != "owner":
         q = q.filter(models.Client.coach_id == user.id)

@@ -16,6 +16,8 @@ class UserOut(BaseModel):
     username: str
     role: str
     name: str
+    # 客户角色关联的档案 id（工作人员账号为 None）
+    client_id: Optional[int] = None
 
 
 class LoginIn(BaseModel):
