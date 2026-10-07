@@ -10,14 +10,13 @@ Page({
 
   async load() {
     this.setData({ loading: true });
-    try {
-      const user = getApp().globalData.user || await api.get('/api/auth/me');
-      getApp().globalData.user = user;
-      this.setData({ user, roleText: ROLE_TEXT[user.role] || '', loading: false });
-    } catch (e) {
-      // 未登录：正常的游客态，展示"您好，请登录"
-      this.setData({ user: null, loading: false });
-    }
+    // 复用全局解析结果（含静默续期），不重复发请求
+    const user = await getApp().ensureUser();
+    this.setData({
+      user,
+      roleText: user ? (ROLE_TEXT[user.role] || '') : '',
+      loading: false,
+    });
   },
 
   goLogin() { wx.navigateTo({ url: '/pages/auth/auth' }); },
@@ -28,8 +27,10 @@ Page({
   goCoach() { wx.navigateTo({ url: '/pages/coach/coach' }); },
 
   async logout() {
-    if (!await fb.confirm('确定退出登录吗？', '退出')) return;
+    if (!await fb.confirm('确定退出登录吗？下次进入需重新登录。', '退出')) return;
     api.logout();
-    this.setData({ user: null });
+    // 同时清空全局缓存，避免页面仍读到旧的登录态
+    getApp().clearUser();
+    this.setData({ user: null, roleText: '' });
   },
 });

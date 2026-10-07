@@ -6,36 +6,19 @@
   </view>
 
   <view class="card">
-    <!-- 顶部切换 -->
-    <view class="tabs">
-      <text class="tab {{mode === 'quick' ? 'on' : ''}}" data-m="quick" bindtap="switchMode">手机号快捷登录</text>
-      <text class="tab {{mode === 'pwd' ? 'on' : ''}}" data-m="pwd" bindtap="switchMode">账号密码</text>
-    </view>
-
-    <!-- 手机号快捷：授权即注册/登录 -->
-    <block wx:if="{{mode === 'quick'}}">
-      <text class="hint">使用微信绑定手机号一键登录，首次使用将自动创建账号</text>
-      <button class="primary" open-type="getPhoneNumber" bindgetphonenumber="onGetPhone"
-              loading="{{loading}}" disabled="{{loading}}">
-        {{loading ? '登录中…' : '微信手机号快捷登录'}}
+    <!-- ============ 主路径：微信一键登录 ============ -->
+    <block wx:if="{{step === 'main'}}">
+      <button class="primary wx" loading="{{loading}}" disabled="{{loading}}" bindtap="doWxLogin">
+        {{loading ? '登录中…' : '微信一键登录'}}
       </button>
-      <text class="cap-note">该功能需小程序主体为企业/组织，且后端已接入取号接口</text>
+      <text class="cap-note">无需注册，首次进入仅需填写姓名</text>
 
-      <!-- 开发者工具不支持手机号授权，展开手输用于联调 -->
-      <view class="dev">
-        <text class="dev-toggle">开发者工具联调（可选填手机号）</text>
-        <input class="dev-input" type="number" maxlength="11" placeholder="如 13800000000"
-               data-k="phone" value="{{phone}}" bindinput="onInput" />
-        <text class="dev-tip">仅在后端 WX_DEV_MOCK=true 时生效</text>
-      </view>
-    </block>
+      <view class="split"><view></view><text>或</text><view></view></view>
 
-    <!-- 账号密码：教练/馆主与已有客户账号 -->
-    <block wx:else>
-      <text class="hint">教练、馆主账号由馆主在管理端创建；客户也可用注册时的账号登录</text>
+      <text class="hint">教练、馆主请使用账号密码登录</text>
       <view class="field">
         <text class="icon">人</text>
-        <input placeholder="请输入用户名或手机号" placeholder-class="placeholder"
+        <input placeholder="请输入用户名" placeholder-class="placeholder"
                data-k="username" value="{{username}}" bindinput="onInput" />
       </view>
       <view class="field">
@@ -43,16 +26,39 @@
         <input placeholder="请输入密码" placeholder-class="placeholder" password
                data-k="password" value="{{password}}" bindinput="onInput" />
       </view>
-      <button class="primary" loading="{{loading}}" disabled="{{loading}}" bindtap="doPwdLogin">
+      <button class="primary ghost" loading="{{loading}}" disabled="{{loading}}" bindtap="doPwdLogin">
         {{loading ? '登录中…' : '登录'}}
       </button>
     </block>
 
+    <!-- ============ 新用户：补全资料（极简建档） ============ -->
+    <block wx:else>
+      <text class="title-row">完善资料</text>
+      <text class="hint">首次使用需登记姓名，便于预约与课堂点名</text>
+      <view class="field">
+        <text class="icon">人</text>
+        <input placeholder="请填写姓名" placeholder-class="placeholder"
+               data-k="name" value="{{name}}" bindinput="onInput" />
+      </view>
+      <view class="field">
+        <text class="icon">机</text>
+        <input type="number" maxlength="11" placeholder="手机号（选填，用于课程通知）"
+               placeholder-class="placeholder" data-k="phone" value="{{phone}}" bindinput="onInput" />
+      </view>
+      <button class="primary" loading="{{loading}}" disabled="{{loading}}" bindtap="doWxRegister">
+        {{loading ? '提交中…' : '完成，进入小程序'}}
+      </button>
+      <text class="back-link" bindtap="backToMain">‹ 返回</text>
+    </block>
+
     <view wx:if="{{err}}" class="error">{{err}}</view>
 
-    <view class="agree" bindtap="toggleAgree">
-      <view class="check {{agreed ? 'on' : ''}}">{{agreed ? '✓' : ''}}</view>
-      <text>已阅读并同意《用户协议》和《隐私政策》</text>
+    <view class="agree">
+      <view class="check {{agreed ? 'on' : ''}}" bindtap="toggleAgree">{{agreed ? '✓' : ''}}</view>
+      <text>已阅读并同意
+        <text class="link" data-t="terms" bindtap="openAgreement">《用户协议》</text>和
+        <text class="link" data-t="privacy" bindtap="openAgreement">《隐私政策》</text>
+      </text>
     </view>
   </view>
 

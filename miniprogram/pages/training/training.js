@@ -6,6 +6,12 @@ Page({
   onShow() { this.load(); },
   async load() {
     this.setData({ loading: true, loadErr: '', needLogin: false });
+    // 登录态由全局统一解析（含静默续期）
+    const user = await getApp().ensureUser();
+    if (!user) {
+      this.setData({ loading: false, needLogin: true });
+      return;
+    }
     try {
       const c = await api.get('/api/clients/mine');
       this.setData({ clientId: c.id });

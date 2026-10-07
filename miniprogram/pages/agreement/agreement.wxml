@@ -1,0 +1,102 @@
+<view class="ag-page">
+  <view class="tabs">
+    <view class="tab {{tab === 'privacy' ? 'on' : ''}}" data-t="privacy" bindtap="switchTab">隐私政策</view>
+    <view class="tab {{tab === 'terms' ? 'on' : ''}}" data-t="terms" bindtap="switchTab">用户协议</view>
+  </view>
+
+  <scroll-view scroll-y class="body">
+    <!-- ================= 隐私政策 ================= -->
+    <block wx:if="{{tab === 'privacy'}}">
+      <view class="sec">引言</view>
+      <view class="p">
+        本馆（以下简称"我们"）深知个人信息对您的重要性，并会尽全力保护您的个人信息安全可靠。
+        我们致力于维持您对我们的信任，恪守以下原则保护您的个人信息：权责一致原则、目的明确原则、
+        选择同意原则、最少够用原则、确保安全原则、主体参与原则、公开透明原则。
+      </view>
+      <view class="p">本政策适用于您使用本馆小程序及相关服务。请您在使用前仔细阅读并确认已充分理解。</view>
+
+      <view class="sec">一、我们收集哪些信息</view>
+      <view class="p">我们仅收集为您提供瑜伽课程服务所必需的信息：</view>
+      <view class="li">1. 微信身份标识（openid）：用于识别您的账号，实现免密登录。我们不获取您的微信昵称、头像、好友关系。</view>
+      <view class="li">2. 姓名：用于课程预约、课堂点名与教练辨认。</view>
+      <view class="li">3. 手机号码（可选）：用于课程变动通知。您可拒绝提供，不影响基本使用。</view>
+      <view class="li">4. 身体与健康信息（身高、体重、训练目标、体测评估、饮食记录）：用于制定和调整训练与饮食方案。此类信息属于敏感个人信息，我们会严格保护。</view>
+      <view class="li">5. 预约与签到记录：用于管理课程出勤。</view>
+
+      <view class="sec">二、我们如何使用信息</view>
+      <view class="li">1. 为您完成账号注册、登录与身份核验；</view>
+      <view class="li">2. 处理课程预约、候补递补、签到与出勤统计；</view>
+      <view class="li">3. 为您制定、调整训练计划与饮食建议；</view>
+      <view class="li">4. 在课程时间变动、闭馆等情况下通知您；</view>
+      <view class="li">5. 改进我们的服务（我们会先对信息进行去标识化处理）。</view>
+      <view class="p">我们不会将您的个人信息用于上述范围之外的用途。如确需变更使用目的，我们会再次征得您的同意。</view>
+
+      <view class="sec">三、信息的存储与保护</view>
+      <view class="li">1. 您的个人信息存储于中华人民共和国境内的服务器。</view>
+      <view class="li">2. 手机号码等敏感字段在数据库中加密存储。</view>
+      <view class="li">3. 我们通过传输加密、访问权限控制、操作留痕等措施保护信息安全。</view>
+      <view class="li">4. 我们会按法律规定在必要期限内保存您的信息，超出后删除或匿名化处理。</view>
+      <view class="p">若不幸发生个人信息泄露等安全事件，我们会按法律法规要求及时告知您。</view>
+
+      <view class="sec">四、共享、转让与公开披露</view>
+      <view class="p">我们不会向任何第三方共享、转让您的个人信息，但以下情形除外：</view>
+      <view class="li">1. 获得您的明确同意；</view>
+      <view class="li">2. 为履行法定义务或响应司法机关、行政机关的合法要求；</view>
+      <view class="li">3. 为保护您或其他自然人的生命、健康和财产安全所必需。</view>
+
+      <view class="sec">五、您的权利</view>
+      <view class="p">您对自己的个人信息享有查阅、复制、更正、补充、删除、撤回同意以及注销账号的权利。您可以通过本小程序「我的」页面或联系本馆行使上述权利。我们会在收到请求后十五个工作日内予以响应。</view>
+      <view class="p">注销账号后，我们将删除或匿名化您的个人信息，法律法规另有规定的除外。</view>
+
+      <view class="sec">六、未成年人信息保护</view>
+      <view class="p">若您未满 18 周岁，请在监护人陪同下阅读本政策，并在监护人同意后再使用我们的服务。我们会按国家法律法规要求，对未成年人个人信息予以特别保护。</view>
+
+      <view class="sec">七、Cookie 及同类技术</view>
+      <view class="p">为保障小程序正常运行，我们会在您的设备上存储必要的本地数据（如登录凭证）。您清除本地数据后需重新登录，但这不会影响您使用其他功能。</view>
+
+      <view class="sec">八、政策更新</view>
+      <view class="p">本政策如有更新，我们会在小程序内提示。若涉及您权利的重大变更，我们会以显著方式通知并重新征得您的同意。</view>
+
+      <view class="sec">九、联系我们</view>
+      <view class="p">如您对本政策有任何疑问、意见或投诉，可通过本小程序「我的」页面或到店前台联系本馆负责人。我们将在十五个工作日内回复。</view>
+
+      <view class="last">更新日期：{{updated}}</view>
+    </block>
+
+    <!-- ================= 用户协议 ================= -->
+    <block wx:else>
+      <view class="sec">一、服务内容</view>
+      <view class="p">本小程序由本馆运营，为您提供瑜伽课程查询与预约、到店签到、训练计划与饮食方案查看、体测评估记录等会员服务。</view>
+
+      <view class="sec">二、账号</view>
+      <view class="li">1. 您可以使用微信一键登录，无需注册密码。</view>
+      <view class="li">2. 您应妥善保管账号，因您主动泄露导致的损失由您自行承担。</view>
+      <view class="li">3. 教练、馆主账号由馆主统一创建与分配，不对客户开放。</view>
+
+      <view class="sec">三、课程预约与取消</view>
+      <view class="li">1. 请按课程容量预约，满员后自动进入候补，有人取消时按顺序递补。</view>
+      <view class="li">2. 如需取消，请提前在「约课」中操作，为他人留出名额。</view>
+      <view class="li">3. 开课前 30 分钟至开课后 60 分钟内可扫码签到；错过时间窗请联系教练补签。</view>
+
+      <view class="sec">四、健康声明</view>
+      <view class="p">瑜伽练习存在一定身体负荷。您确认自身身体状况适合参与本课程，并已如实告知既往伤病、手术史、孕期等特殊情况。如因隐瞒健康状况造成损害，由您自行承担。</view>
+      <view class="p">练习中如感不适，请立即停止并告知教练。</view>
+
+      <view class="sec">五、付费与退款</view>
+      <view class="p">涉及会员卡、课程包购买与退款的具体规则，以本馆到店公示或双方另行约定为准。</view>
+
+      <view class="sec">六、行为规范</view>
+      <view class="p">您不得利用本服务从事违法违规活动，不得干扰系统正常运行，不得爬取或批量获取数据。</view>
+
+      <view class="sec">七、免责</view>
+      <view class="p">因不可抗力、网络故障、设备故障等原因导致服务中断的，我们不承担责任，但会尽力恢复。</view>
+
+      <view class="sec">八、协议变更与争议解决</view>
+      <view class="p">本协议如有修改，我们会在小程序内公布。双方应友好协商解决争议；协商不成的，提交本馆所在地有管辖权的人民法院处理。</view>
+
+      <view class="last">更新日期：{{updated}}</view>
+    </block>
+  </scroll-view>
+
+  <view class="foot"><button class="btn" bindtap="back">我已阅读</button></view>
+</view>

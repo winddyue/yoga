@@ -1,0 +1,13 @@
+.ag-page{display:flex;flex-direction:column;height:100vh;background:#f5f7f6}
+.tabs{display:flex;gap:44rpx;padding:0 40rpx;background:#fff;border-bottom:2rpx solid #eef2f0;flex:none}
+.tab{padding:26rpx 8rpx;min-width:120rpx;color:#8a9694;font-size:30rpx;position:relative}
+.tab.on{color:#173a38;font-weight:700}
+.tab.on::after{content:'';position:absolute;left:50%;bottom:-2rpx;transform:translateX(-50%);width:56rpx;height:6rpx;border-radius:6rpx;background:#147d73}
+.body{flex:1;padding:30rpx 40rpx 20rpx;box-sizing:border-box}
+.sec{font-size:29rpx;font-weight:700;color:#173a38;margin:34rpx 0 16rpx}
+.sec:first-child{margin-top:0}
+.p{font-size:26rpx;line-height:1.85;color:#4a5a58;margin-bottom:18rpx;text-align:justify}
+.li{font-size:26rpx;line-height:1.85;color:#4a5a58;margin-bottom:12rpx;padding-left:26rpx;text-align:justify}
+.last{font-size:23rpx;color:#a9b4b1;text-align:center;margin:40rpx 0 10rpx}
+.foot{flex:none;padding:18rpx 40rpx 30rpx;background:#fff;border-top:2rpx solid #eef2f0}
+.foot .btn{background:#147d73;color:#fff;border-radius:16rpx;font-size:30rpx;height:88rpx;line-height:88rpx}

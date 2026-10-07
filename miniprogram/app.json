@@ -5,6 +5,7 @@
     "pages/training/training",
     "pages/mine/mine",
     "pages/auth/auth",
+    "pages/agreement/agreement",
     "pages/coach/coach"
   ],
   "tabBar": {

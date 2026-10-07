@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """认证路由：登录、微信登录、当前用户信息、用户管理（仅馆主可创建教练账号）。"""
+import hashlib
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
@@ -17,6 +18,13 @@ router = APIRouter(prefix="/api/auth", tags=["认证"])
 
 class WxLoginIn(BaseModel):
     code: str  # wx.login 拿到的临时凭证
+
+
+class WxRegisterIn(BaseModel):
+    """微信一键注册：姓名必填（用于建档与点名），手机号可选（教练可事后补录）。"""
+    code: str
+    name: str = ""
+    phone: str = ""
 
 class ClientRegisterIn(BaseModel):
     name: str
@@ -106,6 +114,54 @@ def wx_login(data: WxLoginIn, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == binding.user_id).first()
     if not user or not user.is_active:
         raise HTTPException(status_code=403, detail="账号已注销，请联系馆主")
+    return {"access_token": auth_lib.create_access_token(user.username)}
+
+
+@router.post("/wx-register", response_model=schemas.Token)
+def wx_register(data: WxRegisterIn, db: Session = Depends(get_db)):
+    """微信一键注册：新用户只需填姓名（手机号可选），即刻建档并绑定微信。
+
+    这是客户的主路径：点「微信一键登录」发现未绑定 → 填个姓名 → 完成，
+    之后每次打开都靠 openid 免密登录，用户全程不需要记密码。
+    已绑定过的微信直接返回 token（等价于登录），保证重复点击不会重复建号。
+    """
+    openid = _code2session(data.code)
+
+    # 已绑定：直接登录，不重复建档
+    binding = (db.query(models.WxBinding)
+               .filter(models.WxBinding.openid == openid).first())
+    if binding:
+        user = db.query(models.User).filter(models.User.id == binding.user_id).first()
+        if user and user.is_active:
+            return {"access_token": auth_lib.create_access_token(user.username)}
+
+    # openid 派生一个内部用户名（不直接暴露 openid）
+    username = "wx_" + hashlib.sha256(openid.encode("utf-8")).hexdigest()[:16]
+    exist_user = db.query(models.User).filter(models.User.username == username).first()
+    if exist_user:
+        # 有账号但绑定丢失（极端情况）：补回绑定而不是新建
+        if not binding:
+            db.add(models.WxBinding(user_id=exist_user.id, openid=openid))
+            db.commit()
+        return {"access_token": auth_lib.create_access_token(exist_user.username)}
+
+    # 手机号选填，但填了就必须合法（前端已校验，后端不信任前端输入）
+    phone = (data.phone or "").strip()
+    if phone and not _phone_ok(phone):
+        raise HTTPException(status_code=400, detail="手机号格式不正确")
+    name = (data.name or "").strip() or ("会员" + openid[-4:])
+    client = models.Client(name=name, phone=crypto_service.encrypt_phone(phone))
+    db.add(client)
+    db.flush()
+    user = models.User(username=username,
+                       password_hash=auth_lib.hash_password(_random_password()),
+                       role="client", name=name, client_id=client.id)
+    db.add(user)
+    db.flush()
+    if not binding:
+        db.add(models.WxBinding(user_id=user.id, openid=openid))
+    db.commit()
+    db.refresh(user)
     return {"access_token": auth_lib.create_access_token(user.username)}
 
 

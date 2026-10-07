@@ -147,10 +147,38 @@ module.exports = {
     wx.setStorageSync('token', res.access_token);
     return res;
   },
+  // 静默续期：用 wx.login 免密换一个新 token。
+  // 小程序不该让用户频繁掉线——只要微信绑定还在，启动/切前台时无感刷新登录态。
+  // 返回 true 表示已恢复登录，false 表示需要用户手动登录（未绑定或换设备）。
+  async silentRenew() {
+    try {
+      const res = await this.wxLogin();
+      const user = await this.get('/api/auth/me');
+      const app = getApp();
+      if (app) {
+        app.globalData.user = user;
+        app.globalData.clientId = user.client_id || null;
+      }
+      return true;
+    } catch (e) {
+      return false; // 未绑定微信等，交由页面展示未登录态
+    }
+  },
   // 绑定微信：登录态下把当前账号与微信关联（绑定后可免密登录）
   async wxBind() {
     const code = await getWxCode();
     return req('/api/auth/wx-bind', { method: 'POST', data: { code } });
+  },
+  // 微信一键注册：新用户填姓名（手机号可选）即建档并绑定微信，返回 token。
+  // 已绑定过的微信会直接返回 token，重复调用不会重复建档。
+  async wxRegister(name, phone) {
+    const code = await getWxCode();
+    const res = await req('/api/auth/wx-register', {
+      method: 'POST',
+      data: { code, name: name || '', phone: phone || '' },
+    });
+    if (res && res.access_token) wx.setStorageSync('token', res.access_token);
+    return res;
   },
   // 退出登录：清 token 与全局用户，回到首页（首页会展示未登录态）
   logout() {

@@ -17,35 +17,36 @@ Page({
 
   async load() {
     this.setData({ loading: true, loadErr: '', needLogin: false });
+    // 登录态由全局统一解析（含静默续期）；游客也能看课程，只是没有自己的预约状态
+    const user = await getApp().ensureUser();
+    let courses = [];
     try {
-      const [courses, mine] = await Promise.all([
-        api.get('/api/courses'),
-        api.get('/api/bookings/mine').catch((e) => {
-          // 未登录时"我的预约"取不到是正常的，不当作错误
-          if (e.message === '未登录') return null;
-          throw e;
-        }),
-      ]);
-      // 我的预约按课程建索引：course_id -> {status, text}
-      const mineMap = {};
-      (mine || []).forEach((b) => { mineMap[b.course_id] = b; });
-      const list = (courses || []).map((c) => {
-        const b = mineMap[c.id];
-        return {
-          ...c,
-          my_status: b ? b.status : '',
-          my_status_text: b ? (STATUS_TEXT[b.status] || b.status) : '',
-          full: c.booked_count >= c.capacity,
-        };
-      });
-      this.setData({ courses: list, loading: false, needLogin: mine === null });
+      courses = await api.get('/api/courses');
     } catch (e) {
-      if (e.message === '未登录') {
-        this.setData({ loading: false, needLogin: true });
-        return;
-      }
       this.setData({ loading: false, loadErr: e.message });
+      return;
     }
+    let mine = [];
+    if (user) {
+      try {
+        mine = await api.get('/api/bookings/mine') || [];
+      } catch (e) {
+        mine = []; // 预约状态取不到不影响浏览课程
+      }
+    }
+    // 我的预约按课程建索引：course_id -> {status, text}
+    const mineMap = {};
+    mine.forEach((b) => { mineMap[b.course_id] = b; });
+    const list = (courses || []).map((c) => {
+      const b = mineMap[c.id];
+      return {
+        ...c,
+        my_status: b ? b.status : '',
+        my_status_text: b ? (STATUS_TEXT[b.status] || b.status) : '',
+        full: c.booked_count >= c.capacity,
+      };
+    });
+    this.setData({ courses: list, loading: false, needLogin: !user });
   },
 
   goLogin() { wx.navigateTo({ url: '/pages/auth/auth' }); },

@@ -17,7 +17,10 @@ class Settings(BaseSettings):
 
     # JWT 签名密钥：生产环境必须通过环境变量覆盖默认值
     SECRET_KEY: str = "change-me-in-production"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # token 有效期 7 天
+    # token 有效期（分钟），默认 30 天。
+    # 小程序场景不应让用户频繁掉线：客户端会在启动/切前台时用 wx.login 静默续期，
+    # 只要微信绑定还在，用户无感知地一直保持登录态。
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30
 
     # 默认管理员账号：首次启动且用户表为空时自动创建
     ADMIN_USERNAME: str = "admin"
