@@ -26,6 +26,14 @@ Page({
 
   goCoach() { wx.navigateTo({ url: '/pages/coach/coach' }); },
 
+  // 以下四项此前只有样式没有 bindtap，是纯死链接，点了没反应
+  goProfile() { wx.navigateTo({ url: '/pages/profile/profile' }); },
+  goRecords(e) {
+    const tab = e.currentTarget.dataset.tab || 'booking';
+    wx.navigateTo({ url: `/pages/records/records?tab=${tab}` });
+  },
+  goAbout() { wx.navigateTo({ url: '/pages/about/about' }); },
+
   async logout() {
     if (!await fb.confirm('确定退出登录吗？下次进入需重新登录。', '退出')) return;
     api.logout();

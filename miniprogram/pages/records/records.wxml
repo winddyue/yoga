@@ -1,0 +1,32 @@
+<view class="container">
+  <view class="tabs">
+    <view class="tab {{tab === 'booking' ? 'on' : ''}}" data-tab="booking" bindtap="switchTab">我的预约</view>
+    <view class="tab {{tab === 'checkin' ? 'on' : ''}}" data-tab="checkin" bindtap="switchTab">签到记录</view>
+  </view>
+
+  <view wx:if="{{needLogin}}" class="login-bar" bindtap="goLogin">
+    <text>登录后可查看记录</text>
+    <text class="go">去登录 ›</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+
+  <view wx:elif="{{!list.length}}" class="tip">
+    {{tab === 'booking' ? '暂无预约记录' : '暂无签到记录'}}
+    <view class="tip-sub">去约课页看看近期课程</view>
+    <button size="mini" type="primary" bindtap="goBooking" style="margin-top:24rpx">去约课</button>
+  </view>
+
+  <block wx:else>
+    <view wx:for="{{list}}" wx:key="id" class="card">
+      <view class="t">{{item.course_title}}</view>
+      <view class="sub">{{item.when}} · {{item.location || '地点待定'}}</view>
+      <view class="status s-{{item.status}}">{{item.status_text}}</view>
+    </view>
+  </block>
+</view>

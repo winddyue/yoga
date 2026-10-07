@@ -1,0 +1,35 @@
+<view class="container">
+  <view class="card about-hero">
+    <view class="brand-mark">瑜</view>
+    <view class="gym-name">{{gym.name}}</view>
+    <view class="gym-desc">{{gym.desc}}</view>
+  </view>
+
+  <view class="card">
+    <view class="sec">门店信息</view>
+    <view wx:if="{{gym.address}}" class="info-row">
+      <text class="label">地址</text><text class="value">{{gym.address}}</text>
+    </view>
+    <view wx:if="{{gym.hours}}" class="info-row">
+      <text class="label">营业时间</text><text class="value">{{gym.hours}}</text>
+    </view>
+    <view wx:if="{{gym.phone}}" class="info-row" bindtap="call">
+      <text class="label">前台电话</text>
+      <text class="value link">{{gym.phone}}</text>
+    </view>
+    <view wx:if="{{!gym.address && !gym.hours && !gym.phone}}" class="tip">
+      门店信息待补充，可到店前台咨询
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="menu-item" data-t="terms" bindtap="openAgreement">
+      <text>用户协议</text><text class="arrow">›</text>
+    </view>
+    <view class="menu-item" data-t="privacy" bindtap="openAgreement">
+      <text>隐私政策</text><text class="arrow">›</text>
+    </view>
+  </view>
+
+  <view class="foot-note">版本 {{version}} · 更新于 {{updated}}</view>
+</view>

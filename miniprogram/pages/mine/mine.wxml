@@ -23,7 +23,7 @@
 
   <!-- 已登录：功能列表 -->
   <view wx:if="{{user}}" class="menu">
-    <view class="menu-item">
+    <view class="menu-item" bindtap="goProfile">
       <text>个人信息</text>
       <text class="arrow">›</text>
     </view>
@@ -31,15 +31,15 @@
       <text>教练工作台</text>
       <text class="arrow">›</text>
     </view>
-    <view class="menu-item">
+    <view class="menu-item" data-tab="booking" bindtap="goRecords">
       <text>我的预约</text>
       <text class="arrow">›</text>
     </view>
-    <view class="menu-item">
+    <view class="menu-item" data-tab="checkin" bindtap="goRecords">
       <text>签到记录</text>
       <text class="arrow">›</text>
     </view>
-    <view class="menu-item">
+    <view class="menu-item" bindtap="goAbout">
       <text>关于我们</text>
       <text class="arrow">›</text>
     </view>

@@ -283,13 +283,23 @@ def mark_noshow(course_id: int,
     return {"ok": True, "marked": len(rows)}
 
 
-@router.get("/bookings/mine", response_model=list[schemas.BookingOut])
+@router.get("/bookings/mine", response_model=list[schemas.MyBookingOut])
 def my_bookings(db: Session = Depends(get_db),
                 user: models.User = Depends(auth_lib.get_current_user)):
-    """客户查看自己的约课记录。"""
+    """客户查看自己的约课/签到记录。附带课程信息，前端无需逐门课再查。"""
     client = auth_lib.get_own_client(db, user)
     rows = (db.query(models.Booking)
             .filter(models.Booking.client_id == client.id)
             .order_by(models.Booking.created_at.desc()).all())
-    return [{"id": b.id, "course_id": b.course_id, "client_id": b.client_id,
-             "client_name": client.name, "status": b.status} for b in rows]
+    out = []
+    for b in rows:
+        course = db.query(models.Course).filter(models.Course.id == b.course_id).first()
+        out.append({
+            "id": b.id, "course_id": b.course_id, "client_id": b.client_id,
+            "client_name": client.name, "status": b.status,
+            "course_title": course.title if course else "（课程已删除）",
+            "start_time": course.start_time if course else "",
+            "end_time": course.end_time if course else "",
+            "location": course.location if course else "",
+        })
+    return out

@@ -76,20 +76,9 @@ def create_client(data: schemas.ClientIn,
     return _present(client, user)
 
 
-# 我自己的客户档案（客户角色）。注意：必须定义在 /{client_id} 之前，
-# 否则 "mine" 会被当成 client_id 匹配。
-@router.get("/mine", response_model=schemas.ClientOut)
-def my_client(
-    db: Session = Depends(get_db),
-    user: models.User = Depends(auth_lib.get_current_user),
-):
-    if user.role != "client" or not user.client_id:
-        raise HTTPException(403, "仅客户角色可访问")
-    client = db.get(models.Client, user.client_id)
-    if not client:
-        raise HTTPException(404, "未绑定客户档案")
-    return _present(client, user)
-
+# 注意：/mine 必须定义在 /{client_id} 之前，否则 "mine" 会被当成 client_id 匹配。
+# 这里只保留一份 /mine 实现——此前存在两个同路径函数，第二个永远不会被命中，
+# 且内部引用了未导入的 HTTPException，一旦命中会直接 NameError。
 
 @router.get("/{client_id}", response_model=schemas.ClientOut)
 def get_client(client_id: int,

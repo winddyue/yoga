@@ -70,10 +70,15 @@ class ClientSelfOut(BaseModel):
 
 
 class ClientSelfUpdate(BaseModel):
-    """客户可自行更正的基础信息（用户权利：更正权）。"""
+    """客户可自行更正的基础信息（用户权利：更正权）。
+    刻意不开放 coach_id / notes / is_minor 等字段——那些只能由工作人员维护，
+    否则客户可自行篡改教练归属或内部备注。"""
     name: Optional[str] = None
     phone: Optional[str] = None
     height_cm: Optional[float] = None
+    gender: Optional[str] = None
+    age: Optional[int] = None
+    goal: Optional[str] = None
 
 
 # ---------- 自定义字段 ----------
@@ -202,6 +207,14 @@ class BookingOut(BaseModel):
     client_id: int
     client_name: str = ""
     status: str
+
+
+class MyBookingOut(BookingOut):
+    """客户查看自己的预约记录：附带课程信息，避免前端逐门课再查一次。"""
+    course_title: str = ""
+    start_time: str = ""
+    end_time: str = ""
+    location: str = ""
 
 
 class CheckInIn(BaseModel):

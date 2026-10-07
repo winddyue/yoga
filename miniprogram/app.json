@@ -6,7 +6,10 @@
     "pages/mine/mine",
     "pages/auth/auth",
     "pages/agreement/agreement",
-    "pages/coach/coach"
+    "pages/coach/coach",
+    "pages/profile/profile",
+    "pages/records/records",
+    "pages/about/about"
   ],
   "tabBar": {
     "color": "#8b93a7",

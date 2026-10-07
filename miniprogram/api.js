@@ -5,6 +5,19 @@ const BASE = 'http://127.0.0.1:8000';
 // 请求超时（毫秒）：超时按网络错误处理，避免"看起来成功实际没结果"
 const TIMEOUT = 15000;
 
+// 显式退出标记：用户主动点了「退出登录」后写入。
+// 没有它的话，token 一清，onLaunch 的静默续期又会拿微信绑定把人登回来，
+// 「退出登录」就形同虚设。只有用户再次主动登录才清除该标记。
+const LOGOUT_FLAG = 'EXPLICIT_LOGOUT';
+
+function markLoggedIn() {
+  try { wx.removeStorageSync(LOGOUT_FLAG); } catch (e) {}
+}
+
+function isLoggedOut() {
+  try { return String(wx.getStorageSync(LOGOUT_FLAG)) === '1'; } catch (e) { return false; }
+}
+
 function headers(json = true) {
   const h = {};
   if (json) h['content-type'] = 'application/json';
@@ -118,6 +131,7 @@ module.exports = {
             return reject(new Error((res.data && res.data.detail) || '用户名或密码错误'));
           }
           wx.setStorageSync('token', res.data.access_token);
+          markLoggedIn();
           resolve(res.data);
         },
         fail: (err) => reject(networkError(err)),
@@ -137,7 +151,7 @@ module.exports = {
       method: 'POST',
       data: { code: phoneCode, name: name || '', wx_code: wxCode },
     });
-    if (res && res.access_token) wx.setStorageSync('token', res.access_token);
+    if (res && res.access_token) { wx.setStorageSync('token', res.access_token); markLoggedIn(); }
     return res;
   },
   // 微信免密登录：wx.login 的 code 换 JWT（需后端已配置 WX_APPID/WX_SECRET）
@@ -177,14 +191,19 @@ module.exports = {
       method: 'POST',
       data: { code, name: name || '', phone: phone || '' },
     });
-    if (res && res.access_token) wx.setStorageSync('token', res.access_token);
+    if (res && res.access_token) { wx.setStorageSync('token', res.access_token); markLoggedIn(); }
     return res;
   },
-  // 退出登录：清 token 与全局用户，回到首页（首页会展示未登录态）
+  // 退出登录：清 token 与全局用户，回到首页（首页会展示未登录态）。
+  // 同时写入"显式退出"标记，阻止下次启动时被静默续期自动登回。
   logout() {
     wx.removeStorageSync('token');
+    try { wx.setStorageSync(LOGOUT_FLAG, '1'); } catch (e) {}
     const app = getApp();
     if (app) app.globalData.user = null;
     wx.switchTab({ url: '/pages/index/index' });
   },
+
+  // 供 app.js 判断：用户是否主动退出过（此时不做静默续期）
+  isLoggedOut,
 };

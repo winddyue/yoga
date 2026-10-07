@@ -1,14 +1,7 @@
 const api = require('../../api.js');
 const fb = require('../../utils/feedback.js');
-
-// 预约状态 -> 展示文案
-const STATUS_TEXT = {
-  booked: '已预约',
-  waitlist: '候补中',
-  checked_in: '已签到',
-  no_show: '爽约',
-  cancelled: '已取消',
-};
+// 与「我的预约/签到记录」共用同一份状态文案，避免两处改漏
+const { STATUS_TEXT } = require('../../utils/status.js');
 
 Page({
   data: { courses: [], loading: true, loadErr: '', needLogin: false },

@@ -79,4 +79,42 @@ page {
 .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 30rpx 28rpx; font-size: 29rpx; color: #173a38; border-bottom: 2rpx solid #f2f5f4; }
 .menu-item:last-child { border-bottom: none; }
 .menu-item .arrow { color: #c0cac7; font-size: 34rpx; }
+.menu-item.danger { color: #c44f4f; }
 .logout { margin-top: 40rpx; background: #fff; color: #c44f4f; border-radius: 16rpx; font-size: 30rpx; height: 90rpx; line-height: 90rpx; }
+
+/* 通用主按钮 */
+.primary { background: #147d73; color: #fff; border-radius: 16rpx; font-size: 30rpx; height: 88rpx; line-height: 88rpx; margin-top: 28rpx; }
+.primary[disabled] { background: #b6ccc8; color: #fff; }
+
+/* 表单行（个人信息编辑） */
+.field { display: flex; align-items: center; padding: 22rpx 0; border-bottom: 2rpx solid #f2f5f4; }
+.field .label { width: 170rpx; font-size: 28rpx; color: #8a9694; }
+.field .value { flex: 1; font-size: 29rpx; color: #173a38; }
+.field .picker-value { display: flex; align-items: center; justify-content: space-between; }
+.readonly { display: flex; align-items: center; padding: 22rpx 0; }
+.readonly .label { width: 170rpx; font-size: 28rpx; color: #8a9694; }
+.readonly .value { flex: 1; font-size: 29rpx; color: #8a9694; }
+.arrow { color: #c0cac7; font-size: 34rpx; }
+
+/* 页脚说明 */
+.foot-note { color: #a9b4b1; font-size: 23rpx; text-align: center; padding: 32rpx 20rpx 0; line-height: 1.6; }
+.tip-sub { color: #a9b4b1; font-size: 24rpx; margin-top: 12rpx; }
+
+/* 记录页 tab */
+.tabs { display: flex; background: #fff; border-radius: 20rpx; padding: 8rpx; margin-bottom: 20rpx; box-shadow: 0 8rpx 26rpx rgba(32,72,68,.06); }
+.tab { flex: 1; text-align: center; padding: 20rpx 0; font-size: 28rpx; color: #8a9694; border-radius: 16rpx; }
+.tab.on { background: #147d73; color: #fff; font-weight: 600; }
+
+/* 关于我们 */
+.about-hero { text-align: center; padding: 48rpx 28rpx; }
+.brand-mark {
+  width: 120rpx; height: 120rpx; line-height: 120rpx; margin: 0 auto 24rpx;
+  border-radius: 36rpx; background: #147d73; color: #fff; font-size: 52rpx; font-weight: 700;
+}
+.gym-name { display: block; font-size: 36rpx; font-weight: 700; color: #173a38; }
+.gym-desc { display: block; font-size: 26rpx; color: #8a9694; margin-top: 18rpx; line-height: 1.7; text-align: left; }
+.info-row { display: flex; padding: 22rpx 0; border-bottom: 2rpx solid #f2f5f4; font-size: 28rpx; }
+.info-row:last-child { border-bottom: none; }
+.info-row .label { width: 170rpx; color: #8a9694; }
+.info-row .value { flex: 1; color: #173a38; }
+.info-row .value.link { color: #147d73; }

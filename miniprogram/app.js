@@ -48,6 +48,8 @@ App({
       }
     }
     // 2. 无 token 或已失效：用 wx.login 静默换 token（用户无感知）
+    //    例外：用户主动点过「退出登录」就不再自动登回，否则退出按钮毫无意义
+    if (api.isLoggedOut && api.isLoggedOut()) return null;
     try {
       const renewed = await api.silentRenew();
       if (renewed) {
