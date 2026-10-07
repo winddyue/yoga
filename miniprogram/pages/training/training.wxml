@@ -1,5 +1,12 @@
 <view class="container">
   <view class="title">我的训练与饮食</view>
+
+  <!-- 未登录：引导登录 -->
+  <view wx:if="{{needLogin}}" class="login-bar" bindtap="goLogin">
+    <text>登录后查看你的训练计划与饮食方案</text>
+    <text class="go">去登录 ›</text>
+  </view>
+
   <view wx:if="{{loading}}" class="tip">加载中…</view>
   <view wx:elif="{{loadErr}}" class="tip err">
     <view>{{loadErr}}</view>

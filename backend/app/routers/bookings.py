@@ -47,11 +47,11 @@ def _booked_count(db: Session, course_id: int) -> int:
 
 
 def _course_out(db: Session, course: models.Course,
-                user: models.User) -> dict:
-    """课程输出：签到码只给工作人员（馆主/教练），客户不可见。"""
+                user: models.User | None) -> dict:
+    """课程输出：签到码只给工作人员（馆主/教练），客户与游客不可见。"""
     out = {c.name: getattr(course, c.name)
            for c in course.__table__.columns if c.name != "checkin_code"}
-    if user.role in ("owner", "coach"):
+    if user is not None and user.role in ("owner", "coach"):
         out["checkin_code"] = course.checkin_code
     out["booked_count"] = _booked_count(db, course.id)
     return out
@@ -95,8 +95,8 @@ def create_course(data: schemas.CourseIn,
 @router.get("/courses", response_model=list[schemas.CourseOut],
             response_model_exclude_unset=True)
 def list_courses(db: Session = Depends(get_db),
-                 user: models.User = Depends(auth_lib.get_current_user)):
-    """课程列表（按开始时间倒序）。"""
+                 user: models.User | None = Depends(auth_lib.get_optional_user)):
+    """课程列表（按开始时间倒序）。游客可浏览，签到码不下发。"""
     courses = db.query(models.Course).order_by(models.Course.start_time.desc()).all()
     return [_course_out(db, c, user) for c in courses]
 
@@ -105,8 +105,8 @@ def list_courses(db: Session = Depends(get_db),
             response_model_exclude_unset=True)
 def get_course(course_id: int,
                db: Session = Depends(get_db),
-               user: models.User = Depends(auth_lib.get_current_user)):
-    """课程详情。"""
+               user: models.User | None = Depends(auth_lib.get_optional_user)):
+    """课程详情。游客可浏览，签到码不下发。"""
     course = db.query(models.Course).filter(models.Course.id == course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="课程不存在")

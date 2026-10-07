@@ -36,9 +36,13 @@ function req(path, { method = 'GET', data = null } = {}) {
       header: headers(!isFormData(data)),
       success(res) {
         if (res.statusCode === 401) {
+          // 未登录/登录过期：只清 token，不再强制跳登录页。
+          // 小程序允许未登录浏览（主流做法：首页可直接看，需要个人信息时才引导登录），
+          // 由各页面自行展示"未登录"引导态并跳转登录页。
           wx.removeStorageSync('token');
-          wx.redirectTo({ url: '/pages/login/login' });
-          return reject(new Error('登录已过期'));
+          const app = getApp();
+          if (app) app.globalData.user = null;
+          return reject(new Error('未登录'));
         }
         if (res.statusCode >= 400) {
           return reject(new Error((res.data && res.data.detail) || `请求失败(${res.statusCode})`));
@@ -123,6 +127,19 @@ module.exports = {
   register(name, username, password) {
     return req('/api/auth/register', { method: 'POST', data: { name, username, password } });
   },
+  // 手机号授权注册/登录：getPhoneNumber 的 code 换手机号，已注册即登录。
+  // name 可选（首次注册时作为姓名）；顺带带 wx.login 的 code 绑定微信实现免密登录。
+  // 后端直接签发 token，拿到即视为已登录。
+  async phoneRegister(phoneCode, name) {
+    let wxCode = '';
+    try { wxCode = await getWxCode(); } catch (e) { /* 绑定失败不影响注册 */ }
+    const res = await req('/api/auth/phone-register', {
+      method: 'POST',
+      data: { code: phoneCode, name: name || '', wx_code: wxCode },
+    });
+    if (res && res.access_token) wx.setStorageSync('token', res.access_token);
+    return res;
+  },
   // 微信免密登录：wx.login 的 code 换 JWT（需后端已配置 WX_APPID/WX_SECRET）
   async wxLogin() {
     const code = await getWxCode();
@@ -135,8 +152,11 @@ module.exports = {
     const code = await getWxCode();
     return req('/api/auth/wx-bind', { method: 'POST', data: { code } });
   },
+  // 退出登录：清 token 与全局用户，回到首页（首页会展示未登录态）
   logout() {
     wx.removeStorageSync('token');
-    wx.redirectTo({ url: '/pages/login/login' });
+    const app = getApp();
+    if (app) app.globalData.user = null;
+    wx.switchTab({ url: '/pages/index/index' });
   },
 };

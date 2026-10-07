@@ -1,5 +1,49 @@
-<view class="container">
-  <view class="title">我的</view>
-  <view wx:if="{{user}}">{{user.name || user.username}}</view>
-  <button bindtap="logout">退出登录</button>
+<view class="mine-page">
+  <!-- 头部：未登录显示登录引导，已登录显示头像与姓名 -->
+  <view class="header" bindtap="onHeaderTap">
+    <view class="avatar">{{user ? (user.name ? user.name[0] : '瑜') : '瑜'}}</view>
+    <view class="who">
+      <block wx:if="{{user}}">
+        <text class="name">{{user.name || user.username}}</text>
+        <text class="role">{{roleText}}</text>
+      </block>
+      <block wx:else>
+        <text class="name">您好，请登录</text>
+        <text class="role">登录后可预约课程、查看训练记录</text>
+      </block>
+    </view>
+    <text wx:if="{{!user}}" class="go">登录 ›</text>
+  </view>
+
+  <!-- 未登录：直接给登录/注册入口 -->
+  <view wx:if="{{!user && !loading}}" class="login-box">
+    <button class="primary" bindtap="goLogin">登录 / 注册</button>
+    <text class="tip-text">首次使用将自动创建账号</text>
+  </view>
+
+  <!-- 已登录：功能列表 -->
+  <view wx:if="{{user}}" class="menu">
+    <view class="menu-item">
+      <text>个人信息</text>
+      <text class="arrow">›</text>
+    </view>
+    <view wx:if="{{user.role !== 'client'}}" class="menu-item" bindtap="goCoach">
+      <text>教练工作台</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="menu-item">
+      <text>我的预约</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="menu-item">
+      <text>签到记录</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="menu-item">
+      <text>关于我们</text>
+      <text class="arrow">›</text>
+    </view>
+  </view>
+
+  <button wx:if="{{user}}" class="logout" bindtap="logout">退出登录</button>
 </view>

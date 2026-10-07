@@ -11,16 +11,20 @@ const STATUS_TEXT = {
 };
 
 Page({
-  data: { courses: [], loading: true, loadErr: '' },
+  data: { courses: [], loading: true, loadErr: '', needLogin: false },
 
   onShow() { this.load(); },
 
   async load() {
-    this.setData({ loading: true, loadErr: '' });
+    this.setData({ loading: true, loadErr: '', needLogin: false });
     try {
       const [courses, mine] = await Promise.all([
         api.get('/api/courses'),
-        api.get('/api/bookings/mine').catch(() => []),
+        api.get('/api/bookings/mine').catch((e) => {
+          // 未登录时"我的预约"取不到是正常的，不当作错误
+          if (e.message === '未登录') return null;
+          throw e;
+        }),
       ]);
       // 我的预约按课程建索引：course_id -> {status, text}
       const mineMap = {};
@@ -34,14 +38,21 @@ Page({
           full: c.booked_count >= c.capacity,
         };
       });
-      this.setData({ courses: list, loading: false });
+      this.setData({ courses: list, loading: false, needLogin: mine === null });
     } catch (e) {
+      if (e.message === '未登录') {
+        this.setData({ loading: false, needLogin: true });
+        return;
+      }
       this.setData({ loading: false, loadErr: e.message });
     }
   },
 
+  goLogin() { wx.navigateTo({ url: '/pages/auth/auth' }); },
+
   // 预约：满员自动候补，后端重复预约会 400
   async book(e) {
+    if (this.data.needLogin) return this.goLogin();
     const id = e.currentTarget.dataset.id;
     try {
       const r = await fb.withFeedback(
@@ -54,6 +65,7 @@ Page({
   },
 
   async cancel(e) {
+    if (this.data.needLogin) return this.goLogin();
     const id = e.currentTarget.dataset.id;
     if (!await fb.confirm('确定取消该预约吗？候补将自动递补。', '取消预约')) return;
     try {
@@ -65,6 +77,7 @@ Page({
   // 扫码签到：扫教练出示的签到二维码（内容为签到码）。
   // 后端校验码值 + 签到时间窗（开课前30分钟~开课后60分钟），失败原因直接提示
   async scanCheckin() {
+    if (this.data.needLogin) return this.goLogin();
     let scan;
     try {
       scan = await new Promise((resolve, reject) => {

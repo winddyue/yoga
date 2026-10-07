@@ -2,7 +2,7 @@
 """认证：密码哈希、JWT 签发与校验、角色守卫。"""
 import datetime
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -52,6 +52,30 @@ def get_current_user(
     if not user.is_active:
         # 已注销账号的旧 token 立即失效
         raise exc
+    return user
+
+
+def get_optional_user(
+    db: Session = Depends(get_db),
+    authorization: str | None = Header(default=None),
+) -> models.User | None:
+    """可选登录：带了有效 token 就返回用户，否则返回 None（不报 401）。
+
+    用于"游客也能看、登录后看到更多"的接口，例如课程列表。
+    """
+    if not authorization or not authorization.lower().startswith("bearer "):
+        return None
+    token = authorization[7:].strip()
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        username = payload.get("sub")
+    except JWTError:
+        return None
+    if not username:
+        return None
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if not user or not user.is_active:
+        return None
     return user
 
 

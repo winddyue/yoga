@@ -4,6 +4,12 @@
     <button size="mini" type="primary" bindtap="scanCheckin">扫码签到</button>
   </view>
 
+  <!-- 未登录：可浏览课程，操作时引导登录 -->
+  <view wx:if="{{needLogin}}" class="login-bar" bindtap="goLogin">
+    <text>登录后可预约课程、扫码签到</text>
+    <text class="go">去登录 ›</text>
+  </view>
+
   <!-- 加载中 -->
   <view wx:if="{{loading}}" class="tip">加载中…</view>
 

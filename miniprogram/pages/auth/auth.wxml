@@ -1,0 +1,59 @@
+<view class="auth-page">
+  <view class="hero">
+    <view class="brand-mark">瑜</view>
+    <text class="brand">瑜伽馆客户管理</text>
+    <text class="slogan">记录每一次进步，陪伴每一次坚持</text>
+  </view>
+
+  <view class="card">
+    <!-- 顶部切换 -->
+    <view class="tabs">
+      <text class="tab {{mode === 'quick' ? 'on' : ''}}" data-m="quick" bindtap="switchMode">手机号快捷登录</text>
+      <text class="tab {{mode === 'pwd' ? 'on' : ''}}" data-m="pwd" bindtap="switchMode">账号密码</text>
+    </view>
+
+    <!-- 手机号快捷：授权即注册/登录 -->
+    <block wx:if="{{mode === 'quick'}}">
+      <text class="hint">使用微信绑定手机号一键登录，首次使用将自动创建账号</text>
+      <button class="primary" open-type="getPhoneNumber" bindgetphonenumber="onGetPhone"
+              loading="{{loading}}" disabled="{{loading}}">
+        {{loading ? '登录中…' : '微信手机号快捷登录'}}
+      </button>
+
+      <!-- 开发者工具不支持手机号授权，展开手输用于联调 -->
+      <view class="dev">
+        <text class="dev-toggle">开发者工具联调（可选填手机号）</text>
+        <input class="dev-input" type="number" maxlength="11" placeholder="如 13800000000"
+               data-k="phone" value="{{phone}}" bindinput="onInput" />
+        <text class="dev-tip">填好后点上面按钮即可模拟授权；真机请忽略此项</text>
+      </view>
+    </block>
+
+    <!-- 账号密码：教练/馆主与已有客户账号 -->
+    <block wx:else>
+      <text class="hint">教练、馆主账号由馆主在管理端创建；客户也可用注册时的账号登录</text>
+      <view class="field">
+        <text class="icon">人</text>
+        <input placeholder="请输入用户名或手机号" placeholder-class="placeholder"
+               data-k="username" value="{{username}}" bindinput="onInput" />
+      </view>
+      <view class="field">
+        <text class="icon">锁</text>
+        <input placeholder="请输入密码" placeholder-class="placeholder" password
+               data-k="password" value="{{password}}" bindinput="onInput" />
+      </view>
+      <button class="primary" loading="{{loading}}" disabled="{{loading}}" bindtap="doPwdLogin">
+        {{loading ? '登录中…' : '登录'}}
+      </button>
+    </block>
+
+    <view wx:if="{{err}}" class="error">{{err}}</view>
+
+    <view class="agree" bindtap="toggleAgree">
+      <view class="check {{agreed ? 'on' : ''}}">{{agreed ? '✓' : ''}}</view>
+      <text>已阅读并同意《用户协议》和《隐私政策》</text>
+    </view>
+  </view>
+
+  <text class="back" bindtap="back">暂不登录，先逛逛</text>
+</view>

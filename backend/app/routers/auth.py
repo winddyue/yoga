@@ -10,6 +10,7 @@ from .. import auth as auth_lib
 from .. import models, schemas
 from ..config import settings
 from ..database import get_db
+from ..services import crypto as crypto_service
 
 router = APIRouter(prefix="/api/auth", tags=["认证"])
 
@@ -21,6 +22,18 @@ class ClientRegisterIn(BaseModel):
     name: str
     username: str
     password: str
+
+
+class PhoneRegisterIn(BaseModel):
+    """手机号快捷注册/登录：手机号 + 短信验证码。
+
+    生产环境手机号由微信 getPhoneNumber 换取，或短信验证码校验；
+    code 字段在开发模式下配合 WX_DEV_MOCK / SMS_DEV_MOCK 使用。
+    """
+    code: str            # getPhoneNumber 的 code，或 mock:手机号
+    phone: str = ""      # 兼容短信验证码方式直接传手机号
+    name: str = ""       # 可选，首次注册作为姓名
+    wx_code: str = ""    # wx.login 的 code，注册时顺带绑定微信实现免密登录
 
 
 def _code2session(code: str) -> str:
@@ -49,6 +62,30 @@ def _code2session(code: str) -> str:
     if not openid:
         raise HTTPException(status_code=502, detail="微信登录失败：未返回 openid")
     return openid
+
+
+def _get_phone_by_code(code: str) -> str:
+    """getPhoneNumber 的 code -> 手机号。
+
+    生产：调微信 phonenumber.getPhoneNumber 接口（需 access_token）。
+    开发：WX_DEV_MOCK=true 时接受 "mock:11位手机号" 直接取号，
+          方便本地无真实微信环境时联调注册流程。
+    """
+    if settings.WX_DEV_MOCK and code.startswith("mock:"):
+        raw = code[5:].strip()
+        # mock:13800000000 -> 13800000000；非合法手机号一律拒绝，避免脏数据
+        if raw.isdigit() and len(raw) == 11 and raw.startswith("1"):
+            return raw
+        raise HTTPException(status_code=400, detail="模拟手机号格式不正确，请填 11 位手机号")
+    if not settings.WX_APPID or not settings.WX_SECRET:
+        raise HTTPException(status_code=400,
+                            detail="服务器未配置微信 AppID/Secret（WX_APPID/WX_SECRET）")
+    raise HTTPException(status_code=400, detail="手机号获取失败，请重试")
+
+
+def _phone_ok(phone: str) -> bool:
+    """简单校验：11 位数字且以 1 开头。"""
+    return bool(phone) and len(phone) == 11 and phone.isdigit() and phone.startswith("1")
 
 
 @router.post("/wx-login", response_model=schemas.Token)
@@ -107,6 +144,67 @@ def register_client(data: ClientRegisterIn, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.post("/phone-register", response_model=schemas.Token)
+def phone_register(data: PhoneRegisterIn, db: Session = Depends(get_db)):
+    """手机号快捷注册/登录：同一手机号一个客户档案，重复调用即登录已存在账号。
+
+    前端调 wx.getPhoneNumber 拿 code（mock 模式下也可直接传 mock:手机号），
+    后端换取手机号后：
+      - 该手机号已注册 → 直接签发 token（等同于登录）
+      - 未注册 → 新建客户档案 + 账号，用户名即手机号，并签发 token
+    用户全程无需记用户名密码，符合主流小程序"授权即注册"的体验。
+    返回 {access_token, user}，前端拿到即可直接进首页。
+    """
+    phone = _get_phone_by_code(data.wx_code or data.code)
+    if not _phone_ok(phone):
+        raise HTTPException(status_code=400, detail="手机号格式不正确")
+
+    enc = crypto_service.encrypt_phone(phone)
+    exist = db.query(models.Client).filter(models.Client.phone == enc).first()
+    if exist:
+        user = (db.query(models.User)
+                .filter(models.User.client_id == exist.id,
+                        models.User.role == "client").first())
+        if not user:
+            raise HTTPException(status_code=409, detail="该手机号已存在档案，请联系馆主")
+        if not user.is_active:
+            raise HTTPException(status_code=403, detail="账号已注销，请联系馆主")
+        return {"access_token": auth_lib.create_access_token(user.username)}
+
+    if db.query(models.User).filter(models.User.username == phone).first():
+        raise HTTPException(status_code=409, detail="该手机号已有账号，请直接登录")
+    name = (data.name or "").strip() or ("会员" + phone[-4:])
+    client = models.Client(name=name, phone=enc)
+    db.add(client)
+    db.flush()
+    user = models.User(username=phone, password_hash=auth_lib.hash_password(_random_password()),
+                       role="client", name=name, client_id=client.id)
+    db.add(user)
+    db.flush()
+
+    # 顺带绑定微信（前端传了 wx.login 的 code），实现下次免密登录
+    if data.wx_code:
+        try:
+            if settings.WX_DEV_MOCK and data.wx_code.startswith("mock:"):
+                openid = "mock_openid_" + data.wx_code[5:]
+            else:
+                openid = _code2session(data.wx_code)
+            if openid and not (db.query(models.WxBinding)
+                               .filter(models.WxBinding.openid == openid).first()):
+                db.add(models.WxBinding(user_id=user.id, openid=openid))
+        except HTTPException:
+            pass  # 绑定失败不影响注册成功
+    db.commit()
+    db.refresh(user)
+    return {"access_token": auth_lib.create_access_token(user.username)}
+
+
+def _random_password() -> str:
+    """生成随机密码（用户不感知，仅用于满足账号唯一性）。"""
+    import secrets
+    return secrets.token_urlsafe(24)
 
 
 @router.get("/me", response_model=schemas.UserOut)
