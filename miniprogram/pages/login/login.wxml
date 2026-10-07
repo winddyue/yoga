@@ -1,8 +1,15 @@
-<view class="container">
-  <view class="title">瑜伽馆客户管理</view>
-  <input placeholder="用户名" data-k="username" bindinput="onInput" />
-  <input placeholder="密码" password data-k="password" bindinput="onInput" />
-  <button type="primary" bindtap="doLogin">登录</button>
-  <button class="wx-btn" open-type="none" loading="{{wxLogging}}" bindtap="doWxLogin">微信一键登录</button>
-  <view class="err">{{err}}</view>
+<view class="login-page">
+  <view class="hero"><view class="brand-mark">瑜</view><text class="brand">瑜伽馆客户管理</text><text class="slogan">记录每一次进步，陪伴每一次坚持</text></view>
+  <view class="card">
+    <text class="welcome">欢迎回来</text><text class="hint">登录后查看训练计划、预约课程和签到记录</text>
+    <view class="field"><text class="icon">人</text><input placeholder="请输入用户名" placeholder-class="placeholder" data-k="username" value="{{username}}" bindinput="onInput" /></view>
+    <view class="field"><text class="icon">锁</text><input placeholder="请输入密码" placeholder-class="placeholder" password data-k="password" value="{{password}}" bindinput="onInput" /></view>
+    <button class="primary" loading="{{loading}}" disabled="{{loading}}" bindtap="doLogin">{{loading ? '登录中…' : '登录'}}</button>
+    <view class="split"><view></view><text>或</text><view></view></view>
+    <button class="wechat" loading="{{wxLogging}}" disabled="{{wxLogging}}" bindtap="doWxLogin">微信快捷登录</button>
+    <view wx:if="{{err}}" class="error">{{err}}</view>
+    <view class="register-row">客户首次使用？<text bindtap="goRegister">注册客户账号</text></view>
+    <text class="account-note">教练和馆主账号由馆主在管理端创建</text>
+  </view>
+  <text class="privacy">登录即表示同意《用户协议》和《隐私政策》</text>
 </view>

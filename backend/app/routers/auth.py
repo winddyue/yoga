@@ -17,6 +17,11 @@ router = APIRouter(prefix="/api/auth", tags=["认证"])
 class WxLoginIn(BaseModel):
     code: str  # wx.login 拿到的临时凭证
 
+class ClientRegisterIn(BaseModel):
+    name: str
+    username: str
+    password: str
+
 
 def _code2session(code: str) -> str:
     """wx.login code -> openid。调用微信 code2session 接口。
@@ -86,6 +91,22 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     if not user.is_active:
         raise HTTPException(status_code=403, detail="账号已注销，请联系馆主")
     return {"access_token": auth_lib.create_access_token(user.username)}
+
+@router.post("/register", response_model=schemas.UserOut)
+def register_client(data: ClientRegisterIn, db: Session = Depends(get_db)):
+    """小程序客户自助注册；只创建 client 角色，不创建工作人员账号。"""
+    if len(data.username.strip()) < 3 or len(data.password) < 6 or not data.name.strip():
+        raise HTTPException(status_code=400, detail="请填写有效姓名、用户名（至少3位）和密码（至少6位）")
+    if db.query(models.User).filter(models.User.username == data.username.strip()).first():
+        raise HTTPException(status_code=409, detail="用户名已存在，请换一个")
+    client = models.Client(name=data.name.strip())
+    db.add(client)
+    db.flush()
+    user = models.User(username=data.username.strip(), password_hash=auth_lib.hash_password(data.password), role="client", name=data.name.strip(), client_id=client.id)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 @router.get("/me", response_model=schemas.UserOut)

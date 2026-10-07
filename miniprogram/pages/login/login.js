@@ -2,7 +2,7 @@ const api = require('../../api.js');
 const fb = require('../../utils/feedback.js');
 
 Page({
-  data: { username: '', password: '', err: '', wxLogging: false },
+  data: { username: '', password: '', err: '', wxLogging: false, loading: false },
 
   onInput(e) { this.setData({ [e.currentTarget.dataset.k]: e.detail.value }); },
 
@@ -20,6 +20,7 @@ Page({
       return;
     }
     try {
+      this.setData({ loading: true });
       await fb.withFeedback(
         api.login(this.data.username, this.data.password),
         { loading: '登录中…' },
@@ -28,8 +29,11 @@ Page({
       await this.afterLogin();
     } catch (e) {
       this.setData({ err: e.message });
+    } finally { this.setData({ loading: false });
     }
   },
+
+  goRegister() { wx.navigateTo({ url: '/pages/register/register' }); },
 
   // 微信一键登录：已绑定的微信直接换 token；未绑定则提示先密码登录
   async doWxLogin() {

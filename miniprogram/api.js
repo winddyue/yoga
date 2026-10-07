@@ -80,6 +80,9 @@ module.exports = {
       });
     });
   },
+  register(name, username, password) {
+    return req('/api/auth/register', { method: 'POST', data: { name, username, password } });
+  },
   // 微信免密登录：wx.login 的 code 换 JWT（需后端已配置 WX_APPID/WX_SECRET）
   async wxLogin() {
     const code = await getWxCode();
