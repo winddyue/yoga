@@ -40,11 +40,23 @@
     </view>
   </block>
 
-  <!-- 客户视图：全空引导 -->
+  <!-- 客户视图：全空引导 + 计划获取 -->
   <view wx:elif="{{role === 'client' && empty}}" class="empty-guide">
     <text class="empty-title">还没有数据</text>
     <text class="empty-sub">先记录一次体测吧，身体趋势曲线和训练建议就会出现</text>
     <button class="primary" bindtap="goMeasure">去记录体测</button>
+    <view class="acquire-zone">
+      <view class="sec">获取训练计划</view>
+      <view class="btn-row">
+        <button size="mini" type="primary" bindtap="aiGeneratePlan" loading="{{genPlan}}">AI 生成训练计划</button>
+        <button size="mini" bindtap="requestPlan" data-kind="training">请求教练制定</button>
+      </view>
+      <view class="sec">获取饮食方案</view>
+      <view class="btn-row">
+        <button size="mini" type="primary" bindtap="aiGenerateDiet" loading="{{genDiet}}">AI 生成饮食方案</button>
+        <button size="mini" bindtap="requestPlan" data-kind="diet">请求教练制定</button>
+      </view>
+    </view>
   </view>
 
   <block wx:elif="{{role === 'client'}}">
@@ -94,11 +106,40 @@
       <view class="more-link" bindtap="goMeasure">＋ 记录体测</view>
     </view>
 
+    <!-- 打卡区：登录客户始终显示 -->
+    <view class="sec">今日打卡</view>
+    <view class="card">
+      <view class="btn-row">
+        <button wx:if="{{!todayTraining}}" size="mini" type="primary" bindtap="checkin" data-kind="training">训练打卡</button>
+        <button wx:else size="mini" disabled>✓ 训练已打卡</button>
+        <button wx:if="{{!todayDiet}}" size="mini" type="primary" bindtap="checkin" data-kind="diet">饮食打卡</button>
+        <button wx:else size="mini" disabled>✓ 饮食已打卡</button>
+      </view>
+    </view>
+    <view class="sec">本月打卡 {{checkinDays}} 天</view>
+    <view wx:if="{{!recentCheckins.length}}" class="tip">本月还没有打卡记录</view>
+    <view wx:for="{{recentCheckins}}" wx:key="id" class="card">
+      <view class="t">{{item.date}} · {{item.kindText}} <text wx:if="{{item.photo_path}}" data-path="{{item.photo_path}}" bindtap="previewPhoto">📷</text></view>
+      <view wx:if="{{item.note}}" class="sub">{{item.note}}</view>
+    </view>
+
     <view class="sec">训练计划（{{plans.length}}）</view>
-    <view wx:if="{{!plans.length}}" class="tip">暂无训练计划</view>
+    <view wx:if="{{!plans.length}}">
+      <view class="tip">暂无训练计划</view>
+      <view class="btn-row">
+        <button size="mini" type="primary" bindtap="aiGeneratePlan" loading="{{genPlan}}">AI 生成训练计划</button>
+        <button size="mini" bindtap="requestPlan" data-kind="training">请求教练制定</button>
+      </view>
+    </view>
     <view wx:for="{{plans}}" wx:key="id" class="card"><view class="t">第 {{item.week_start}} 周计划</view></view>
     <view class="sec">饮食方案（{{diets.length}}）</view>
-    <view wx:if="{{!diets.length}}" class="tip">暂无饮食方案</view>
+    <view wx:if="{{!diets.length}}">
+      <view class="tip">暂无饮食方案</view>
+      <view class="btn-row">
+        <button size="mini" type="primary" bindtap="aiGenerateDiet" loading="{{genDiet}}">AI 生成饮食方案</button>
+        <button size="mini" bindtap="requestPlan" data-kind="diet">请求教练制定</button>
+      </view>
+    </view>
     <view wx:for="{{diets}}" wx:key="id" class="card">
       <view class="t">{{item.date}} · {{item.status === 'confirmed' ? '已确认' : (item.status === 'ai_draft' ? 'AI 生成·待教练确认' : '待确认')}}</view>
       <view wx:if="{{item.status === 'ai_draft'}}" class="disclaimer">AI 生成内容仅供参考，不构成医疗建议，请遵医嘱</view>

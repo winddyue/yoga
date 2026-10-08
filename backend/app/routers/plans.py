@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
-"""训练计划路由：自动生成、手动调整（增删改）、归档。"""
-from fastapi import APIRouter, Depends
+"""训练计划路由：自动生成、手动调整（增删改）、归档、求助。
+
+模板生成免费开放：客户可为自己一键生成模板计划（走原模板逻辑），
+工作人员不变；生成成功后通知客户。
+"""
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .. import auth as auth_lib
 from .. import models, schemas
 from ..database import get_db
+from ..services import notify as notify_service
 from ..services.training import generate_plan
 
 router = APIRouter(prefix="/api", tags=["训练计划"])
@@ -14,8 +19,11 @@ router = APIRouter(prefix="/api", tags=["训练计划"])
 @router.post("/clients/{client_id}/plans/generate", response_model=schemas.TrainingPlanOut)
 def generate(client_id: int, week_start: str = "",
              db: Session = Depends(get_db),
-             user: models.User = Depends(auth_lib.require_staff)):
-    """按客户目标自动生成一周训练计划（旧计划自动归档）。仅工作人员可写。"""
+             user: models.User = Depends(auth_lib.get_current_user)):
+    """按客户目标自动生成一周训练计划（旧计划自动归档）。
+
+    模板生成免费：客户只能给自己生成，工作人员可为名下/全馆客户生成。
+    """
     client = auth_lib.client_visible_to(db, user, client_id)
     db.query(models.TrainingPlan).filter(
         models.TrainingPlan.client_id == client.id,
@@ -25,7 +33,33 @@ def generate(client_id: int, week_start: str = "",
     db.add(plan)
     db.commit()
     db.refresh(plan)
+    notify_service.notify_client(
+        db, client.id, "plan_new",
+        "新的训练计划已生成",
+        f"{client.name}，你的新一周训练计划已生成，可以开始打卡了",
+        ref_type="plan", ref_id=plan.id)
     return plan
+
+
+@router.post("/plan-requests")
+def request_plan(data: schemas.PlanRequestIn,
+                 db: Session = Depends(get_db),
+                 user: models.User = Depends(auth_lib.get_current_user)):
+    """客户求助：请求教练制定训练/饮食计划。通知其所属教练，无教练则 400。"""
+    if data.kind not in ("training", "diet"):
+        raise HTTPException(status_code=400, detail="kind 只能是 training 或 diet")
+    client = auth_lib.get_own_client(db, user)  # 仅客户账号可求助
+    if not client.coach_id:
+        raise HTTPException(status_code=400, detail="暂未分配教练，请联系馆主")
+    kind_name = "训练计划" if data.kind == "training" else "饮食方案"
+    body = f"{client.name} 请求制定{kind_name}"
+    if data.message:
+        body += f"：{data.message}"
+    notify_service.notify_coach(
+        db, client.id, "plan_request",
+        f"{client.name}请求制定{kind_name}", body,
+        ref_type="client", ref_id=client.id)
+    return {"ok": True}
 
 
 @router.get("/clients/{client_id}/plans", response_model=list[schemas.TrainingPlanOut])

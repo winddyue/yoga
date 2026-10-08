@@ -74,5 +74,15 @@
         <view class="sub">{{item.time}} · {{item.status}}</view>
       </view>
     </block>
+
+    <!-- 打卡记录 -->
+    <block wx:if="{{checkins !== null}}">
+      <view class="sec">打卡记录</view>
+      <view wx:if="{{!checkins.length}}" class="tip">暂无打卡记录</view>
+      <view wx:for="{{checkins}}" wx:key="date" class="card">
+        <view class="t">{{item.date}} · {{item.kindText}} <text wx:if="{{item.photo}}" data-path="{{item.photo}}" bindtap="previewPhoto">📷</text></view>
+        <view wx:if="{{item.note}}" class="sub">{{item.note}}</view>
+      </view>
+    </block>
   </block>
 </view>

@@ -18,16 +18,24 @@ function pickCustoms(customValues, fieldMap) {
   return out;
 }
 
+function todayYM() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
 // 上课情况：预约/签到记录（后端并行开发中，失败则静默不显示该区）
 const BOOKING_STATUS = {
   booked: '已约', waitlist: '候补', cancelled: '已取消',
   checked_in: '已签到', no_show: '爽约',
 };
 
+// 打卡 kind 中文
+const CHECKIN_KIND = { training: '训练', diet: '饮食' };
+
 Page({
   data: {
     theme: '', id: null, client: null, history: [], trends: null,
-    metric: 'weight', latestStatus: [], bookings: null,
+    metric: 'weight', latestStatus: [], bookings: null, checkins: null,
     loading: true, loadErr: '', needLogin: false,
   },
 
@@ -70,7 +78,19 @@ Page({
           status: BOOKING_STATUS[b.status] || b.status || '',
         }));
       } catch (e) {}
-      // 自定义字段 id→name 映射（用于历史记录中显示字段名；字段被删则显示"已删除字段"）
+      // 打卡记录：失败静默，该区不显示
+      let checkins = null;
+      try {
+        const cl = await api.get(`/api/clients/${this.data.id}/checkins?ym=${todayYM()}`);
+        checkins = (cl || []).slice()
+          .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+          .map((c) => ({
+            date: c.date || '',
+            kindText: CHECKIN_KIND[c.kind] || c.kind || '',
+            note: c.note || '',
+            photo: !!c.photo_path,
+          }));
+      } catch (e) {}
       let fieldMap = {};
       try {
         const all = await api.get('/api/custom-fields');
@@ -122,7 +142,7 @@ Page({
           };
         }),
         trends, loading: false,
-        latestStatus, bookings,
+        latestStatus, bookings, checkins,
       }, () => { setTimeout(() => this.drawTrend(), 80); });
     } catch (e) {
       const expired = e.message === '未登录';
@@ -141,6 +161,22 @@ Page({
     const m = e.currentTarget.dataset.m;
     if (m === this.data.metric) return;
     this.setData({ metric: m }, () => this.drawTrend());
+  },
+
+  // 打卡照片点开放大（鉴权下载）
+  previewPhoto(e) {
+    const path = e.currentTarget.dataset.path;
+    if (!path) return;
+    const token = wx.getStorageSync('token') || '';
+    wx.downloadFile({
+      url: api.BASE + path,
+      header: token ? { Authorization: `Bearer ${token}` } : {},
+      success(res) {
+        if (res.statusCode === 200) wx.previewImage({ urls: [res.tempFilePath] });
+        else fb.toast('图片加载失败');
+      },
+      fail() { fb.toast('图片加载失败'); },
+    });
   },
 
   drawTrend() {

@@ -313,3 +313,34 @@ class NotificationOut(BaseModel):
         if hasattr(v, "isoformat"):
             return v.isoformat(sep=" ", timespec="seconds")
         return v or ""
+
+
+# ---------- 每日打卡 ----------
+class CheckinIn(BaseModel):
+    date: str = ""            # YYYY-MM-DD，空则默认今天
+    kind: str = "training"    # training / diet
+    note: str = ""
+    photo_path: str = ""
+
+
+class CheckinOut(BaseModel):
+    id: int
+    client_id: int
+    date: str
+    kind: str
+    note: str = ""
+    photo_path: str = ""
+    created_at: str = ""
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def _dt_to_str(cls, v):
+        if hasattr(v, "isoformat"):
+            return v.isoformat(sep=" ", timespec="seconds")
+        return v or ""
+
+
+# ---------- 计划求助 ----------
+class PlanRequestIn(BaseModel):
+    kind: str = "training"    # training / diet
+    message: str = ""

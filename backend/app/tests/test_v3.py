@@ -164,10 +164,12 @@ def test_v3_flow():
         origins = cors[0].kwargs.get("allow_origins", [])
         assert "*" not in origins and len(origins) > 0, origins
 
-        # ---- A6. 计划/饮食写接口：客户 403，教练可用 ----
+        # ---- A6. 计划/饮食写接口 ----
+        # v9.2 起：模板计划生成对客户开放自助（只能给自己），教练可用；
+        # 手动改计划、饮食生成仍仅工作人员
         r = client.post(f"/api/clients/{cid_c}/plans/generate",
                         json={}, headers=stu_c)
-        assert r.status_code == 403, r.text
+        assert r.status_code == 200, r.text
         r = client.post(f"/api/clients/{cid_c}/plans/generate",
                         json={}, headers=coach_h)
         assert r.status_code == 200, r.text

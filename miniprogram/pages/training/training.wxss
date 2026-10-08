@@ -45,3 +45,7 @@
 /* 工作人员视图：快捷入口按钮行 */
 .btn-row{display:flex;gap:16rpx;margin-bottom:20rpx}
 .btn-row button{flex:1}
+
+/* 计划获取区（空状态） */
+.acquire-zone{width:100%;margin-top:48rpx;text-align:left}
+.acquire-zone .sec{margin-top:24rpx}

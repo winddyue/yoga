@@ -11,7 +11,7 @@ from . import models
 from .auth import hash_password
 from .config import settings, validate_prod
 from .database import Base, SessionLocal, engine
-from .routers import assessments, auth, bookings, clients, consents, custom_fields, dashboard, diets, exercises, files, intake, notifications, plans, settings as settings_router, subscriptions
+from .routers import assessments, auth, bookings, checkins, clients, consents, custom_fields, dashboard, diets, exercises, files, intake, notifications, plans, settings as settings_router, subscriptions, uploads
 
 
 @asynccontextmanager
@@ -84,6 +84,8 @@ app.include_router(notifications.router)
 app.include_router(subscriptions.router)
 app.include_router(consents.router)
 app.include_router(files.router)
+app.include_router(checkins.router)
+app.include_router(uploads.router)
 
 
 @app.on_event("startup")

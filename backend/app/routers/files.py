@@ -39,13 +39,19 @@ def download_file(filename: str,
     full = _safe_path(filename)
     if not os.path.isfile(full):
         raise HTTPException(status_code=404, detail="文件不存在")
-    # 找到引用该文件的评估记录，归属哪个客户
+    # 找到引用该文件的记录，归属哪个客户（评估照片 / 打卡照片）
     like = f"%{os.path.basename(filename)}%"
     assessment = (db.query(models.Assessment)
                   .filter(models.Assessment.photo_path.like(like)).first())
-    if assessment:
+    owner_client_id = assessment.client_id if assessment else None
+    if owner_client_id is None:
+        checkin = (db.query(models.DailyCheckin)
+                   .filter(models.DailyCheckin.photo_path.like(like)).first())
+        if checkin:
+            owner_client_id = checkin.client_id
+    if owner_client_id is not None:
         # 按客户归属校验：馆主全看，教练看名下，客户看自己
-        auth_lib.client_visible_to(db, user, assessment.client_id)
+        auth_lib.client_visible_to(db, user, owner_client_id)
     elif user.role not in ("owner", "coach"):
         # 无归属记录的文件仅工作人员可下
         raise HTTPException(status_code=403, detail="无权下载该文件")

@@ -9,6 +9,13 @@ function todayYM() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+const CHECKIN_KIND = { training: '训练', diet: '饮食' };
+
 Page({
   data: {
     role: '', // client | staff
@@ -18,6 +25,10 @@ Page({
     attPct: 0, attRate: 0, monthCount: 0, daysSince: null,
     summary: null,
     pendingDiets: [], dueReassess: 0,
+    // 打卡
+    checkins: [], todayTraining: false, todayDiet: false,
+    checkinDays: 0, recentCheckins: [],
+    genPlan: false, genDiet: false,
     loading: true, loadErr: '', needLogin: false,
   },
   onShow() { syncTheme(this); this.load(); },
@@ -92,6 +103,7 @@ Page({
         loading: false,
       }, () => {
         this.computeDelta();
+        this.loadCheckins();
         setTimeout(() => { this.drawTrend(); this.drawDash(); }, 80);
       });
     } catch (e) {
@@ -105,6 +117,141 @@ Page({
   goLogin() { wx.navigateTo({ url: '/pages/auth/auth' }); },
   goMeasure() { wx.navigateTo({ url: '/pages/measure/measure' }); },
   goClients() { wx.navigateTo({ url: '/pages/clients/clients' }); },
+
+  // 计划获取：AI 生成训练计划（客户可给自己调用）
+  async aiGeneratePlan() {
+    if (this.data.genPlan || !this.data.clientId) return;
+    this.setData({ genPlan: true });
+    try {
+      await fb.withFeedback(
+        api.post(`/api/clients/${this.data.clientId}/plans/generate`, {}),
+        { loading: 'AI 生成中…' },
+      );
+      fb.showSuccess('训练计划已生成');
+      this.loadClient();
+    } catch (e) { /* 已提示 */ }
+    this.setData({ genPlan: false });
+  },
+
+  // 计划获取：AI 生成饮食方案（客户可给自己调用）
+  async aiGenerateDiet() {
+    if (this.data.genDiet || !this.data.clientId) return;
+    this.setData({ genDiet: true });
+    try {
+      await fb.withFeedback(
+        api.post(`/api/clients/${this.data.clientId}/diets/ai-generate`, {}),
+        { loading: 'AI 生成中…' },
+      );
+      fb.showSuccess('饮食方案已生成');
+      this.loadClient();
+    } catch (e) {
+      if (/503|未配置/.test(e.message || '')) fb.showError(new Error('馆主尚未配置 AI 服务，请联系馆主'));
+    }
+    this.setData({ genDiet: false });
+  },
+
+  // 计划获取：请求教练制定
+  async requestPlan(e) {
+    const kind = e.currentTarget.dataset.kind; // training | diet
+    try {
+      await fb.withFeedback(
+        api.post('/api/plan-requests', { kind }),
+        { loading: '发送中…' },
+      );
+      fb.showSuccess('已通知教练');
+    } catch (e) { /* 400 无教练时后端返回友好提示，已显示 */ }
+  },
+
+  // 打卡：本月记录（失败静默）
+  async loadCheckins() {
+    try {
+      const list = await api.get(`/api/checkins/mine?ym=${todayYM()}`);
+      const arr = list || [];
+      const today = todayStr();
+      const recent = arr.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 5)
+        .map((c) => ({ ...c, kindText: CHECKIN_KIND[c.kind] || c.kind }));
+      this.setData({
+        checkins: arr,
+        todayTraining: arr.some((c) => c.date === today && c.kind === 'training'),
+        todayDiet: arr.some((c) => c.date === today && c.kind === 'diet'),
+        checkinDays: new Set(arr.map((c) => c.date)).size,
+        recentCheckins: recent,
+      });
+    } catch (e) { /* 后端未就绪时静默 */ }
+  },
+
+  // 打卡：选直接打卡 / 拍照打卡
+  async checkin(e) {
+    const kind = e.currentTarget.dataset.kind;
+    let r;
+    try {
+      r = await wx.showActionSheet({ itemList: ['直接打卡', '拍照打卡'] });
+    } catch (err) { return; } // 用户取消
+    if (r.tapIndex === 1) {
+      this.photoCheckin(kind);
+    } else {
+      this.doCheckin(kind, '');
+    }
+  },
+
+  // 打卡：拍照上传后再打卡（写法参考 intake 页）
+  photoCheckin(kind) {
+    wx.chooseMedia({ count: 1, mediaType: ['image'], sourceType: ['album', 'camera'] })
+      .then((res) => {
+        if (!res || !res.tempFiles || !res.tempFiles.length) return;
+        const filePath = res.tempFiles[0].tempFilePath;
+        const token = wx.getStorageSync('token') || '';
+        fb.showLoading('上传中…');
+        wx.uploadFile({
+          url: api.BASE + '/api/uploads',
+          filePath,
+          name: 'file',
+          header: { Authorization: token ? `Bearer ${token}` : '' },
+          success: (up) => {
+            let data = null;
+            try { data = JSON.parse(up.data); } catch (err) {}
+            if (up.statusCode >= 400 || !data || !data.path) {
+              fb.showError(new Error((data && data.detail) || '上传失败，请重试'));
+              return;
+            }
+            this.doCheckin(kind, data.path);
+          },
+          fail: () => fb.showError(new Error('网络连接失败，请检查网络')),
+          complete: () => fb.hideLoading(),
+        });
+      })
+      .catch(() => { /* 用户取消 */ });
+  },
+
+  // 打卡提交
+  async doCheckin(kind, photoPath) {
+    try {
+      const body = { kind };
+      if (photoPath) body.photo_path = photoPath;
+      await fb.withFeedback(api.post('/api/checkins', body), { loading: '打卡中…' });
+      fb.showSuccess('打卡成功');
+      this.loadCheckins();
+    } catch (e) {
+      // 重复打卡 400 等，后端返回友好提示，已显示
+      this.loadCheckins(); // 刷新已打卡态
+    }
+  },
+
+  // 打卡照片点开放大（鉴权下载：header 带 token，拿到临时文件再预览）
+  previewPhoto(e) {
+    const path = e.currentTarget.dataset.path;
+    if (!path) return;
+    const token = wx.getStorageSync('token') || '';
+    wx.downloadFile({
+      url: api.BASE + path,
+      header: token ? { Authorization: `Bearer ${token}` } : {},
+      success(res) {
+        if (res.statusCode === 200) wx.previewImage({ urls: [res.tempFilePath] });
+        else fb.toast('图片加载失败');
+      },
+      fail() { fb.toast('图片加载失败'); },
+    });
+  },
 
   // 工作人员：一键确认饮食（逻辑同教练工作台）
   async confirmDiet(e) {

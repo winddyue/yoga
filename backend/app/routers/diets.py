@@ -49,6 +49,11 @@ def generate(client_id: int, data: schemas.DietGenerateIn,
     db.add(diet)
     db.commit()
     db.refresh(diet)
+    notify_service.notify_client(
+        db, client.id, "diet_new",
+        "教练为你制定了饮食方案",
+        f"{client.name}，教练为你制定了新的饮食方案，可以查看了",
+        ref_type="diet", ref_id=diet.id)
     return diet
 
 

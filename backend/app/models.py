@@ -2,7 +2,7 @@
 """数据模型：用户、客户、自定义字段、评估记录、训练计划、饮食方案、系统设置。"""
 import datetime
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, text
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -298,3 +298,20 @@ class Notification(Base):
     ref_id: Mapped[int] = mapped_column(Integer, default=0)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class DailyCheckin(Base):
+    """每日打卡：训练/饮食二选一，每天每种一次。照片打卡走上传接口。"""
+    __tablename__ = "daily_checkins"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), index=True)
+    date: Mapped[str] = mapped_column(String(16), default="")          # YYYY-MM-DD
+    kind: Mapped[str] = mapped_column(String(16), default="training")  # training / diet
+    note: Mapped[str] = mapped_column(Text, default="")
+    photo_path: Mapped[str] = mapped_column(String(256), default="")
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint("client_id", "date", "kind", name="uq_checkin_client_date_kind"),
+    )
