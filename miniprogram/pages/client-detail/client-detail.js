@@ -46,9 +46,24 @@ Page({
           goal: client.goal || '', phone: client.phone || '',
           att: Math.round((client.attendance_rate || 0) * 100),
         },
-        history: rows.map((r) => ({
-          date: r.date, weight: r.weight_kg || '-', bodyFat: r.body_fat_pct || '-',
-        })),
+        history: rows.map((r, i) => {
+          // 较上条（体重维度）：rows 按日期倒序，最旧的一条不显示
+          let d = null;
+          if (i < rows.length - 1) {
+            const cur = r.weight_kg, prev = rows[i + 1].weight_kg;
+            if (typeof cur === 'number' && cur > 0 && typeof prev === 'number' && prev > 0) {
+              const diff = +(cur - prev).toFixed(1);
+              d = {
+                text: `${diff > 0 ? '+' : ''}${diff.toFixed(1)}kg`,
+                cls: diff < 0 ? 'good' : (diff > 0 ? 'bad' : 'flat'),
+              };
+            }
+          }
+          return {
+            date: r.date, weight: r.weight_kg || '-', bodyFat: r.body_fat_pct || '-',
+            delta: d,
+          };
+        }),
         trends, loading: false,
       }, () => { setTimeout(() => this.drawTrend(), 80); });
     } catch (e) {

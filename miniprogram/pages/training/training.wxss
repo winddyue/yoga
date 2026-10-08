@@ -6,6 +6,25 @@
 .tab-active{color:#fff;background:#357771}
 .more-link{font-size:26rpx;color:#357771;text-align:center;padding:18rpx 0 6rpx}
 
+/* 健康仪表盘 */
+.dash{display:flex;align-items:center;background:#fff;border-radius:28rpx;padding:26rpx;margin-bottom:10rpx;box-shadow:0 8rpx 24rpx rgba(122,100,84,.05)}
+.dash .ring-wrap{position:relative;width:120px;height:120px;flex-shrink:0}
+.dash .ring-canvas{width:120px;height:120px}
+.dash .ring-text{position:absolute;left:0;top:0;width:120px;height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dash .ring-pct{font-size:36rpx;font-weight:700;color:#2F3F3C}
+.dash .ring-label{font-size:20rpx;color:#85948F;margin-top:4rpx}
+.stats{flex:1;display:flex;flex-direction:column;gap:16rpx;margin-left:28rpx}
+.stat{display:flex;justify-content:space-between;align-items:center}
+.stat-k{font-size:24rpx;color:#85948F}
+.stat-v{font-size:30rpx;font-weight:700;color:#2F3F3C}
+
+/* 较上次对比 chip */
+.delta-row{margin:4rpx 0 8rpx}
+.delta-chip{display:inline-block;font-size:24rpx;padding:8rpx 22rpx;border-radius:999rpx}
+.delta-good{background:#E3EFE3;color:#4C7A4C}
+.delta-bad{background:#F8E4E0;color:#B4655F}
+.delta-flat{background:#EDEFF0;color:#85948F}
+
 /* 全空引导 */
 .empty-guide{display:flex;flex-direction:column;align-items:center;padding:90rpx 40rpx;text-align:center}
 .empty-title{font-size:34rpx;font-weight:700;color:#2F3F3C;margin-bottom:16rpx}

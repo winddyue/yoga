@@ -12,6 +12,24 @@
     <button size="mini" bindtap="init">重试</button>
   </view>
 
+  <block wx:elif="{{done}}">
+    <view class="card done-card">
+      <view class="t done-title">记录成功</view>
+      <view wx:if="{{firstTime}}" class="tip">这是你的第一次体测，继续加油</view>
+      <block wx:else>
+        <view wx:for="{{doneRows}}" wx:key="label" class="done-row">
+          <text class="t">{{item.label}}</text>
+          <text class="sub">{{item.cur}}</text>
+          <text wx:if="{{item.d}}" class="delta-chip delta-{{item.cls}}">较上次 {{item.d.text}}</text>
+        </view>
+      </block>
+      <view class="btns">
+        <button class="primary" bindtap="goTraining">查看趋势</button>
+        <button bindtap="resetForm">再记一条</button>
+      </view>
+    </view>
+  </block>
+
   <block wx:elif="{{!needLogin}}">
     <!-- 敏感信息单独授权条 -->
     <view wx:if="{{needConsent}}" class="consent-bar">

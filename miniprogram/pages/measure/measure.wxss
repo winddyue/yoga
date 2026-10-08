@@ -8,3 +8,15 @@
 .consent-bar { background: #FFF9EC; border: 2rpx solid #EBD9A8; border-radius: 20rpx; padding: 26rpx; margin-bottom: 24rpx; }
 .consent-text { font-size: 26rpx; color: #8A6D2B; line-height: 1.7; display: block; margin-bottom: 18rpx; }
 .consent-btn { margin-top: 0; height: 78rpx; line-height: 78rpx; font-size: 28rpx; }
+
+/* 提交成功对比卡 */
+.done-card{padding:30rpx}
+.done-title{margin-bottom:16rpx}
+.done-row{display:flex;align-items:center;gap:16rpx;padding:18rpx 0;border-bottom:2rpx solid #F0F0EC}
+.done-row:last-of-type{border-bottom:none}
+.done-card .btns{display:flex;gap:16rpx;margin-top:28rpx}
+.done-card .btns button{flex:1}
+.delta-chip{display:inline-block;font-size:24rpx;padding:8rpx 22rpx;border-radius:999rpx}
+.delta-good{background:#E3EFE3;color:#4C7A4C}
+.delta-bad{background:#F8E4E0;color:#B4655F}
+.delta-flat{background:#EDEFF0;color:#85948F}

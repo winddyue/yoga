@@ -21,12 +21,28 @@
   </view>
 
   <block wx:else>
+    <!-- 健康仪表盘 -->
+    <view class="dash">
+      <view class="ring-wrap">
+        <canvas canvas-id="trainRing" id="trainRing" class="ring-canvas" />
+        <view class="ring-text"><text class="ring-pct">{{attPct}}%</text><text class="ring-label">出勤率</text></view>
+      </view>
+      <view class="stats">
+        <view class="stat"><text class="stat-k">本月体测</text><text class="stat-v">{{monthCount}} 次</text></view>
+        <view class="stat"><text class="stat-k">距上次评估</text><text class="stat-v">{{daysSince === null ? '—' : daysSince + ' 天'}}</text></view>
+        <view class="stat"><text class="stat-k">进行中计划</text><text class="stat-v">{{plans.length}} 个</text></view>
+      </view>
+    </view>
+
     <view class="sec">身体趋势</view>
     <view class="chart-card" wx:if="{{charts && charts.trends && charts.trends.dates.length}}">
       <view class="tabs">
         <text class="tab {{metric === 'weight' ? 'tab-active' : ''}}" bindtap="switchMetric" data-m="weight">体重</text>
         <text class="tab {{metric === 'body_fat' ? 'tab-active' : ''}}" bindtap="switchMetric" data-m="body_fat">体脂</text>
         <text class="tab {{metric === 'waist' ? 'tab-active' : ''}}" bindtap="switchMetric" data-m="waist">腰围</text>
+      </view>
+      <view wx:if="{{delta}}" class="delta-row">
+        <text class="delta-chip delta-{{deltaCls}}">较上次 {{delta.text}}</text>
       </view>
       <canvas canvas-id="trainTrend" id="trainTrend" class="trend-canvas" />
       <view class="more-link" bindtap="goMeasure">＋ 记录体测</view>
