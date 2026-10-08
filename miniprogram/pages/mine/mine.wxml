@@ -31,6 +31,7 @@
       <text>教练工作台</text>
       <text class="arrow">›</text>
     </view>
+    <!-- 约课功能暂隐（booking 恢复时取消注释）
     <view class="menu-item" data-tab="booking" bindtap="goRecords">
       <text>我的预约</text>
       <text class="arrow">›</text>
@@ -39,6 +40,7 @@
       <text>签到记录</text>
       <text class="arrow">›</text>
     </view>
+    -->
     <view wx:if="{{user.role === 'client'}}" class="menu-item" bindtap="goMeasure">
       <text>体测记录</text>
       <text class="arrow">›</text>

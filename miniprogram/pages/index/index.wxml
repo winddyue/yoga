@@ -13,9 +13,10 @@
   <view wx:elif="{{needLogin}}" class="content">
     <view class="guest-card">
       <text class="guest-title">您好，请先登录</text>
-      <text class="guest-sub">登录后查看训练计划、预约课程和签到记录</text>
+      <text class="guest-sub">登录后查看训练计划和身体数据</text>
       <button class="guest-btn" bindtap="goLogin">登录 / 注册</button>
     </view>
+    <!-- 约课功能暂隐：浏览课程入口恢复时取消注释
     <view class="section-title">先看看</view>
     <navigator class="action" open-type="switchTab" url="/pages/booking/booking">
       <view>
@@ -24,6 +25,7 @@
       </view>
       <text class="arrow">›</text>
     </navigator>
+    -->
   </view>
 
   <view wx:elif="{{loadErr}}" class="tip err">
@@ -64,10 +66,19 @@
     </view>
     <view class="tip" wx:else>暂无评估数据，多测几次就有曲线了</view>
     <view class="section-title">下一步</view>
+    <!-- 约课功能暂隐：恢复时取消注释
     <navigator class="action" open-type="switchTab" url="/pages/booking/booking">
       <view>
         <text class="action-title">查看课程并预约</text>
         <text class="action-sub">选一节适合你的课程</text>
+      </view>
+      <text class="arrow">›</text>
+    </navigator>
+    -->
+    <navigator class="action" url="/pages/measure/measure">
+      <view>
+        <text class="action-title">记录体测数据</text>
+        <text class="action-sub">体重、体脂、围度，生成你的身体趋势</text>
       </view>
       <text class="arrow">›</text>
     </navigator>

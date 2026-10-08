@@ -32,10 +32,6 @@
         "text": "首页"
       },
       {
-        "pagePath": "pages/booking/booking",
-        "text": "约课"
-      },
-      {
         "pagePath": "pages/training/training",
         "text": "训练"
       },
