@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container t-{{theme}}">
   <view wx:if="{{needLogin}}" class="login-bar" bindtap="goLogin">
     <text>登录后查看个人信息</text>
     <text class="go">去登录 ›</text>

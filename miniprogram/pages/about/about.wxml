@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container t-{{theme}}">
   <view class="card about-hero">
     <view class="brand-mark">瑜</view>
     <view class="gym-name">{{gym.name}}</view>

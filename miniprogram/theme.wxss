@@ -1,0 +1,180 @@
+/* 12 套界面主题覆写：根节点 class="t-{{theme}}" 生效。基准为薄荷青（G），故无 .t-g。
+/* 由脚本生成，请勿手改；色值源自 utils/themes.js */
+
+/* a · 山茶绿 */
+.t-a .primary, .t-a .guest-btn, .t-a .login-box .primary, .t-a .foot .btn { background: #4C6043; }
+.t-a .mine-page .avatar { background: #4C6043; }
+.t-a .home-page .avatar { background: #EBEEE9; color: #4C6043; }
+.t-a .goal-card { background: linear-gradient(135deg, #6F8563 0%, #4C6043 100%); box-shadow: 0 16rpx 32rpx rgba(76,96,67,.2); }
+.t-a .tab.on, .t-a .tab-active { background: #4C6043; }
+.t-a .check.on { background: #4C6043; border-color: #4C6043; }
+.t-a .tab.on::after { background: #4C6043; }
+.t-a .arrow, .t-a .header .go, .t-a .icon, .t-a .back-link, .t-a .agree .link, .t-a .info-row .value.link, .t-a .ring-pct { color: #4C6043; }
+.t-a .brand-mark { background: #4C6043; }
+.t-a .status.s-booked { background: #EBEEE9; color: #4C6043; }
+.t-a .login-bar, .t-a .primary.ghost, .t-a .fi-blue { background: #EBEEE9; color: #4C6043; }
+.t-a .home-page { background: #F5F7F2; }
+
+/* b · 雾蓝 */
+.t-b .primary, .t-b .guest-btn, .t-b .login-box .primary, .t-b .foot .btn { background: #3C5C7E; }
+.t-b .mine-page .avatar { background: #3C5C7E; }
+.t-b .home-page .avatar { background: #E8EDF3; color: #3C5C7E; }
+.t-b .goal-card { background: linear-gradient(135deg, #5B7FA6 0%, #3C5C7E 100%); box-shadow: 0 16rpx 32rpx rgba(60,92,126,.2); }
+.t-b .tab.on, .t-b .tab-active { background: #3C5C7E; }
+.t-b .check.on { background: #3C5C7E; border-color: #3C5C7E; }
+.t-b .tab.on::after { background: #3C5C7E; }
+.t-b .arrow, .t-b .header .go, .t-b .icon, .t-b .back-link, .t-b .agree .link, .t-b .info-row .value.link, .t-b .ring-pct { color: #3C5C7E; }
+.t-b .brand-mark { background: #3C5C7E; }
+.t-b .status.s-booked { background: #E8EDF3; color: #3C5C7E; }
+.t-b .login-bar, .t-b .primary.ghost, .t-b .fi-blue { background: #E8EDF3; color: #3C5C7E; }
+.t-b .home-page { background: #F2F5F9; }
+
+/* c · 燕麦拿铁 */
+.t-c .primary, .t-c .guest-btn, .t-c .login-box .primary, .t-c .foot .btn { background: #6E5638; }
+.t-c .mine-page .avatar { background: #6E5638; }
+.t-c .home-page .avatar { background: #F1EDE7; color: #6E5638; }
+.t-c .goal-card { background: linear-gradient(135deg, #9A7B54 0%, #6E5638 100%); box-shadow: 0 16rpx 32rpx rgba(110,86,56,.2); }
+.t-c .tab.on, .t-c .tab-active { background: #6E5638; }
+.t-c .check.on { background: #6E5638; border-color: #6E5638; }
+.t-c .tab.on::after { background: #6E5638; }
+.t-c .arrow, .t-c .header .go, .t-c .icon, .t-c .back-link, .t-c .agree .link, .t-c .info-row .value.link, .t-c .ring-pct { color: #6E5638; }
+.t-c .brand-mark { background: #6E5638; }
+.t-c .status.s-booked { background: #F1EDE7; color: #6E5638; }
+.t-c .login-bar, .t-c .primary.ghost, .t-c .fi-blue { background: #F1EDE7; color: #6E5638; }
+.t-c .home-page { background: #FAF6EF; }
+
+/* d · 墨绿鎏金 */
+.t-d .primary, .t-d .guest-btn, .t-d .login-box .primary, .t-d .foot .btn { background: #1E3833; }
+.t-d .mine-page .avatar { background: #1E3833; }
+.t-d .home-page .avatar { background: #E2E7E6; color: #1E3833; }
+.t-d .goal-card { background: linear-gradient(135deg, #2F5249 0%, #1E3833 100%); box-shadow: 0 16rpx 32rpx rgba(30,56,51,.2); }
+.t-d .tab.on, .t-d .tab-active { background: #1E3833; }
+.t-d .check.on { background: #1E3833; border-color: #1E3833; }
+.t-d .tab.on::after { background: #1E3833; }
+.t-d .arrow, .t-d .header .go, .t-d .icon, .t-d .back-link, .t-d .agree .link, .t-d .info-row .value.link, .t-d .ring-pct { color: #1E3833; }
+.t-d .brand-mark { background: #1E3833; }
+.t-d .status.s-booked { background: #E2E7E6; color: #1E3833; }
+.t-d .login-bar, .t-d .primary.ghost, .t-d .fi-blue { background: #E2E7E6; color: #1E3833; }
+.t-d .home-page { background: #F3F1EA; }
+
+/* e · 陶土橘 */
+.t-e .primary, .t-e .guest-btn, .t-e .login-box .primary, .t-e .foot .btn { background: #96502F; }
+.t-e .mine-page .avatar { background: #96502F; }
+.t-e .home-page .avatar { background: #F6ECE7; color: #96502F; }
+.t-e .goal-card { background: linear-gradient(135deg, #C07856 0%, #96502F 100%); box-shadow: 0 16rpx 32rpx rgba(150,80,47,.2); }
+.t-e .tab.on, .t-e .tab-active { background: #96502F; }
+.t-e .check.on { background: #96502F; border-color: #96502F; }
+.t-e .tab.on::after { background: #96502F; }
+.t-e .arrow, .t-e .header .go, .t-e .icon, .t-e .back-link, .t-e .agree .link, .t-e .info-row .value.link, .t-e .ring-pct { color: #96502F; }
+.t-e .brand-mark { background: #96502F; }
+.t-e .status.s-booked { background: #F6ECE7; color: #96502F; }
+.t-e .login-bar, .t-e .primary.ghost, .t-e .fi-blue { background: #F6ECE7; color: #96502F; }
+.t-e .home-page { background: #FAF3EB; }
+
+/* f · 丁香紫 */
+.t-f .primary, .t-f .guest-btn, .t-f .login-box .primary, .t-f .foot .btn { background: #66569B; }
+.t-f .mine-page .avatar { background: #66569B; }
+.t-f .home-page .avatar { background: #EFEDF7; color: #66569B; }
+.t-f .goal-card { background: linear-gradient(135deg, #8E7CC3 0%, #66569B 100%); box-shadow: 0 16rpx 32rpx rgba(102,86,155,.2); }
+.t-f .tab.on, .t-f .tab-active { background: #66569B; }
+.t-f .check.on { background: #66569B; border-color: #66569B; }
+.t-f .tab.on::after { background: #66569B; }
+.t-f .arrow, .t-f .header .go, .t-f .icon, .t-f .back-link, .t-f .agree .link, .t-f .info-row .value.link, .t-f .ring-pct { color: #66569B; }
+.t-f .brand-mark { background: #66569B; }
+.t-f .status.s-booked { background: #EFEDF7; color: #66569B; }
+.t-f .login-bar, .t-f .primary.ghost, .t-f .fi-blue { background: #EFEDF7; color: #66569B; }
+.t-f .home-page { background: #F5F3FA; }
+
+/* h · 珍珠灰×金 */
+.t-h .primary, .t-h .guest-btn, .t-h .login-box .primary, .t-h .foot .btn { background: #57524A; }
+.t-h .mine-page .avatar { background: #57524A; }
+.t-h .home-page .avatar { background: #EDECEA; color: #57524A; }
+.t-h .goal-card { background: linear-gradient(135deg, #7D766B 0%, #57524A 100%); box-shadow: 0 16rpx 32rpx rgba(87,82,74,.2); }
+.t-h .tab.on, .t-h .tab-active { background: #57524A; }
+.t-h .check.on { background: #57524A; border-color: #57524A; }
+.t-h .tab.on::after { background: #57524A; }
+.t-h .arrow, .t-h .header .go, .t-h .icon, .t-h .back-link, .t-h .agree .link, .t-h .info-row .value.link, .t-h .ring-pct { color: #57524A; }
+.t-h .brand-mark { background: #57524A; }
+.t-h .status.s-booked { background: #EDECEA; color: #57524A; }
+.t-h .login-bar, .t-h .primary.ghost, .t-h .fi-blue { background: #EDECEA; color: #57524A; }
+.t-h .home-page { background: #F7F5F0; }
+
+/* i · 珊瑚橙 */
+.t-i .primary, .t-i .guest-btn, .t-i .login-box .primary, .t-i .foot .btn { background: #C74E38; }
+.t-i .mine-page .avatar { background: #C74E38; }
+.t-i .home-page .avatar { background: #FDEBE8; color: #C74E38; }
+.t-i .goal-card { background: linear-gradient(135deg, #F26D5B 0%, #C74E38 100%); box-shadow: 0 16rpx 32rpx rgba(199,78,56,.2); }
+.t-i .tab.on, .t-i .tab-active { background: #C74E38; }
+.t-i .check.on { background: #C74E38; border-color: #C74E38; }
+.t-i .tab.on::after { background: #C74E38; }
+.t-i .arrow, .t-i .header .go, .t-i .icon, .t-i .back-link, .t-i .agree .link, .t-i .info-row .value.link, .t-i .ring-pct { color: #C74E38; }
+.t-i .brand-mark { background: #C74E38; }
+.t-i .status.s-booked { background: #FDEBE8; color: #C74E38; }
+.t-i .login-bar, .t-i .primary.ghost, .t-i .fi-blue { background: #FDEBE8; color: #C74E38; }
+.t-i .home-page { background: #FFF4F0; }
+
+/* j · 蜜糖黄 */
+.t-j .primary, .t-j .guest-btn, .t-j .login-box .primary, .t-j .foot .btn { background: #B87A10; }
+.t-j .mine-page .avatar { background: #B87A10; }
+.t-j .home-page .avatar { background: #FCF2E0; color: #B87A10; }
+.t-j .goal-card { background: linear-gradient(135deg, #E8A020 0%, #B87A10 100%); box-shadow: 0 16rpx 32rpx rgba(184,122,16,.2); }
+.t-j .tab.on, .t-j .tab-active { background: #B87A10; }
+.t-j .check.on { background: #B87A10; border-color: #B87A10; }
+.t-j .tab.on::after { background: #B87A10; }
+.t-j .arrow, .t-j .header .go, .t-j .icon, .t-j .back-link, .t-j .agree .link, .t-j .info-row .value.link, .t-j .ring-pct { color: #B87A10; }
+.t-j .brand-mark { background: #B87A10; }
+.t-j .status.s-booked { background: #FCF2E0; color: #B87A10; }
+.t-j .login-bar, .t-j .primary.ghost, .t-j .fi-blue { background: #FCF2E0; color: #B87A10; }
+.t-j .home-page { background: #FFFBF0; }
+
+/* k · 薄荷亮 */
+.t-k .primary, .t-k .guest-btn, .t-k .login-box .primary, .t-k .foot .btn { background: #147A70; }
+.t-k .mine-page .avatar { background: #147A70; }
+.t-k .home-page .avatar { background: #E0F3F1; color: #147A70; }
+.t-k .goal-card { background: linear-gradient(135deg, #1FA89A 0%, #147A70 100%); box-shadow: 0 16rpx 32rpx rgba(20,122,112,.2); }
+.t-k .tab.on, .t-k .tab-active { background: #147A70; }
+.t-k .check.on { background: #147A70; border-color: #147A70; }
+.t-k .tab.on::after { background: #147A70; }
+.t-k .arrow, .t-k .header .go, .t-k .icon, .t-k .back-link, .t-k .agree .link, .t-k .info-row .value.link, .t-k .ring-pct { color: #147A70; }
+.t-k .brand-mark { background: #147A70; }
+.t-k .status.s-booked { background: #E0F3F1; color: #147A70; }
+.t-k .login-bar, .t-k .primary.ghost, .t-k .fi-blue { background: #E0F3F1; color: #147A70; }
+.t-k .home-page { background: #ECFAF8; }
+
+/* l · 樱花粉 */
+.t-l .primary, .t-l .guest-btn, .t-l .login-box .primary, .t-l .foot .btn { background: #BC3A64; }
+.t-l .mine-page .avatar { background: #BC3A64; }
+.t-l .home-page .avatar { background: #FCE8EF; color: #BC3A64; }
+.t-l .goal-card { background: linear-gradient(135deg, #E85D8A 0%, #BC3A64 100%); box-shadow: 0 16rpx 32rpx rgba(188,58,100,.2); }
+.t-l .tab.on, .t-l .tab-active { background: #BC3A64; }
+.t-l .check.on { background: #BC3A64; border-color: #BC3A64; }
+.t-l .tab.on::after { background: #BC3A64; }
+.t-l .arrow, .t-l .header .go, .t-l .icon, .t-l .back-link, .t-l .agree .link, .t-l .info-row .value.link, .t-l .ring-pct { color: #BC3A64; }
+.t-l .brand-mark { background: #BC3A64; }
+.t-l .status.s-booked { background: #FCE8EF; color: #BC3A64; }
+.t-l .login-bar, .t-l .primary.ghost, .t-l .fi-blue { background: #FCE8EF; color: #BC3A64; }
+.t-l .home-page { background: #FFF1F5; }
+
+/* 主题选择页自身跟随 */
+.t-a .cell.on { border-color: #4C6043; }
+.t-a .tick { color: #4C6043; }
+.t-b .cell.on { border-color: #3C5C7E; }
+.t-b .tick { color: #3C5C7E; }
+.t-c .cell.on { border-color: #6E5638; }
+.t-c .tick { color: #6E5638; }
+.t-d .cell.on { border-color: #1E3833; }
+.t-d .tick { color: #1E3833; }
+.t-e .cell.on { border-color: #96502F; }
+.t-e .tick { color: #96502F; }
+.t-f .cell.on { border-color: #66569B; }
+.t-f .tick { color: #66569B; }
+.t-h .cell.on { border-color: #57524A; }
+.t-h .tick { color: #57524A; }
+.t-i .cell.on { border-color: #C74E38; }
+.t-i .tick { color: #C74E38; }
+.t-j .cell.on { border-color: #B87A10; }
+.t-j .tick { color: #B87A10; }
+.t-k .cell.on { border-color: #147A70; }
+.t-k .tick { color: #147A70; }
+.t-l .cell.on { border-color: #BC3A64; }
+.t-l .tick { color: #BC3A64; }

@@ -1,4 +1,5 @@
 const api = require('../../api.js');
+const { syncTheme } = require('../../utils/themes.js');
 const { STATUS_TEXT, BOOKING_STATUSES, CHECKIN_STATUSES } = require('../../utils/status.js');
 
 // 「我的预约」与「签到记录」共用本页，靠 tab 参数区分，避免为两个列表各写一套
@@ -24,7 +25,7 @@ Page({
     wx.setNavigationBarTitle({ title: conf.title });
   },
 
-  onShow() { this.load(); },
+  onShow() { syncTheme(this); this.load(); },
 
   async load() {
     this.setData({ loading: true, loadErr: '', needLogin: false });

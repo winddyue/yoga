@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { THEMES, THEME_IDS } from '../themes';
+import { useTheme } from '../theme';
 import Layout from '../components/Layout';
 
 // 设置页（仅馆主）：第三方 API 配置 + AI 功能开关 + AI 套餐管理。
@@ -11,6 +13,7 @@ const FEATURE_LABELS = {
 };
 
 export default function Settings() {
+  const { themeId, setTheme } = useTheme();
   const [s, setS] = useState(null);
   const [form, setForm] = useState({
     ocr_api_url: '', ai_api_url: '', ai_model: '', asr_api_url: '', ai_enabled: false,
@@ -70,6 +73,27 @@ export default function Settings() {
   return (
     <Layout>
       <h1 className="text-xl font-bold mb-4">设置</h1>
+
+      <div className="card max-w-lg mb-4">
+        <h2 className="font-bold mb-1">界面风格</h2>
+        <p className="text-sm text-muted mb-3">选择喜欢的配色，立即生效（仅保存在本浏览器）</p>
+        <div className="grid grid-cols-4 md:grid-cols-6 gap-2.5">
+          {THEME_IDS.map((id) => {
+            const t = THEMES[id];
+            const active = id === themeId;
+            return (
+              <button key={id} type="button" onClick={() => setTheme(id)}
+                className={`rounded-2xl p-2.5 text-center border-2 transition ${active ? 'border-brand-500 shadow-soft' : 'border-transparent hover:border-sand'}`}
+                style={{ background: t.bg }} title={t.name}>
+                <span className="block w-8 h-8 rounded-full mx-auto mb-1.5 border border-black/5" style={{ background: t.pri }} />
+                <span className="block text-xs leading-tight" style={{ color: t.txt }}>{t.name}</span>
+                {active && <span className="block text-xs mt-0.5" style={{ color: t.prid }}>✓ 使用中</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <form onSubmit={save} className="card space-y-3 max-w-lg">
         <h2 className="font-bold">AI 功能（高配版）</h2>
         <label className="flex items-center gap-2 text-sm">

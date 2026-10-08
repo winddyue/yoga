@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../auth';
+import { useTheme } from '../theme';
 import Layout from '../components/Layout';
 import TrendChart from '../components/TrendChart';
 import BarChart from '../components/BarChart';
@@ -10,26 +11,28 @@ const STATUS_ORDER = { red: 0, yellow: 1, green: 2 };
 const STATUS_NAME = { red: '需关注', yellow: '待跟进', green: '正常' };
 
 // 趋势指标配置：减脂场景下，体重/体脂/腰围下降是好事（sage 绿），上升是坏事（柔红）
-const METRICS = {
-  weight: { label: '体重', unit: 'kg', color: '#B76E79' },
+// weight 主色跟随主题，其余为区分数据的固定柔色
+const METRICS = (theme) => ({
+  weight: { label: '体重', unit: 'kg', color: theme.pri },
   body_fat: { label: '体脂率', unit: '%', color: '#D9A85F' },
   waist: { label: '腰围', unit: 'cm', color: '#9CAF88' },
   hip: { label: '臀围', unit: 'cm', color: '#B89B7E' },
-};
+});
 const changeCls = (v) => (v < 0 ? 'text-sage-700' : v > 0 ? 'text-[#C07878]' : 'text-clay');
 
 // 出勤目标差距圆环：当前出勤率 vs 100% 目标（行业共识做法，一眼看到差距）
 function GoalRing({ rate }) {
+  const { theme } = useTheme();
   const R = 34, C = 2 * Math.PI * R;
   const pct = Math.round((rate || 0) * 100);
   return (
     <svg width="96" height="96" viewBox="0 0 96 96">
-      <circle cx="48" cy="48" r={R} fill="none" stroke="#F1E9DE" strokeWidth="10" />
-      <circle cx="48" cy="48" r={R} fill="none" stroke="#B76E79" strokeWidth="10"
+      <circle cx="48" cy="48" r={R} fill="none" stroke={theme.line} strokeWidth="10" />
+      <circle cx="48" cy="48" r={R} fill="none" stroke={theme.pri} strokeWidth="10"
         strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - (rate || 0))}
         transform="rotate(-90 48 48)" />
       <text x="48" y="48" textAnchor="middle" dominantBaseline="central"
-        fontSize="18" fontWeight="bold" fill="#854750">{pct}%</text>
+        fontSize="18" fontWeight="bold" fill={theme.prid}>{pct}%</text>
     </svg>
   );
 }
@@ -37,6 +40,7 @@ function GoalRing({ rate }) {
 // 总览页：按角色展示不同汇总
 export default function Dashboard() {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [d, setD] = useState(null);
   const [charts, setCharts] = useState(null);
   const [staffClients, setStaffClients] = useState(null);
@@ -55,7 +59,7 @@ export default function Dashboard() {
 
   // ---------------- 客户：我的进展 ----------------
   if (user.role === 'client') {
-    const m = METRICS[metric];
+    const m = METRICS(theme)[metric];
     const t = charts?.trends;
     return (
       <Layout>
@@ -90,7 +94,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-2">
                 <h2 className="font-medium">身体趋势</h2>
                 <div className="flex gap-1">
-                  {Object.entries(METRICS).map(([k, cfg]) => (
+                  {Object.entries(METRICS(theme)).map(([k, cfg]) => (
                     <button key={k} onClick={() => setMetric(k)}
                       className={`text-xs px-2 py-1 rounded ${metric === k ? 'bg-brand-600 text-white' : 'bg-cream text-muted'}`}>
                       {cfg.label}
@@ -100,7 +104,7 @@ export default function Dashboard() {
               </div>
               <TrendChart dates={t.dates} series={t[metric]} unit={m.unit} color={m.color} />
               <div className="flex flex-wrap gap-4 mt-2 text-sm">
-                {Object.entries(METRICS).map(([k, cfg]) => {
+                {Object.entries(METRICS(theme)).map(([k, cfg]) => {
                   if (k === 'hip') return null;
                   const v = charts.changes?.[k] ?? 0;
                   return (

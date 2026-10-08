@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container t-{{theme}}">
   <view class="title">教练工作台</view>
   <view wx:if="{{!courses.length}}" class="tip">暂无课程</view>
   <view wx:for="{{courses}}" wx:key="id" class="card">

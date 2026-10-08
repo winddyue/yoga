@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container t-{{theme}}">
   <view class="title-row">
     <view class="title">约课</view>
     <button size="mini" type="primary" bindtap="scanCheckin">扫码签到</button>

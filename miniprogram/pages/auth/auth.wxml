@@ -1,4 +1,4 @@
-<view class="auth-page">
+<view class="auth-page t-{{theme}}">
   <view class="hero">
     <view class="brand-mark">瑜</view>
     <text class="brand">瑜伽馆客户管理</text>

@@ -1,3 +1,4 @@
+const { syncTheme } = require('../../utils/themes.js');
 // 关于我们：馆名与联系方式为占位内容，上线前请替换为实际信息（TODO）
 const GYM = {
   name: '本瑜伽馆',
@@ -8,6 +9,7 @@ const GYM = {
 };
 
 Page({
+  onShow() { syncTheme(this); },
   data: {
     gym: GYM,
     version: '1.0.0',

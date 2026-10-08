@@ -1,4 +1,4 @@
-<view class="mine-page">
+<view class="mine-page t-{{theme}}">
   <!-- 头部：未登录显示登录引导，已登录显示头像与姓名 -->
   <view class="header" bindtap="onHeaderTap">
     <view class="avatar">{{user ? (user.name ? user.name[0] : '瑜') : '瑜'}}</view>
@@ -37,6 +37,10 @@
     </view>
     <view class="menu-item" data-tab="checkin" bindtap="goRecords">
       <text>签到记录</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goTheme">
+      <text>界面风格</text>
       <text class="arrow">›</text>
     </view>
     <view class="menu-item" bindtap="goAbout">

@@ -1,4 +1,5 @@
 const api = require('../../api.js');
+const { syncTheme } = require('../../utils/themes.js');
 const fb = require('../../utils/feedback.js');
 // 与「我的预约/签到记录」共用同一份状态文案，避免两处改漏
 const { STATUS_TEXT } = require('../../utils/status.js');
@@ -6,7 +7,7 @@ const { STATUS_TEXT } = require('../../utils/status.js');
 Page({
   data: { courses: [], loading: true, loadErr: '', needLogin: false },
 
-  onShow() { this.load(); },
+  onShow() { syncTheme(this); this.load(); },
 
   async load() {
     this.setData({ loading: true, loadErr: '', needLogin: false });

@@ -1,9 +1,10 @@
 const api = require('../../api.js');
+const { syncTheme } = require('../../utils/themes.js');
 const fb = require('../../utils/feedback.js');
 
 Page({
   data: { plans: [], diets: [], clientId: null, loading: true, loadErr: '', needLogin: false },
-  onShow() { this.load(); },
+  onShow() { syncTheme(this); this.load(); },
   async load() {
     this.setData({ loading: true, loadErr: '', needLogin: false });
     // 登录态由全局统一解析（含静默续期）

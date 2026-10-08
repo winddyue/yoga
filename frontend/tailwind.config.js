@@ -1,39 +1,35 @@
 /** @type {import('tailwindcss').Config} */
+// 语义色全部映射到 CSS 变量 --th-*（由 ThemeProvider 按所选主题写入），
+// 类名（bg-brand-500 / text-muted 等）不用改，换主题自动变色。
+const th = (v) => `var(--th-${v})`;
+const mix = (color, pct, base) => `color-mix(in srgb, ${color} ${pct}%, ${base})`;
+
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
-        // 暖米白底
-        cream: '#FAF6F1',
-        // 豆沙粉 / 雾玫红（主色）
+        cream: th('bg'),
         brand: {
-          50: '#FBF4F5',
-          100: '#F6E3E6',
-          200: '#EAC2C9',
-          300: '#DB9FAB',
-          400: '#C97E8C',
-          500: '#B76E79',
-          600: '#A25964',
-          700: '#854750',
+          50: mix(th('pri'), 6, th('card')),
+          100: mix(th('pri'), 13, th('card')),
+          200: mix(th('pri'), 26, th('card')),
+          300: mix(th('pri'), 42, th('card')),
+          400: mix(th('pri'), 66, th('card')),
+          500: th('pri'),
+          600: th('prid'),
+          700: mix(th('prid'), 82, 'black'),
+          DEFAULT: th('pri'),
         },
-        // 鼠尾草绿（辅助色）
         sage: {
-          50: '#F4F7F1',
-          100: '#E5EDE0',
-          200: '#CCDBC0',
-          300: '#B0C6A0',
-          400: '#9CAF88',
-          500: '#8A9D75',
-          600: '#72825F',
-          700: '#5D6A4E',
+          100: mix(th('acc'), 16, th('card')),
+          700: mix(th('acc'), 72, 'black'),
+          DEFAULT: th('acc'),
         },
-        // 暖深灰（正文）/ 暖灰（次要小字，≥4.5:1）/ 浅暖灰（装饰大字）
-        ink: '#4A4239',
-        muted: '#776A5D',
-        clay: '#9A8F84',
-        // 暖沙色（细分割线 / 浅底）
-        sand: '#EDE5D8',
+        ink: th('txt'),
+        muted: th('mut'),
+        clay: mix(th('mut'), 62, th('bg')),
+        sand: th('line'),
       },
       boxShadow: {
         soft: '0 8px 28px rgba(122, 100, 84, 0.07)',

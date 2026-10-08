@@ -2,9 +2,11 @@
 // 客户主路径：微信一键登录 → 未绑定则填姓名即建档（不需要密码）
 // 工作人员路径：账号密码登录（教练/馆主账号由馆主在管理端创建）
 const api = require('../../api.js');
+const { syncTheme } = require('../../utils/themes.js');
 const fb = require('../../utils/feedback.js');
 
 Page({
+  onShow() { syncTheme(this); },
   data: {
     username: '',
     password: '',

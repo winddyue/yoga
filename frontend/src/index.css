@@ -2,7 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 全局：暖米白底、暖深灰正文、放宽行高 */
+/* 主题变量：默认值=薄荷青（G），ThemeProvider 会按 localStorage 所选主题覆盖 */
+:root {
+  --th-bg: #EFF6F4;
+  --th-card: #FFFFFF;
+  --th-pri: #4FA39B;
+  --th-prid: #357771;
+  --th-acc: #93C9C2;
+  --th-txt: #2F3F3C;
+  --th-mut: #85948F;
+  --th-line: #DCEBE8;
+}
+
+/* 全局：主题底色、主题正文、放宽行高 */
 body {
   @apply bg-cream text-ink;
   line-height: 1.75;
@@ -15,13 +27,13 @@ h1, h2, h3 {
 }
 .input {
   @apply w-full rounded-xl px-4 py-2.5 text-sm bg-white text-ink transition;
-  border: 1px solid #EDE5D8;
+  border: 1px solid var(--th-line);
 }
-.input::placeholder { color: #9A8F84; }
+.input::placeholder { color: var(--th-mut); }
 .input:focus {
   outline: none;
-  border-color: #DB9FAB;
-  box-shadow: 0 0 0 3px rgba(183, 110, 121, 0.14);
+  border-color: var(--th-pri);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--th-pri) 14%, transparent);
 }
 .btn {
   @apply px-5 py-2.5 rounded-full text-sm font-medium transition;
@@ -29,26 +41,26 @@ h1, h2, h3 {
 }
 .btn-primary {
   @apply btn text-white;
-  background: #A25964;
-  box-shadow: 0 8px 22px rgba(162, 89, 100, 0.28);
+  background: var(--th-prid);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--th-prid) 28%, transparent);
 }
-.btn-primary:hover { background: #854750; }
+.btn-primary:hover { background: color-mix(in srgb, var(--th-prid) 85%, black); }
 .btn-ghost {
   @apply btn bg-white text-ink;
-  border: 1px solid #EDE5D8;
+  border: 1px solid var(--th-line);
 }
-.btn-ghost:hover { background: #FBF4F5; }
+.btn-ghost:hover { background: color-mix(in srgb, var(--th-pri) 6%, var(--th-card)); }
 .card {
   @apply bg-white rounded-2xl p-5;
-  border: 1px solid #F4ECE1;
+  border: 1px solid var(--th-line);
   box-shadow: 0 8px 28px rgba(122, 100, 84, 0.07);
 }
 .label {
   @apply block text-xs mb-1.5;
-  color: #776A5D;
+  color: var(--th-mut);
   letter-spacing: 0.08em;
 }
-/* 柔和状态色（语义保留） */
+/* 柔和状态色（语义保留，不随主题变） */
 .dot-soft-red { background: #D98880; }
 .dot-soft-amber { background: #D9A85F; }
 .dot-soft-green { background: #9CAF88; }

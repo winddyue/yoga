@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container t-{{theme}}">
   <view class="title">我的训练与饮食</view>
 
   <!-- 未登录：引导登录 -->

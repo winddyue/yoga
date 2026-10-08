@@ -1,4 +1,4 @@
-<view class="home-page">
+<view class="home-page t-{{theme}}">
   <view class="home-head">
     <view>
       <text class="eyebrow">{{needLogin ? '欢迎光临' : '今日状态'}}</text>

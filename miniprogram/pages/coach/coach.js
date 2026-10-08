@@ -1,10 +1,11 @@
 const api = require('../../api.js');
+const { syncTheme } = require('../../utils/themes.js');
 const fb = require('../../utils/feedback.js');
 
 Page({
   data: { courses: [], roster: [], cur: null, qr: null, qrTitle: '' },
 
-  onShow() { this.load(); },
+  onShow() { syncTheme(this); this.load(); },
 
   async load() {
     try {

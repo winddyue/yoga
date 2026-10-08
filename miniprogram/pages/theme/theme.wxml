@@ -1,0 +1,11 @@
+<view class="container t-{{theme}}">
+  <view class="sec">界面风格</view>
+  <view class="tip-text">选择喜欢的配色，立即生效</view>
+  <view class="grid">
+    <view wx:for="{{themes}}" wx:key="id" class="cell {{item.id === current ? 'on' : ''}}" bindtap="pick" data-id="{{item.id}}" style="background:{{item.bg}}">
+      <view class="dot" style="background:{{item.pri}}"></view>
+      <text class="nm">{{item.name}}</text>
+      <text wx:if="{{item.id === current}}" class="tick">✓ 使用中</text>
+    </view>
+  </view>
+</view>

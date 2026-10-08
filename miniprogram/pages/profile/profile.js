@@ -1,4 +1,5 @@
 const api = require('../../api.js');
+const { syncTheme } = require('../../utils/themes.js');
 
 // 健身目标：与后端 ClientIn.goal 默认值保持一致，用 picker 避免手输出现脏数据
 const GOALS = ['减脂', '塑形', '增肌', '理疗康复', '提升柔韧'];
@@ -14,7 +15,7 @@ Page({
     saving: false,
   },
 
-  onShow() { this.load(); },
+  onShow() { syncTheme(this); this.load(); },
 
   async load() {
     this.setData({ loading: true, loadErr: '', needLogin: false });

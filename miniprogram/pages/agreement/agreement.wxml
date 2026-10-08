@@ -1,4 +1,4 @@
-<view class="ag-page">
+<view class="ag-page t-{{theme}}">
   <view class="tabs">
     <view class="tab {{tab === 'privacy' ? 'on' : ''}}" data-t="privacy" bindtap="switchTab">隐私政策</view>
     <view class="tab {{tab === 'terms' ? 'on' : ''}}" data-t="terms" bindtap="switchTab">用户协议</view>

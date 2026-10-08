@@ -9,21 +9,34 @@
     "pages/coach/coach",
     "pages/profile/profile",
     "pages/records/records",
-    "pages/about/about"
+    "pages/about/about",
+    "pages/theme/theme"
   ],
   "tabBar": {
     "color": "#8b93a7",
     "list": [
-      { "pagePath": "pages/index/index", "text": "首页" },
-      { "pagePath": "pages/booking/booking", "text": "约课" },
-      { "pagePath": "pages/training/training", "text": "训练" },
-      { "pagePath": "pages/mine/mine", "text": "我的" }
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/booking/booking",
+        "text": "约课"
+      },
+      {
+        "pagePath": "pages/training/training",
+        "text": "训练"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的"
+      }
     ],
     "selectedColor": "#1f8f83"
   },
   "window": {
-    "backgroundColor": "#f5f7f6",
-    "navigationBarBackgroundColor": "#147d73",
+    "backgroundColor": "#EFF6F4",
+    "navigationBarBackgroundColor": "#4FA39B",
     "navigationBarTextStyle": "white",
     "navigationBarTitleText": "瑜伽馆客户管理"
   }

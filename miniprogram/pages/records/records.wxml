@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container t-{{theme}}">
   <view class="tabs">
     <view class="tab {{tab === 'booking' ? 'on' : ''}}" data-tab="booking" bindtap="switchTab">我的预约</view>
     <view class="tab {{tab === 'checkin' ? 'on' : ''}}" data-tab="checkin" bindtap="switchTab">签到记录</view>

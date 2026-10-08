@@ -1,4 +1,5 @@
 const api = require('../../api.js');
+const { syncTheme, getTheme, currentThemeId } = require('../../utils/themes.js');
 
 Page({
   data: {
@@ -8,7 +9,7 @@ Page({
     metric: 'weight',     // 客户迷你趋势：weight / body_fat
   },
 
-  onShow() { this.load(); },
+  onShow() { syncTheme(this); this.load(); },
 
   async load() {
     this.setData({ loading: true, loadErr: '', needLogin: false });
@@ -100,7 +101,8 @@ Page({
       const metric = this.data.metric;
       const dates = charts.trends.dates;
       const series = charts.trends[metric] || [];
-      const color = metric === 'weight' ? '#B76E79' : '#D9A85F';
+      const th = getTheme(currentThemeId());
+      const color = metric === 'weight' ? th.pri : '#D9A85F';
       const q = wx.createSelectorQuery();
       q.select('#trendCanvas').boundingClientRect();
       q.exec((res) => {
@@ -129,11 +131,11 @@ Page({
           ctx.beginPath();
           ctx.arc(x, y, 3, 0, 2 * Math.PI);
           ctx.fill();
-          ctx.setFillStyle('#9A8F84');
+          ctx.setFillStyle(th.mut);
           ctx.setFontSize(9);
           ctx.setTextAlign('center');
           ctx.fillText(String(dates[i]).slice(5), x, H - 8);
-          ctx.setFillStyle('#4A4239');
+          ctx.setFillStyle(th.txt);
           ctx.fillText(String(v), x, y - 8);
           ctx.setFillStyle(color);
         });
@@ -150,12 +152,13 @@ Page({
       const cx = 60, cy = 60, R = 46;
       ctx.setLineWidth(12);
       ctx.setLineCap('round');
-      ctx.setStrokeStyle('#F1E9DE');
+      const th2 = getTheme(currentThemeId());
+      ctx.setStrokeStyle(th2.line);
       ctx.beginPath();
       ctx.arc(cx, cy, R, 0, 2 * Math.PI);
       ctx.stroke();
       if (rate > 0) {
-        ctx.setStrokeStyle('#A25964');
+        ctx.setStrokeStyle(th2.prid);
         ctx.beginPath();
         ctx.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * Math.min(rate, 1));
         ctx.stroke();

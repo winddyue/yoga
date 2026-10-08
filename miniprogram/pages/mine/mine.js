@@ -1,4 +1,5 @@
 const api = require('../../api.js');
+const { syncTheme } = require('../../utils/themes.js');
 const fb = require('../../utils/feedback.js');
 
 const ROLE_TEXT = { owner: '馆主', coach: '教练', client: '会员' };
@@ -6,7 +7,7 @@ const ROLE_TEXT = { owner: '馆主', coach: '教练', client: '会员' };
 Page({
   data: { user: null, roleText: '', loading: true },
 
-  onShow() { this.load(); },
+  onShow() { syncTheme(this); this.load(); },
 
   async load() {
     this.setData({ loading: true });
@@ -33,6 +34,7 @@ Page({
     wx.navigateTo({ url: `/pages/records/records?tab=${tab}` });
   },
   goAbout() { wx.navigateTo({ url: '/pages/about/about' }); },
+  goTheme() { wx.navigateTo({ url: '/pages/theme/theme' }); },
 
   async logout() {
     if (!await fb.confirm('确定退出登录吗？下次进入需重新登录。', '退出')) return;
