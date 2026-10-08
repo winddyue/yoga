@@ -1,0 +1,14 @@
+/* 训练计划：复用 app.wxss 全局 token，此处仅补计划卡与编辑区 */
+.gen-btn { margin: 0 0 8rpx; }
+.plan-card { margin-top: 20rpx; padding: 26rpx 28rpx; }
+.plan-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14rpx; }
+.day-line { padding: 12rpx 0; border-bottom: 2rpx solid #F6F1E8; }
+.day-line .day { display: block; font-size: 27rpx; font-weight: 600; }
+.day-line .ex { display: block; font-size: 25rpx; color: #85948F; margin-top: 6rpx; }
+.btns { display: flex; gap: 16rpx; margin-top: 18rpx; }
+.day-edit { margin-top: 18rpx; padding-top: 14rpx; border-top: 2rpx solid #F6F1E8; }
+.day-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10rpx; }
+.day-head .day { font-size: 27rpx; font-weight: 600; }
+.time-input { font-size: 26rpx; color: #2F3F3C; text-align: right; width: 280rpx; }
+.ex-text { width: 100%; min-height: 120rpx; font-size: 26rpx; background: #FAF7F0; border-radius: 14rpx; padding: 16rpx; box-sizing: border-box; }
+.field .input { flex: 1; font-size: 28rpx; text-align: right; }

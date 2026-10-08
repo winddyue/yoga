@@ -43,6 +43,9 @@ Page({
   },
   goAbout() { wx.navigateTo({ url: '/pages/about/about' }); },
   goTheme() { wx.navigateTo({ url: '/pages/theme/theme' }); },
+  goUsers() { wx.navigateTo({ url: '/pages/users/users' }); },
+  goSettings() { wx.navigateTo({ url: '/pages/settings/settings' }); },
+  goFields() { wx.navigateTo({ url: '/pages/fields/fields' }); },
 
   goMeasure() { wx.navigateTo({ url: '/pages/measure/measure' }); },
 

@@ -51,6 +51,18 @@
       <text>界面风格</text>
       <text class="arrow">›</text>
     </view>
+    <view wx:if="{{user.role === 'owner'}}" class="menu-item" bindtap="goUsers">
+      <text>用户管理</text>
+      <text class="arrow">›</text>
+    </view>
+    <view wx:if="{{user.role === 'owner'}}" class="menu-item" bindtap="goSettings">
+      <text>系统设置</text>
+      <text class="arrow">›</text>
+    </view>
+    <view wx:if="{{user.role === 'owner'}}" class="menu-item" bindtap="goFields">
+      <text>自定义字段</text>
+      <text class="arrow">›</text>
+    </view>
     <view class="menu-item" bindtap="goAbout">
       <text>关于我们</text>
       <text class="arrow">›</text>

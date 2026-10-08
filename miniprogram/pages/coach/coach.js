@@ -36,6 +36,10 @@ Page({
 
   hideQr() { this.setData({ qr: null }); },
 
+  goClients() { wx.navigateTo({ url: '/pages/clients/clients' }); },
+  goCourseEdit() { wx.navigateTo({ url: '/pages/course-edit/course-edit' }); },
+  goIntake() { wx.navigateTo({ url: '/pages/intake/intake' }); },
+
   async openRoster(e) {
     const id = e.currentTarget.dataset.id;
     try {

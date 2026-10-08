@@ -1,0 +1,10 @@
+/* 教练代录体测：复用 app.wxss 全局 token（.container/.card/.field/.primary），此处仅补输入框与授权条 */
+.field .input { flex: 1; font-size: 29rpx; color: #2F3F3C; height: 60rpx; text-align: right; }
+.field .unit { font-size: 26rpx; color: #85948F; margin-left: 10rpx; }
+.field .req { color: #C07B6E; }
+.field .arrow { color: #85948F; }
+.picker-value { display: flex; align-items: center; justify-content: space-between; }
+
+.consent-bar { background: #FFF9EC; border: 2rpx solid #EBD9A8; border-radius: 20rpx; padding: 26rpx; margin-bottom: 24rpx; }
+.consent-text { font-size: 26rpx; color: #8A6D2B; line-height: 1.7; display: block; margin-bottom: 18rpx; }
+.consent-btn { margin-top: 0; height: 78rpx; line-height: 78rpx; font-size: 28rpx; }

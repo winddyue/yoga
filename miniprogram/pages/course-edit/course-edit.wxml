@@ -1,0 +1,45 @@
+<view class="container t-{{theme}}">
+  <view class="title">发布课程</view>
+  <view class="card">
+    <view class="field">
+      <text class="label">标题<text class="req">*</text></text>
+      <input class="input" placeholder="如：晨间流瑜伽" value="{{title}}" data-k="title" bindinput="onInput" />
+    </view>
+    <view class="field" wx:if="{{isOwner && coaches.length}}">
+      <text class="label">教练</text>
+      <picker mode="selector" range="{{coaches}}" range-key="name" value="{{coachIdx}}" bindchange="onCoach">
+        <view class="picker-value"><text>{{coaches[coachIdx].name}}</text><text class="arrow">›</text></view>
+      </picker>
+    </view>
+    <view class="field" wx:if="{{!isOwner}}">
+      <text class="label">教练</text>
+      <text class="value">{{userName}}（我）</text>
+    </view>
+    <view class="field">
+      <text class="label">日期<text class="req">*</text></text>
+      <picker mode="date" value="{{date}}" bindchange="onDate">
+        <view class="picker-value"><text>{{date}}</text><text class="arrow">›</text></view>
+      </picker>
+    </view>
+    <view class="field">
+      <text class="label">开始时间</text>
+      <picker mode="time" value="{{time}}" bindchange="onTime">
+        <view class="picker-value"><text>{{time}}</text><text class="arrow">›</text></view>
+      </picker>
+    </view>
+    <view class="field">
+      <text class="label">时长（分钟）</text>
+      <input class="input" type="number" value="{{duration}}" data-k="duration" bindinput="onInput" />
+    </view>
+    <view class="field">
+      <text class="label">地点</text>
+      <input class="input" placeholder="如：A 教室" value="{{location}}" data-k="location" bindinput="onInput" />
+    </view>
+    <view class="field">
+      <text class="label">容量</text>
+      <input class="input" type="number" value="{{capacity}}" data-k="capacity" bindinput="onInput" />
+    </view>
+  </view>
+  <view class="tip">签到码由系统自动生成，发布后教练可在工作台查看二维码</view>
+  <button class="primary" bindtap="submit" disabled="{{submitting}}">{{submitting ? '发布中…' : '发布课程'}}</button>
+</view>

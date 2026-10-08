@@ -1,0 +1,43 @@
+<view class="container t-{{theme}}">
+  <view class="title-row"><text class="title">饮食方案{{clientName ? ' · ' + clientName : ''}}</text></view>
+
+  <view wx:if="{{needLogin}}" class="login-bar" bindtap="goLogin">
+    <text>登录后管理饮食方案</text>
+    <text class="go">去登录 ›</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+
+  <block wx:elif="{{!needLogin}}">
+    <button class="primary gen-btn" bindtap="aiGenerate" disabled="{{generating}}">{{generating ? 'AI 生成中…' : 'AI 生成初版'}}</button>
+
+    <view wx:if="{{!diets.length}}" class="tip">暂无饮食方案，可点上方 AI 生成初版</view>
+
+    <view wx:for="{{diets}}" wx:key="id" class="card diet-card">
+      <view class="diet-head" bindtap="toggle" data-id="{{item.id}}">
+        <view>
+          <text class="t">{{item.date || '饮食方案'}}</text>
+          <text class="status {{item.statusCls}}">{{item.statusText}}</text>
+        </view>
+        <text class="arrow">{{expandedId === item.id ? '▾' : '›'}}</text>
+      </view>
+      <view class="sub">目标 {{item.calories}}kcal · 蛋白 {{item.protein}}g · 脂肪 {{item.fat}}g · 碳水 {{item.carbs}}g</view>
+
+      <block wx:if="{{expandedId === item.id}}">
+        <view wx:for="{{item.mealList}}" wx:for-item="m" wx:key="label" class="meal-line">
+          <text class="meal-label">{{m.label}}</text>
+          <text class="meal-items">{{m.items}}</text>
+        </view>
+        <view wx:if="{{item.disclaimer}}" class="disclaimer">{{item.disclaimer}}</view>
+      </block>
+
+      <view class="btns" wx:if="{{item.canConfirm}}">
+        <button size="mini" type="primary" bindtap="confirm" data-id="{{item.id}}" disabled="{{confirmingId === item.id}}">{{confirmingId === item.id ? '确认中…' : '一键确认'}}</button>
+      </view>
+    </view>
+  </block>
+</view>

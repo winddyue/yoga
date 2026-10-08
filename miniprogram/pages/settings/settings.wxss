@@ -1,0 +1,7 @@
+/* 系统设置页：复用 app.wxss 全局 token，此处仅补表单细节 */
+.field .input { flex: 1; font-size: 27rpx; color: #2F3F3C; height: 60rpx; text-align: right; min-width: 0; }
+.field .value { flex: 1; font-size: 29rpx; color: #2F3F3C; text-align: right; }
+.field .arrow { color: #85948F; margin-left: 8rpx; }
+.field switch { transform: scale(.85); }
+.picker-value { display: flex; align-items: center; justify-content: flex-end; font-size: 29rpx; color: #2F3F3C; flex: 1; }
+.cfg { font-size: 24rpx; color: #85948F; padding: 16rpx 0 4rpx; line-height: 1.6; }

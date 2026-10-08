@@ -1,0 +1,58 @@
+<view class="container t-{{theme}}">
+  <view class="title-row"><text class="title">代录体测{{clientName ? ' · ' + clientName : ''}}</text></view>
+
+  <view wx:if="{{needLogin}}" class="login-bar" bindtap="goLogin">
+    <text>登录后代录体测数据</text>
+    <text class="go">去登录 ›</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="init">重试</button>
+  </view>
+
+  <block wx:elif="{{!needLogin}}">
+    <!-- 客户尚未授权：工作人员可代登记 -->
+    <view wx:if="{{needConsent}}" class="consent-bar">
+      <text class="consent-text">该客户尚未完成敏感信息单独授权（合规要求），可代客户登记后再录入。</text>
+      <button class="primary consent-btn" bindtap="agreeConsent" disabled="{{agreeing}}">{{agreeing ? '提交中…' : '代客户登记授权'}}</button>
+    </view>
+
+    <view class="card">
+      <view class="field">
+        <text class="label">日期</text>
+        <picker mode="date" value="{{date}}" bindchange="onDateChange" class="value picker-value">
+          <text>{{date}}</text>
+          <text class="arrow">›</text>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="label">体重 <text class="req">*</text></text>
+        <input class="value input" type="digit" placeholder="如 62.5" value="{{weight}}" bindinput="onInput" data-k="weight" />
+        <text class="unit">kg</text>
+      </view>
+      <view class="field">
+        <text class="label">体脂率</text>
+        <input class="value input" type="digit" placeholder="选填，如 27.5" value="{{bodyFat}}" bindinput="onInput" data-k="bodyFat" />
+        <text class="unit">%</text>
+      </view>
+      <view class="field">
+        <text class="label">腰围</text>
+        <input class="value input" type="digit" placeholder="选填" value="{{waist}}" bindinput="onInput" data-k="waist" />
+        <text class="unit">cm</text>
+      </view>
+      <view class="field">
+        <text class="label">臀围</text>
+        <input class="value input" type="digit" placeholder="选填" value="{{hip}}" bindinput="onInput" data-k="hip" />
+        <text class="unit">cm</text>
+      </view>
+      <view class="field">
+        <text class="label">备注</text>
+        <input class="value input" placeholder="选填" value="{{notes}}" bindinput="onInput" data-k="notes" />
+      </view>
+    </view>
+
+    <button class="primary" bindtap="submit" disabled="{{submitting}}">{{submitting ? '保存中…' : '保存记录'}}</button>
+  </block>
+</view>

@@ -1,0 +1,49 @@
+<view class="container t-{{theme}}">
+  <view class="title-row">
+    <view class="title">用户管理</view>
+    <text class="link" bindtap="toggleForm">{{showForm ? '收起' : '＋ 新增'}}</text>
+  </view>
+
+  <view wx:if="{{showForm}}" class="card">
+    <view class="field">
+      <text class="label">用户名<text class="req">*</text></text>
+      <input class="input" placeholder="登录用" value="{{username}}" data-k="username" bindinput="onInput" />
+    </view>
+    <view class="field">
+      <text class="label">初始密码<text class="req">*</text></text>
+      <input class="input" password value="{{password}}" data-k="password" bindinput="onInput" placeholder="请告知对方首次登录后修改" />
+    </view>
+    <view class="field">
+      <text class="label">姓名</text>
+      <input class="input" value="{{name}}" data-k="name" bindinput="onInput" />
+    </view>
+    <view class="field">
+      <text class="label">角色</text>
+      <picker mode="selector" range="{{roles}}" range-key="name" value="{{roleIdx}}" bindchange="onRole">
+        <view class="picker-value"><text>{{roles[roleIdx].name}}</text><text class="arrow">›</text></view>
+      </picker>
+    </view>
+    <view class="field" wx:if="{{roles[roleIdx].id === 'client' && clients.length}}">
+      <text class="label">关联客户<text class="req">*</text></text>
+      <picker mode="selector" range="{{clients}}" range-key="name" value="{{clientIdx}}" bindchange="onClient">
+        <view class="picker-value"><text>{{clients[clientIdx].name}}</text><text class="arrow">›</text></view>
+      </picker>
+    </view>
+    <button class="primary sm" bindtap="submit" disabled="{{submitting}}">{{submitting ? '创建中…' : '创建账号'}}</button>
+  </view>
+
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+  <view wx:elif="{{!users.length}}" class="tip">暂无用户</view>
+  <block wx:else>
+    <view wx:for="{{users}}" wx:key="id" class="card row">
+      <view>
+        <view class="t">{{item.name || item.username}} <text class="sub2">@{{item.username}}</text></view>
+        <view class="sub">{{item.role === 'owner' ? '馆主' : item.role === 'coach' ? '教练' : '客户'}}</view>
+      </view>
+    </view>
+  </block>
+</view>

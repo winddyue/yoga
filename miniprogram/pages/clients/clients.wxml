@@ -1,0 +1,32 @@
+<view class="container t-{{theme}}">
+  <view class="title-row"><text class="title">客户管理</text></view>
+
+  <view wx:if="{{needLogin}}" class="login-bar" bindtap="goLogin">
+    <text>登录后查看客户列表</text>
+    <text class="go">去登录 ›</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+
+  <block wx:elif="{{!needLogin}}">
+    <view class="search-bar">
+      <input class="search-input" placeholder="按姓名搜索" value="{{keyword}}" bindinput="onSearch" />
+    </view>
+    <view wx:if="{{!list.length}}" class="tip">没有找到客户</view>
+    <view wx:for="{{list}}" wx:key="id" class="card client-row" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="row-main">
+        <text class="light">{{item.light}}</text>
+        <text class="t">{{item.name}}</text>
+        <text class="goal">{{item.goal}}</text>
+      </view>
+      <view class="row-sub">
+        <text>出勤 {{item.att}}%</text>
+        <text class="arrow">›</text>
+      </view>
+    </view>
+  </block>
+</view>

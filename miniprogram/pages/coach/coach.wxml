@@ -1,6 +1,13 @@
 <view class="container t-{{theme}}">
   <view class="title">教练工作台</view>
 
+  <view class="sec">管理</view>
+  <view class="btns">
+    <button size="mini" type="primary" bindtap="goClients">客户管理</button>
+    <button size="mini" type="primary" bindtap="goCourseEdit">发布课程</button>
+    <button size="mini" type="primary" bindtap="goIntake">智能录入</button>
+  </view>
+
   <view wx:if="{{pendingDiets.length}}">
     <view class="sec">待确认饮食（{{pendingDiets.length}}）</view>
     <view wx:for="{{pendingDiets}}" wx:key="id" class="card">

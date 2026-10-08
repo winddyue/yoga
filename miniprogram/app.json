@@ -12,7 +12,17 @@
     "pages/about/about",
     "pages/theme/theme",
     "pages/notices/notices",
-    "pages/measure/measure"
+    "pages/measure/measure",
+    "pages/clients/clients",
+    "pages/client-detail/client-detail",
+    "pages/assess/assess",
+    "pages/plans/plans",
+    "pages/diets/diets",
+    "pages/course-edit/course-edit",
+    "pages/intake/intake",
+    "pages/users/users",
+    "pages/settings/settings",
+    "pages/fields/fields"
   ],
   "tabBar": {
     "color": "#8b93a7",

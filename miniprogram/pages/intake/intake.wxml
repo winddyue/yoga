@@ -1,0 +1,49 @@
+<view class="container t-{{theme}}">
+  <view class="title">智能录入</view>
+
+  <view class="field">
+    <text class="label">客户<text class="req">*</text></text>
+    <block wx:if="{{clients.length && !clientName}}">
+      <picker mode="selector" range="{{clients}}" range-key="name" value="{{clientIdx}}" bindchange="onClient">
+        <view class="picker-value"><text>{{clients[clientIdx].name}}</text><text class="arrow">›</text></view>
+      </picker>
+    </block>
+    <text class="value" wx:else>{{clientName || '未选择'}}</text>
+  </view>
+
+  <view class="tabs">
+    <view class="tab {{tab === 'text' ? 'on' : ''}}" data-t="text" bindtap="switchTab">文字录入</view>
+    <view class="tab {{tab === 'photo' ? 'on' : ''}}" data-t="photo" bindtap="switchTab">拍照</view>
+  </view>
+
+  <!-- 文字录入 -->
+  <block wx:if="{{tab === 'text'}}">
+    <view class="card">
+      <textarea class="ta" placeholder="如：体重68kg，体脂30%，腰围82cm" value="{{text}}" data-k="text" bindinput="onInput" maxlength="500" />
+    </view>
+    <button class="primary" bindtap="extract" disabled="{{extracting}}">{{extracting ? '提取中…' : 'AI 提取'}}</button>
+  </block>
+
+  <!-- 拍照 -->
+  <block wx:elif="{{tab === 'photo'}}">
+    <view class="card center">
+      <view class="sub">拍摄或选择体测单照片，自动识别身体数据</view>
+      <button class="primary" bindtap="choosePhoto" disabled="{{uploading}}">{{uploading ? '识别中…' : '选择照片'}}</button>
+    </view>
+  </block>
+
+  <!-- 待确认表单 -->
+  <block wx:if="{{editFields.length}}">
+    <view class="sec">待确认（可修改后保存）</view>
+    <view class="card">
+      <block wx:for="{{editFields}}" wx:key="k">
+        <view class="field">
+          <text class="label">{{item.label}}</text>
+          <input class="input" type="digit" value="{{item.value}}" data-k="{{item.k}}" bindinput="onFieldInput" placeholder="—" />
+          <text class="unit">{{item.unit}}</text>
+        </view>
+      </block>
+    </view>
+    <button class="primary" bindtap="confirmSave" disabled="{{confirming}}">{{confirming ? '保存中…' : '确认并保存为评估'}}</button>
+  </block>
+</view>

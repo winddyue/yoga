@@ -1,0 +1,42 @@
+<view class="container t-{{theme}}">
+  <view class="title-row">
+    <view class="title">自定义字段</view>
+    <text class="link" bindtap="toggleForm">{{showForm ? '收起' : '＋ 新增'}}</text>
+  </view>
+
+  <view wx:if="{{showForm}}" class="card">
+    <view class="field">
+      <text class="label">字段名称<text class="req">*</text></text>
+      <input class="input" placeholder="如：过敏史" value="{{name}}" data-k="name" bindinput="onInput" />
+    </view>
+    <view class="field">
+      <text class="label">类型</text>
+      <picker mode="selector" range="{{types}}" range-key="name" value="{{typeIdx}}" bindchange="onType">
+        <view class="picker-value"><text>{{types[typeIdx].name}}</text><text class="arrow">›</text></view>
+      </picker>
+    </view>
+    <view class="field">
+      <text class="label">用于</text>
+      <picker mode="selector" range="{{targets}}" range-key="name" value="{{targetIdx}}" bindchange="onTarget">
+        <view class="picker-value"><text>{{targets[targetIdx].name}}</text><text class="arrow">›</text></view>
+      </picker>
+    </view>
+    <button class="primary sm" bindtap="submit" disabled="{{submitting}}">{{submitting ? '添加中…' : '添加字段'}}</button>
+  </view>
+
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+  <view wx:elif="{{!fields.length}}" class="tip">暂无自定义字段</view>
+  <block wx:else>
+    <view wx:for="{{fields}}" wx:key="id" class="card row">
+      <view>
+        <view class="t">{{item.name}}</view>
+        <view class="sub">{{item.field_type === 'text' ? '文本' : item.field_type === 'number' ? '数字' : item.field_type === 'select' ? '选项' : item.field_type}} · {{item.target === 'client' ? '客户档案' : item.target === 'assessment' ? '评估记录' : item.target}}</view>
+      </view>
+      <text class="del" data-id="{{item.id}}" bindtap="remove">删除</text>
+    </view>
+  </block>
+</view>

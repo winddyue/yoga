@@ -1,0 +1,53 @@
+<view class="container t-{{theme}}">
+  <view class="title">系统设置</view>
+
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+  <block wx:else>
+    <view class="sec">AI 服务</view>
+    <view class="card">
+      <view class="field">
+        <text class="label">AI 接口地址</text>
+        <input class="input" placeholder="如 https://api.deepseek.com" value="{{ai_api_url}}" data-k="ai_api_url" bindinput="onInput" />
+      </view>
+      <view class="field">
+        <text class="label">模型名</text>
+        <input class="input" placeholder="如 deepseek-chat" value="{{ai_model}}" data-k="ai_model" bindinput="onInput" />
+      </view>
+      <view class="field">
+        <text class="label">启用 AI</text>
+        <switch checked="{{ai_enabled}}" bindchange="onSwitch" color="#357771" style="transform: scale(.85)" />
+      </view>
+      <view class="cfg">AI：{{ai_configured ? '已配置密钥' : '未配置密钥（密钥请在服务器环境变量设置）'}}</view>
+    </view>
+
+    <view class="sec">识别服务</view>
+    <view class="card">
+      <view class="field">
+        <text class="label">OCR 接口地址</text>
+        <input class="input" value="{{ocr_api_url}}" data-k="ocr_api_url" bindinput="onInput" />
+      </view>
+      <view class="field">
+        <text class="label">ASR 接口地址</text>
+        <input class="input" value="{{asr_api_url}}" data-k="asr_api_url" bindinput="onInput" />
+      </view>
+      <view class="cfg">OCR：{{ocr_configured ? '已配置' : '未配置'}} · ASR：{{asr_configured ? '已配置' : '未配置'}}</view>
+    </view>
+    <button class="primary" bindtap="save" disabled="{{saving}}">{{saving ? '保存中…' : '保存设置'}}</button>
+
+    <view class="sec">其他</view>
+    <view class="card">
+      <view class="field" bindtap="goTheme">
+        <text class="label">界面风格</text>
+        <view class="picker-value"><text>去选择</text><text class="arrow">›</text></view>
+      </view>
+      <view class="field">
+        <text class="label">版本</text>
+        <text class="value">{{version}}</text>
+      </view>
+    </view>
+  </block>
+</view>

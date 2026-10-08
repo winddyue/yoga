@@ -1,0 +1,10 @@
+/* 自定义字段页：复用 app.wxss 全局 token，此处仅补表单与行细节 */
+.link { font-size: 28rpx; color: #357771; font-weight: 600; }
+.field .input { flex: 1; font-size: 29rpx; color: #2F3F3C; height: 60rpx; text-align: right; min-width: 0; }
+.field .req { color: #C07B6E; }
+.field .arrow { color: #85948F; margin-left: 8rpx; }
+.field picker { flex: 1; }
+.picker-value { display: flex; align-items: center; justify-content: flex-end; font-size: 29rpx; color: #2F3F3C; }
+.primary.sm { height: 80rpx; line-height: 80rpx; font-size: 28rpx; }
+.card.row { display: flex; align-items: center; justify-content: space-between; }
+.del { font-size: 26rpx; color: #B4655F; padding: 12rpx; }

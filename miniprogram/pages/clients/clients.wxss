@@ -1,0 +1,10 @@
+/* 客户列表：复用 app.wxss 全局 token，此处仅补搜索框与列表行 */
+.search-bar { margin-bottom: 20rpx; }
+.search-input { background: #fff; border-radius: 999rpx; padding: 18rpx 30rpx; font-size: 28rpx; box-shadow: 0 4rpx 16rpx rgba(122,100,84,.06); }
+.client-row { display: flex; align-items: center; justify-content: space-between; padding: 26rpx 28rpx; }
+.row-main { display: flex; align-items: center; flex: 1; }
+.light { font-size: 28rpx; margin-right: 12rpx; }
+.row-main .t { font-size: 31rpx; font-weight: 600; }
+.goal { font-size: 24rpx; color: #85948F; margin-left: 14rpx; }
+.row-sub { display: flex; align-items: center; font-size: 25rpx; color: #85948F; }
+.row-sub .arrow { margin-left: 10rpx; font-size: 30rpx; }

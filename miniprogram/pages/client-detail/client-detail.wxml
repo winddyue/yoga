@@ -1,0 +1,51 @@
+<view class="container t-{{theme}}">
+  <view class="title-row"><text class="title">{{client ? client.name : '客户详情'}}</text></view>
+
+  <view wx:if="{{needLogin}}" class="login-bar" bindtap="goLogin">
+    <text>登录后查看客户详情</text>
+    <text class="go">去登录 ›</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+
+  <block wx:elif="{{!needLogin && client}}">
+    <!-- 档案卡 -->
+    <view class="card">
+      <view class="t">{{client.name}}</view>
+      <view class="sub">{{client.gender}} {{client.age ? client.age + '岁' : ''}} · 目标：{{client.goal || '未设置'}}</view>
+      <view class="sub" wx:if="{{client.phone}}">电话：{{client.phone}}</view>
+      <view class="sub">出勤率：{{client.att}}%</view>
+    </view>
+
+    <!-- 快捷操作 -->
+    <view class="ops">
+      <button class="op-btn" bindtap="goAssess">代录体测</button>
+      <button class="op-btn" bindtap="goPlans">训练计划</button>
+      <button class="op-btn" bindtap="goDiets">饮食方案</button>
+    </view>
+
+    <!-- 身体趋势 -->
+    <view class="sec">身体趋势</view>
+    <view class="card" wx:if="{{trends && trends.dates.length}}">
+      <view class="tabs">
+        <text class="tab {{metric==='weight'?'on':''}}" data-m="weight" bindtap="switchMetric">体重</text>
+        <text class="tab {{metric==='body_fat'?'on':''}}" data-m="body_fat" bindtap="switchMetric">体脂率</text>
+        <text class="tab {{metric==='waist'?'on':''}}" data-m="waist" bindtap="switchMetric">腰围</text>
+      </view>
+      <canvas canvas-id="detailTrend" id="detailTrend" class="trend-canvas" />
+    </view>
+    <view class="tip" wx:else>暂无评估数据，可先代录一次体测</view>
+
+    <!-- 评估历史 -->
+    <view class="sec">评估历史（{{history.length}}）</view>
+    <view wx:if="{{!history.length}}" class="tip">暂无评估记录</view>
+    <view wx:for="{{history}}" wx:key="date" class="card hist-row">
+      <text class="t">{{item.date}}</text>
+      <text class="sub">体重 {{item.weight}}kg · 体脂 {{item.bodyFat}}%</text>
+    </view>
+  </block>
+</view>

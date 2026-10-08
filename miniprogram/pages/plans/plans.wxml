@@ -1,0 +1,55 @@
+<view class="container t-{{theme}}">
+  <view class="title-row"><text class="title">训练计划{{clientName ? ' · ' + clientName : ''}}</text></view>
+
+  <view wx:if="{{needLogin}}" class="login-bar" bindtap="goLogin">
+    <text>登录后管理训练计划</text>
+    <text class="go">去登录 ›</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+
+  <block wx:elif="{{!needLogin}}">
+    <button class="primary gen-btn" bindtap="generate" disabled="{{generating}}">{{generating ? '生成中…' : 'AI 生成一周计划'}}</button>
+
+    <view wx:if="{{!plans.length}}" class="tip">暂无训练计划，可点上方 AI 生成</view>
+
+    <view wx:for="{{plans}}" wx:key="id" class="card plan-card">
+      <view class="plan-head">
+        <text class="t">第 {{item.week_start}} 周</text>
+        <text class="status {{item.status==='active'?'s-checked_in':'s-cancelled'}}">{{item.status==='active'?'生效中':'已归档'}}</text>
+      </view>
+
+      <!-- 查看态 -->
+      <block wx:if="{{editingId !== item.id}}">
+        <view wx:for="{{item.days}}" wx:for-item="d" wx:key="day" class="day-line">
+          <text class="day">{{d.day}}{{d.time ? ' · ' + d.time : ''}}</text>
+          <text class="ex">{{d.exText}}</text>
+        </view>
+        <view class="btns"><button size="mini" bindtap="startEdit" data-id="{{item.id}}">编辑</button></view>
+      </block>
+
+      <!-- 编辑态 -->
+      <block wx:else>
+        <view class="field">
+          <text class="label">起始周</text>
+          <input class="value input" placeholder="如 2026-10-12" value="{{editWeek}}" bindinput="onWeekInput" />
+        </view>
+        <view wx:for="{{editDays}}" wx:for-item="d" wx:for-index="i" wx:key="day" class="day-edit">
+          <view class="day-head">
+            <text class="day">{{d.day}}</text>
+            <input class="time-input" placeholder="时间，如 19:00" value="{{d.time}}" bindinput="onDayTimeInput" data-i="{{i}}" />
+          </view>
+          <textarea class="ex-text" placeholder="每行一个动作，格式：深蹲 3x12" value="{{d.text}}" bindinput="onDayTextInput" data-i="{{i}}" auto-height />
+        </view>
+        <view class="btns">
+          <button size="mini" type="primary" bindtap="saveEdit" disabled="{{saving}}">{{saving ? '保存中…' : '保存'}}</button>
+          <button size="mini" bindtap="cancelEdit">取消</button>
+        </view>
+      </block>
+    </view>
+  </block>
+</view>

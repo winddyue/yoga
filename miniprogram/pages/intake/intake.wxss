@@ -1,0 +1,14 @@
+/* 智能录入页：复用 app.wxss 全局 token，此处仅补 tab/输入框细节 */
+.field .input { flex: 1; font-size: 29rpx; color: #2F3F3C; height: 60rpx; text-align: right; min-width: 0; }
+.field .value { flex: 1; font-size: 29rpx; color: #2F3F3C; text-align: right; }
+.field .unit { font-size: 26rpx; color: #85948F; margin-left: 10rpx; }
+.field .req { color: #C07B6E; }
+.field .arrow { color: #85948F; margin-left: 8rpx; }
+.field picker { flex: 1; }
+.picker-value { display: flex; align-items: center; justify-content: flex-end; font-size: 29rpx; color: #2F3F3C; }
+.tabs { display: flex; gap: 16rpx; margin: 24rpx 0; }
+.tab { flex: 1; text-align: center; font-size: 28rpx; padding: 20rpx 0; border-radius: 999rpx; background: #fff; color: #85948F; }
+.tab.on { background: #357771; color: #fff; font-weight: 600; }
+.ta { width: 100%; min-height: 180rpx; font-size: 29rpx; color: #2F3F3C; line-height: 1.6; }
+.card.center { text-align: center; }
+.card .sub { font-size: 26rpx; color: #85948F; margin-bottom: 20rpx; }
