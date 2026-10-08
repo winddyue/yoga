@@ -60,6 +60,9 @@
       <text class="t">{{item.date}}</text>
       <text class="sub">体重 {{item.weight}}kg · 体脂 {{item.bodyFat}}%</text>
       <text wx:if="{{item.delta}}" class="delta-chip delta-{{item.delta.cls}}">较上条 {{item.delta.text}}</text>
+      <block wx:if="{{item.customs.length}}" wx:for="{{item.customs}}" wx:for-item="c" wx:key="name">
+        <text class="sub">{{c.name}}：{{c.value}}</text>
+      </block>
     </view>
   </block>
 </view>

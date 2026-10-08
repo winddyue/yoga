@@ -114,6 +114,21 @@
       </view>
     </view>
 
+    <block wx:if="{{cfFields.length}}">
+      <view class="sec">自定义字段</view>
+      <view class="card">
+        <block wx:for="{{cfFields}}" wx:key="id">
+          <view class="field">
+            <text class="label">{{item.name}}</text>
+            <input wx:if="{{item.field_type === 'number'}}" class="value input" type="digit" placeholder="选填"
+              value="{{item.val}}" bindinput="onCfInput" data-i="{{index}}" />
+            <input wx:else class="value input" placeholder="选填"
+              value="{{item.val}}" bindinput="onCfInput" data-i="{{index}}" />
+          </view>
+        </block>
+      </view>
+    </block>
+
     <button class="primary" bindtap="submit" disabled="{{submitting}}">{{submitting ? '保存中…' : '保存记录'}}</button>
   </block>
 </view>

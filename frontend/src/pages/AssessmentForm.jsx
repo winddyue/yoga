@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import Layout from '../components/Layout';
@@ -20,13 +20,30 @@ export default function AssessmentForm() {
   const [form, setForm] = useState({ ...EMPTY, injuries: '' });
   const [scan, setScan] = useState(false);
   const [msg, setMsg] = useState('');
+  // 自定义字段（target=assessment，由馆主在"自定义字段"页维护）
+  const [cfFields, setCfFields] = useState([]);
+  const [cfVals, setCfVals] = useState({});
+  useEffect(() => {
+    api.get('/api/custom-fields')
+      .then((r) => setCfFields((r || []).filter((f) => f.target === 'assessment')))
+      .catch(() => {});
+  }, []);
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const setCf = (id) => (e) => setCfVals({ ...cfVals, [id]: e.target.value });
 
   const submit = async (e) => {
     e.preventDefault();
     const num = (v) => (v === '' ? 0 : +v);
     const payload = { ...form };
     FIELDS.forEach(([k, , t]) => { if (t === 'number') payload[k] = num(form[k]); });
+    // 自定义字段并入 custom_values（key 为字段 id 字符串；空值不保存）
+    const cv = {};
+    cfFields.forEach((f) => {
+      const v = cfVals[f.id];
+      if (v === '' || v === undefined || v === null) return;
+      cv[String(f.id)] = f.field_type === 'number' ? num(v) : v;
+    });
+    if (Object.keys(cv).length) payload.custom_values = cv;
     await api.post(`/api/clients/${id}/assessments`, payload);
     nav(`/clients/${id}`);
   };
@@ -71,6 +88,18 @@ export default function AssessmentForm() {
           <span className="label">伤病史/注意事项</span>
           <textarea className="input" rows="2" value={form.injuries} onChange={set('injuries')} />
         </div>
+        {cfFields.length > 0 && (
+          <>
+            <div className="col-span-2 md:col-span-3"><span className="label font-bold">自定义字段</span></div>
+            {cfFields.map((f) => (
+              <div key={f.id}>
+                <span className="label">{f.name}</span>
+                <input className="input" type={f.field_type === 'number' ? 'number' : 'text'}
+                  value={cfVals[f.id] ?? ''} onChange={setCf(f.id)} />
+              </div>
+            ))}
+          </>
+        )}
         <button className="btn-primary col-span-2 md:col-span-3">保存评估</button>
       </form>
     </Layout>

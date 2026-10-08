@@ -4,6 +4,20 @@ const { syncTheme, getTheme, currentThemeId } = require('../../utils/themes.js')
 const chart = require('../../utils/chart.js');
 const fb = require('../../utils/feedback.js');
 
+// 从 custom_values 提取自定义字段显示项（排除 notes 备注键；空值跳过；
+// key 为字段 id 字符串，字段被删后显示"已删除字段"，历史数据不受影响）
+function pickCustoms(customValues, fieldMap) {
+  const out = [];
+  const cv = customValues || {};
+  for (const k of Object.keys(cv)) {
+    if (k === 'notes') continue;
+    const v = cv[k];
+    if (v === '' || v === null || v === undefined) continue;
+    out.push({ name: fieldMap[String(k)] || '已删除字段', value: String(v) });
+  }
+  return out;
+}
+
 Page({
   data: {
     theme: '', id: null, client: null, history: [], trends: null,
@@ -40,6 +54,12 @@ Page({
       ]), { loading: '加载中…' });
       let trends = null;
       try { trends = await api.get(`/api/clients/${this.data.id}/trends`); } catch (e) {}
+      // 自定义字段 id→name 映射（用于历史记录中显示字段名；字段被删则显示"已删除字段"）
+      let fieldMap = {};
+      try {
+        const all = await api.get('/api/custom-fields');
+        (all || []).forEach((f) => { fieldMap[String(f.id)] = f.name; });
+      } catch (e) {}
       const rows = (history || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
       // 最新状态：取最新一条评估，有值的指标（最多6项，两列网格）
       const latest = rows[0] || null;
@@ -82,7 +102,7 @@ Page({
           }
           return {
             date: r.date, weight: r.weight_kg || '-', bodyFat: r.body_fat_pct || '-',
-            delta: d,
+            delta: d, customs: pickCustoms(r.custom_values, fieldMap),
           };
         }),
         trends, loading: false,

@@ -20,6 +20,8 @@ Page({
     chest: '', waist: '', hip: '', arm: '', thigh: '',
     // 健康指标
     restingHr: '', bloodPressure: '', injuries: '', notes: '',
+    // 自定义字段（target=assessment，馆主维护）：[{id, name, field_type, val}]
+    cfFields: [],
     clientId: null, needLogin: false, loading: true, loadErr: '',
     needConsent: false, agreeing: false, submitting: false,
     done: false, doneRows: [], firstTime: false,
@@ -41,6 +43,12 @@ Page({
       const patch = { clientId: c.id, needConsent: !ok, loading: false };
       // 身高从客户档案预填（仅用于当场算 BMI，不回写）
       if (c.height_cm && c.height_cm > 0) patch.height = String(c.height_cm);
+      // 自定义字段（评估类）
+      try {
+        const all = await api.get('/api/custom-fields');
+        patch.cfFields = (all || []).filter((f) => f.target === 'assessment')
+          .map((f) => ({ id: f.id, name: f.name, field_type: f.field_type, val: '' }));
+      } catch (e) {}
       this.setData(patch, () => this._calcBmi());
     } catch (e) {
       this.setData({ loading: false, loadErr: e.message === '未登录' ? '' : e.message, needLogin: e.message === '未登录' });
@@ -56,6 +64,12 @@ Page({
     this.setData({ [k]: e.detail.value }, () => {
       if (k === 'weight' || k === 'height') this._calcBmi();
     });
+  },
+
+  // 自定义字段输入（按下标更新，避免动态 key 绑定问题）
+  onCfInput(e) {
+    const i = Number(e.currentTarget.dataset.i);
+    this.setData({ [`cfFields[${i}].val`]: e.detail.value });
   },
 
   // BMI = 体重kg / (身高m)^2，保留1位；身高或体重缺失时不显示
@@ -114,6 +128,16 @@ Page({
         }
       }
     }
+    // 自定义字段：数字型填了必须有效
+    for (const f of this.data.cfFields) {
+      if (f.field_type === 'number' && f.val !== '' && f.val !== undefined && f.val !== null) {
+        const n = this._num(f.val);
+        if (isNaN(n) || n < 0) {
+          wx.showToast({ title: `${f.name}请填写有效数字`, icon: 'none' });
+          return;
+        }
+      }
+    }
     if (this.data.needConsent) {
       wx.showToast({ title: '请先完成上方的授权', icon: 'none' });
       return;
@@ -138,6 +162,14 @@ Page({
         injuries: this.data.injuries || '',
       };
       if (this.data.notes) body.custom_values = { notes: this.data.notes };
+      // 自定义字段并入 custom_values（key 为字段 id 字符串；notes 键保留给备注）
+      const cv = body.custom_values || {};
+      for (const f of this.data.cfFields) {
+        if (f.val !== '' && f.val !== undefined && f.val !== null) {
+          cv[String(f.id)] = f.field_type === 'number' ? this._num(f.val) : f.val;
+        }
+      }
+      if (Object.keys(cv).length) body.custom_values = cv;
       await api.post(`/api/clients/${this.data.clientId}/assessments`, body);
       // 提交成功：重新拉趋势（含本次新记录），页面内显示"本次 vs 上次"对比卡
       let trends = null;
@@ -175,10 +207,12 @@ Page({
 
   // 再记一条：重置表单（保留身高预填）
   resetForm() {
+    const cfFields = (this.data.cfFields || []).map((f) => ({ ...f, val: '' }));
     this.setData({
       date: todayStr(), weight: '', bodyFat: '', muscle: '', visceral: '', bmiText: '',
       chest: '', waist: '', hip: '', arm: '', thigh: '',
       restingHr: '', bloodPressure: '', injuries: '', notes: '',
+      cfFields,
       done: false, doneRows: [], firstTime: false,
     }, () => this._calcBmi());
   },
