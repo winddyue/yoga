@@ -14,7 +14,12 @@ function todayStr() {
 Page({
   data: {
     theme: '', date: todayStr(),
-    weight: '', bodyFat: '', waist: '', hip: '', notes: '',
+    // 身体成分
+    height: '', weight: '', bodyFat: '', muscle: '', visceral: '', bmiText: '',
+    // 围度
+    chest: '', waist: '', hip: '', arm: '', thigh: '',
+    // 健康指标
+    restingHr: '', bloodPressure: '', injuries: '', notes: '',
     clientId: null, needLogin: false, loading: true, loadErr: '',
     needConsent: false, agreeing: false, submitting: false,
     done: false, doneRows: [], firstTime: false,
@@ -33,7 +38,10 @@ Page({
       let consents = [];
       try { consents = await api.get('/api/consents/mine'); } catch (e) {}
       const ok = (consents || []).some((x) => x.consent_type === 'sensitive_info');
-      this.setData({ clientId: c.id, needConsent: !ok, loading: false });
+      const patch = { clientId: c.id, needConsent: !ok, loading: false };
+      // 身高从客户档案预填（仅用于当场算 BMI，不回写）
+      if (c.height_cm && c.height_cm > 0) patch.height = String(c.height_cm);
+      this.setData(patch, () => this._calcBmi());
     } catch (e) {
       this.setData({ loading: false, loadErr: e.message === '未登录' ? '' : e.message, needLogin: e.message === '未登录' });
     }
@@ -43,7 +51,23 @@ Page({
 
   onDateChange(e) { this.setData({ date: e.detail.value }); },
 
-  onInput(e) { this.setData({ [e.currentTarget.dataset.k]: e.detail.value }); },
+  onInput(e) {
+    const k = e.currentTarget.dataset.k;
+    this.setData({ [k]: e.detail.value }, () => {
+      if (k === 'weight' || k === 'height') this._calcBmi();
+    });
+  },
+
+  // BMI = 体重kg / (身高m)^2，保留1位；身高或体重缺失时不显示
+  _calcBmi() {
+    const w = this._num(this.data.weight);
+    const h = this._num(this.data.height);
+    let t = '';
+    if (!isNaN(w) && w > 0 && !isNaN(h) && h > 0) {
+      t = (w / Math.pow(h / 100, 2)).toFixed(1);
+    }
+    this.setData({ bmiText: t });
+  },
 
   // 单独授权：敏感信息采集同意
   async agreeConsent() {
@@ -77,11 +101,17 @@ Page({
       wx.showToast({ title: '请填写有效的体重', icon: 'none' });
       return;
     }
-    for (const [k, label] of [['bodyFat', '体脂率'], ['waist', '腰围'], ['hip', '臀围']]) {
-      const n = this._num(this.data[k]);
-      if (isNaN(n) || n < 0) {
-        wx.showToast({ title: `${label}请填写有效数字`, icon: 'none' });
-        return;
+    // 其余数字项：填了就必须有效；必填只有体重
+    for (const [k, label] of [['height', '身高'], ['bodyFat', '体脂率'], ['muscle', '肌肉量'],
+        ['visceral', '内脏脂肪等级'], ['chest', '胸围'], ['waist', '腰围'], ['hip', '臀围'],
+        ['arm', '上臂围'], ['thigh', '大腿围'], ['restingHr', '静息心率']]) {
+      const raw = this.data[k];
+      if (raw !== '' && raw !== undefined && raw !== null) {
+        const n = this._num(raw);
+        if (isNaN(n) || n < 0) {
+          wx.showToast({ title: `${label}请填写有效数字`, icon: 'none' });
+          return;
+        }
       }
     }
     if (this.data.needConsent) {
@@ -90,12 +120,22 @@ Page({
     }
     this.setData({ submitting: true });
     try {
+      const rh = parseInt(this._num(this.data.restingHr), 10);
       const body = {
         date: this.data.date,
         weight_kg: w,
         body_fat_pct: this._num(this.data.bodyFat),
+        muscle_kg: this._num(this.data.muscle),
+        bmi: this.data.bmiText ? parseFloat(this.data.bmiText) : 0,
+        visceral_fat: this._num(this.data.visceral),
+        chest_cm: this._num(this.data.chest),
         waist_cm: this._num(this.data.waist),
         hip_cm: this._num(this.data.hip),
+        arm_cm: this._num(this.data.arm),
+        thigh_cm: this._num(this.data.thigh),
+        resting_hr: isNaN(rh) ? 0 : rh,
+        blood_pressure: this.data.bloodPressure || '',
+        injuries: this.data.injuries || '',
       };
       if (this.data.notes) body.custom_values = { notes: this.data.notes };
       await api.post(`/api/clients/${this.data.clientId}/assessments`, body);
@@ -133,11 +173,13 @@ Page({
   // 对比卡按钮：去训练页看趋势（tab 页用 switchTab）
   goTraining() { wx.switchTab({ url: '/pages/training/training' }); },
 
-  // 再记一条：重置表单
+  // 再记一条：重置表单（保留身高预填）
   resetForm() {
     this.setData({
-      date: todayStr(), weight: '', bodyFat: '', waist: '', hip: '', notes: '',
+      date: todayStr(), weight: '', bodyFat: '', muscle: '', visceral: '', bmiText: '',
+      chest: '', waist: '', hip: '', arm: '', thigh: '',
+      restingHr: '', bloodPressure: '', injuries: '', notes: '',
       done: false, doneRows: [], firstTime: false,
-    });
+    }, () => this._calcBmi());
   },
 });

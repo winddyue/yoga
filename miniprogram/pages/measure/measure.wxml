@@ -45,6 +45,15 @@
           <text class="arrow">›</text>
         </picker>
       </view>
+    </view>
+
+    <view class="sec">身体成分</view>
+    <view class="card">
+      <view class="field">
+        <text class="label">身高</text>
+        <input class="value input" type="digit" placeholder="仅用于计算BMI" value="{{height}}" bindinput="onInput" data-k="height" />
+        <text class="unit">cm</text>
+      </view>
       <view class="field">
         <text class="label">体重 <text class="req">*</text></text>
         <input class="value input" type="digit" placeholder="如 62.5" value="{{weight}}" bindinput="onInput" data-k="weight" />
@@ -56,6 +65,30 @@
         <text class="unit">%</text>
       </view>
       <view class="field">
+        <text class="label">肌肉量</text>
+        <input class="value input" type="digit" placeholder="选填" value="{{muscle}}" bindinput="onInput" data-k="muscle" />
+        <text class="unit">kg</text>
+      </view>
+      <view class="field">
+        <text class="label">BMI</text>
+        <text class="value input">{{bmiText || '—'}}</text>
+        <text class="unit">自动计算</text>
+      </view>
+      <view class="field">
+        <text class="label">内脏脂肪等级</text>
+        <input class="value input" type="digit" placeholder="选填" value="{{visceral}}" bindinput="onInput" data-k="visceral" />
+        <text class="unit">级</text>
+      </view>
+    </view>
+
+    <view class="sec">围度</view>
+    <view class="card">
+      <view class="field">
+        <text class="label">胸围</text>
+        <input class="value input" type="digit" placeholder="选填" value="{{chest}}" bindinput="onInput" data-k="chest" />
+        <text class="unit">cm</text>
+      </view>
+      <view class="field">
         <text class="label">腰围</text>
         <input class="value input" type="digit" placeholder="选填" value="{{waist}}" bindinput="onInput" data-k="waist" />
         <text class="unit">cm</text>
@@ -64,6 +97,34 @@
         <text class="label">臀围</text>
         <input class="value input" type="digit" placeholder="选填" value="{{hip}}" bindinput="onInput" data-k="hip" />
         <text class="unit">cm</text>
+      </view>
+      <view class="field">
+        <text class="label">上臂围</text>
+        <input class="value input" type="digit" placeholder="选填" value="{{arm}}" bindinput="onInput" data-k="arm" />
+        <text class="unit">cm</text>
+      </view>
+      <view class="field">
+        <text class="label">大腿围</text>
+        <input class="value input" type="digit" placeholder="选填" value="{{thigh}}" bindinput="onInput" data-k="thigh" />
+        <text class="unit">cm</text>
+      </view>
+    </view>
+
+    <view class="sec">健康指标</view>
+    <view class="card">
+      <view class="field">
+        <text class="label">静息心率</text>
+        <input class="value input" type="digit" placeholder="选填" value="{{restingHr}}" bindinput="onInput" data-k="restingHr" />
+        <text class="unit">bpm</text>
+      </view>
+      <view class="field">
+        <text class="label">血压</text>
+        <input class="value input" placeholder="选填，如 120/80" value="{{bloodPressure}}" bindinput="onInput" data-k="bloodPressure" />
+        <text class="unit">mmHg</text>
+      </view>
+      <view class="field">
+        <text class="label">伤病史/注意事项</text>
+        <input class="value input" placeholder="选填" value="{{injuries}}" bindinput="onInput" data-k="injuries" />
       </view>
       <view class="field">
         <text class="label">备注</text>

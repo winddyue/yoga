@@ -21,6 +21,19 @@
       <view class="sub">出勤率：{{client.att}}%</view>
     </view>
 
+    <!-- 最新状态：最新一条评估的有值指标 -->
+    <block wx:if="{{latestStatus.length}}">
+      <view class="sec">最新状态</view>
+      <view class="card status-grid">
+        <block wx:for="{{latestStatus}}" wx:key="label">
+          <view class="status-cell">
+            <text class="status-label">{{item.label}}</text>
+            <text class="status-value">{{item.text}}</text>
+          </view>
+        </block>
+      </view>
+    </block>
+
     <!-- 快捷操作 -->
     <view class="ops">
       <button class="op-btn" bindtap="goAssess">代录体测</button>

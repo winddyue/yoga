@@ -8,6 +8,12 @@
 .trend-canvas { width: 100%; height: 300rpx; }
 .hist-row { padding: 22rpx 28rpx; margin-bottom: 16rpx; }
 
+/* 最新状态：两列网格 */
+.status-grid { display: flex; flex-wrap: wrap; padding: 8rpx 28rpx 20rpx; }
+.status-cell { width: 50%; padding: 18rpx 0; border-bottom: 2rpx solid #F0F0EC; }
+.status-label { display: block; font-size: 24rpx; color: #85948F; margin-bottom: 6rpx; }
+.status-value { display: block; font-size: 32rpx; font-weight: 600; color: #2F3F3C; }
+
 /* 较上条对比 chip */
 .delta-chip{display:inline-block;font-size:24rpx;padding:8rpx 22rpx;border-radius:999rpx;margin-top:10rpx}
 .delta-good{background:#E3EFE3;color:#4C7A4C}

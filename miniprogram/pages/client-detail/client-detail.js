@@ -7,7 +7,8 @@ const fb = require('../../utils/feedback.js');
 Page({
   data: {
     theme: '', id: null, client: null, history: [], trends: null,
-    metric: 'weight', loading: true, loadErr: '', needLogin: false,
+    metric: 'weight', latestStatus: [],
+    loading: true, loadErr: '', needLogin: false,
   },
 
   onLoad(options) {
@@ -40,6 +41,26 @@ Page({
       let trends = null;
       try { trends = await api.get(`/api/clients/${this.data.id}/trends`); } catch (e) {}
       const rows = (history || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+      // 最新状态：取最新一条评估，有值的指标（最多6项，两列网格）
+      const latest = rows[0] || null;
+      const latestStatus = [];
+      if (latest) {
+        const items = [
+          ['体重', latest.weight_kg, 'kg', 1],
+          ['体脂率', latest.body_fat_pct, '%', 1],
+          ['肌肉量', latest.muscle_kg, 'kg', 1],
+          ['BMI', latest.bmi, '', 1],
+          ['腰围', latest.waist_cm, 'cm', 1],
+          ['静息心率', latest.resting_hr, 'bpm', 0],
+        ];
+        for (const [label, v, unit, dec] of items) {
+          if (typeof v === 'number' && v > 0) {
+            const text = dec ? `${(+v).toFixed(1)}${unit}` : `${v}${unit}`;
+            latestStatus.push({ label, text });
+            if (latestStatus.length >= 6) break;
+          }
+        }
+      }
       this.setData({
         client: {
           name: client.name, gender: client.gender || '', age: client.age || '',
@@ -65,6 +86,7 @@ Page({
           };
         }),
         trends, loading: false,
+        latestStatus,
       }, () => { setTimeout(() => this.drawTrend(), 80); });
     } catch (e) {
       const expired = e.message === '未登录';
