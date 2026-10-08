@@ -20,7 +20,7 @@ export default function TrendChart({ dates, series, unit, color = '#B76E79' }) {
           <text x={X(i)} y={Y(v) - 8} fontSize="10" textAnchor="middle" fill="#4A4239">{v}</text>
         </g>
       ))}
-      <text x={P} y={16} fontSize="11" fill="#776A5D">单位：{unit}（{min} ~ {max}）</text>
+      <text x={W - P} y={16} fontSize="11" textAnchor="end" fill="#776A5D">单位：{unit}（{min} ~ {max}）</text>
     </svg>
   );
 }
