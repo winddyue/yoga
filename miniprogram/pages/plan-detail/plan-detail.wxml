@@ -1,0 +1,19 @@
+<view class="container t-{{theme}}">
+  <view class="title">第 {{plan ? plan.week_start : ''}} 周计划</view>
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{plan}}">
+    <view wx:for="{{plan.days}}" wx:key="day" class="card {{item.day === today ? 'today-card' : ''}}">
+      <view class="day-head">
+        <text class="t">{{item.day}}</text>
+        <text wx:if="{{item.day === today}}" class="badge">今日</text>
+        <text wx:if="{{item.time}}" class="sub"> {{item.time}}</text>
+      </view>
+      <view wx:for="{{item.exercises}}" wx:key="name" class="ex">
+        <text class="ex-name">{{item.name}}</text>
+        <text class="ex-sets">{{item.sets}}组 × {{item.reps}}</text>
+      </view>
+    </view>
+    <button class="checkin-btn" bindtap="goCheckin">今日训练打卡</button>
+  </view>
+  <view wx:else class="tip">未找到该计划</view>
+</view>

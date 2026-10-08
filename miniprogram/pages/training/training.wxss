@@ -49,3 +49,8 @@
 /* 计划获取区（空状态） */
 .acquire-zone{width:100%;margin-top:48rpx;text-align:left}
 .acquire-zone .sec{margin-top:24rpx}
+/* 计划卡片箭头与饮食展开 */
+.arrow { color: #8A917F; float: right; }
+.meals { margin-top: 8px; border-top: 1px solid #E4E8DD; padding-top: 8px; }
+.meal { font-size: 13px; padding: 4px 0; line-height: 1.6; }
+.mk { display: inline-block; min-width: 36px; color: #8A917F; font-size: 12px; }

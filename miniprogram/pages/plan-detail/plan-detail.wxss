@@ -1,0 +1,8 @@
+.day-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.badge { font-size: 11px; background: #6F8563; color: #fff; padding: 2px 8px; border-radius: 10px; }
+.today-card { border: 2px solid #6F8563; }
+.ex { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #E4E8DD; font-size: 14px; }
+.ex:last-child { border: none; }
+.ex-name { font-weight: 600; }
+.ex-sets { color: #8A917F; font-size: 13px; }
+.checkin-btn { margin-top: 16px; }

@@ -131,7 +131,10 @@
         <button size="mini" bindtap="requestPlan" data-kind="training">请求教练制定</button>
       </view>
     </view>
-    <view wx:for="{{plans}}" wx:key="id" class="card"><view class="t">第 {{item.week_start}} 周计划</view></view>
+    <view wx:for="{{plans}}" wx:key="id" class="card" data-id="{{item.id}}" bindtap="goPlanDetail">
+      <view class="t">第 {{item.week_start}} 周计划 <text class="arrow">›</text></view>
+      <view class="sub">{{(item.days || []).length}} 天 · 点查看每天动作</view>
+    </view>
     <view class="sec">饮食方案（{{diets.length}}）</view>
     <view wx:if="{{!diets.length}}">
       <view class="tip">暂无饮食方案</view>
@@ -140,9 +143,16 @@
         <button size="mini" bindtap="requestPlan" data-kind="diet">请求教练制定</button>
       </view>
     </view>
-    <view wx:for="{{diets}}" wx:key="id" class="card">
-      <view class="t">{{item.date}} · {{item.status === 'confirmed' ? '已确认' : (item.status === 'ai_draft' ? 'AI 生成·待教练确认' : '待确认')}}</view>
+    <view wx:for="{{diets}}" wx:key="id" class="card" data-id="{{item.id}}" bindtap="toggleDiet">
+      <view class="t">{{item.date}} · {{item.status === 'confirmed' ? '已确认' : (item.status === 'ai_draft' ? 'AI 生成·待教练确认' : '待确认')}} <text class="arrow">{{expandedDiet === item.id ? '▾' : '›'}}</text></view>
       <view wx:if="{{item.status === 'ai_draft'}}" class="disclaimer">AI 生成内容仅供参考，不构成医疗建议，请遵医嘱</view>
+      <view wx:if="{{expandedDiet === item.id}}" class="meals">
+        <view wx:if="{{item.meals.breakfast}}" class="meal"><text class="mk">早餐</text>{{item.meals.breakfast.join('、')}}</view>
+        <view wx:if="{{item.meals.lunch}}" class="meal"><text class="mk">午餐</text>{{item.meals.lunch.join('、')}}</view>
+        <view wx:if="{{item.meals.dinner}}" class="meal"><text class="mk">晚餐</text>{{item.meals.dinner.join('、')}}</view>
+        <view wx:if="{{item.meals.snack}}" class="meal"><text class="mk">加餐</text>{{item.meals.snack.join('、')}}</view>
+        <view class="sub">{{item.calories_target}}千卡 · 蛋白{{item.protein_g}}g · 脂肪{{item.fat_g}}g · 碳水{{item.carbs_g}}g</view>
+      </view>
     </view>
   </block>
 </view>

@@ -22,7 +22,8 @@
     "pages/intake/intake",
     "pages/users/users",
     "pages/settings/settings",
-    "pages/fields/fields"
+    "pages/fields/fields",
+    "pages/plan-detail/plan-detail"
   ],
   "tabBar": {
     "color": "#8b93a7",

@@ -29,6 +29,7 @@ Page({
     checkins: [], todayTraining: false, todayDiet: false,
     checkinDays: 0, recentCheckins: [],
     genPlan: false, genDiet: false,
+    expandedDiet: null,
     loading: true, loadErr: '', needLogin: false,
   },
   onShow() { syncTheme(this); this.load(); },
@@ -235,6 +236,15 @@ Page({
       // 重复打卡 400 等，后端返回友好提示，已显示
       this.loadCheckins(); // 刷新已打卡态
     }
+  },
+
+  // 计划详情 / 饮食展开
+  goPlanDetail(e) {
+    wx.navigateTo({ url: `/pages/plan-detail/plan-detail?id=${e.currentTarget.dataset.id}` });
+  },
+  toggleDiet(e) {
+    const id = e.currentTarget.dataset.id;
+    this.setData({ expandedDiet: this.data.expandedDiet === id ? null : id });
   },
 
   // 打卡照片点开放大（鉴权下载：header 带 token，拿到临时文件再预览）
