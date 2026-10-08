@@ -9,14 +9,14 @@ const LIGHT = { red: '🔴', yellow: '🟡', green: '🟢' };
 const STATUS_ORDER = { red: 0, yellow: 1, green: 2 };
 const STATUS_NAME = { red: '需关注', yellow: '待跟进', green: '正常' };
 
-// 趋势指标配置：减脂场景下，体重/体脂/腰围下降是好事（绿），上升是坏事（红）
+// 趋势指标配置：减脂场景下，体重/体脂/腰围下降是好事（sage 绿），上升是坏事（柔红）
 const METRICS = {
-  weight: { label: '体重', unit: 'kg', color: '#0d9488' },
-  body_fat: { label: '体脂率', unit: '%', color: '#f59e0b' },
-  waist: { label: '腰围', unit: 'cm', color: '#6366f1' },
-  hip: { label: '臀围', unit: 'cm', color: '#ec4899' },
+  weight: { label: '体重', unit: 'kg', color: '#B76E79' },
+  body_fat: { label: '体脂率', unit: '%', color: '#D9A85F' },
+  waist: { label: '腰围', unit: 'cm', color: '#9CAF88' },
+  hip: { label: '臀围', unit: 'cm', color: '#B89B7E' },
 };
-const changeCls = (v) => (v < 0 ? 'text-green-600' : v > 0 ? 'text-red-500' : 'text-gray-400');
+const changeCls = (v) => (v < 0 ? 'text-sage-700' : v > 0 ? 'text-[#C07878]' : 'text-clay');
 
 // 出勤目标差距圆环：当前出勤率 vs 100% 目标（行业共识做法，一眼看到差距）
 function GoalRing({ rate }) {
@@ -24,12 +24,12 @@ function GoalRing({ rate }) {
   const pct = Math.round((rate || 0) * 100);
   return (
     <svg width="96" height="96" viewBox="0 0 96 96">
-      <circle cx="48" cy="48" r={R} fill="none" stroke="#e5e7eb" strokeWidth="10" />
-      <circle cx="48" cy="48" r={R} fill="none" stroke="#0d9488" strokeWidth="10"
+      <circle cx="48" cy="48" r={R} fill="none" stroke="#F1E9DE" strokeWidth="10" />
+      <circle cx="48" cy="48" r={R} fill="none" stroke="#B76E79" strokeWidth="10"
         strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - (rate || 0))}
         transform="rotate(-90 48 48)" />
       <text x="48" y="48" textAnchor="middle" dominantBaseline="central"
-        fontSize="18" fontWeight="bold" fill="#0f766e">{pct}%</text>
+        fontSize="18" fontWeight="bold" fill="#854750">{pct}%</text>
     </svg>
   );
 }
@@ -65,8 +65,8 @@ export default function Dashboard() {
             ['体重变化', `${d.weight_change > 0 ? '+' : ''}${d.weight_change}kg`],
             ['饮食方案已确认', d.diet_confirmed]].map(([k, v]) => (
             <div key={k} className="card text-center">
-              <div className="text-2xl font-bold text-teal-700">{v}</div>
-              <div className="text-sm text-gray-500 mt-1">{k}</div>
+              <div className="text-2xl font-bold text-brand-700">{v}</div>
+              <div className="text-sm text-muted mt-1">{k}</div>
             </div>
           ))}
         </div>
@@ -75,10 +75,10 @@ export default function Dashboard() {
           <GoalRing rate={d.attendance_rate} />
           <div>
             <div className="font-medium">出勤目标差距</div>
-            <div className="text-sm text-gray-500 mt-1">
+            <div className="text-sm text-muted mt-1">
               当前出勤率 {Math.round((d.attendance_rate || 0) * 100)}%，目标 100%
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-muted">
               还差 {100 - Math.round((d.attendance_rate || 0) * 100)} 个百分点
             </div>
           </div>
@@ -92,7 +92,7 @@ export default function Dashboard() {
                 <div className="flex gap-1">
                   {Object.entries(METRICS).map(([k, cfg]) => (
                     <button key={k} onClick={() => setMetric(k)}
-                      className={`text-xs px-2 py-1 rounded ${metric === k ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                      className={`text-xs px-2 py-1 rounded ${metric === k ? 'bg-brand-600 text-white' : 'bg-cream text-muted'}`}>
                       {cfg.label}
                     </button>
                   ))}
@@ -104,12 +104,12 @@ export default function Dashboard() {
                   if (k === 'hip') return null;
                   const v = charts.changes?.[k] ?? 0;
                   return (
-                    <span key={k} className="text-gray-500">{cfg.label}
+                    <span key={k} className="text-muted">{cfg.label}
                       <b className={`ml-1 ${changeCls(v)}`}>{v > 0 ? '+' : ''}{v}{cfg.unit}</b>
                     </span>
                   );
                 })}
-                <span className="text-gray-400 text-xs self-center">相对首次评估</span>
+                <span className="text-clay text-xs self-center">相对首次评估</span>
               </div>
             </div>
             <div className="card mt-4">
@@ -142,18 +142,18 @@ export default function Dashboard() {
             ['近30天预约', d.bookings_30d], ['累计签到', d.total_checkins],
             ['AI 订阅中', d.active_subscriptions], ['AI 调用', d.ai_calls]].map(([k, v]) => (
             <div key={k} className="card text-center">
-              <div className="text-3xl font-bold text-teal-700">{v}</div>
-              <div className="text-sm text-gray-500 mt-1">{k}</div>
+              <div className="text-3xl font-bold text-brand-700">{v}</div>
+              <div className="text-sm text-muted mt-1">{k}</div>
             </div>
           ))}
         </div>
 
         <h2 className="font-bold mt-6 mb-2">会员分层</h2>
         <div className="grid grid-cols-4 gap-3">
-          {[['新客', d.new_clients_30d, '近30天新增', 'bg-blue-50 text-blue-700'],
-            ['活跃', cnt.green, '绿灯客户', 'bg-green-50 text-green-700'],
-            ['沉默', cnt.yellow, '黄灯客户', 'bg-amber-50 text-amber-700'],
-            ['流失风险', cnt.red, '红灯客户', 'bg-red-50 text-red-700']].map(([k, v, sub, cls]) => (
+          {[['新客', d.new_clients_30d, '近30天新增', 'bg-sage-100 text-sage-700'],
+            ['活跃', cnt.green, '绿灯客户', 'bg-brand-100 text-brand-700'],
+            ['沉默', cnt.yellow, '黄灯客户', 'bg-[#FDF6E8] text-[#96690F]'],
+            ['流失风险', cnt.red, '红灯客户', 'bg-[#FBF0EE] text-[#A85D5D]']].map(([k, v, sub, cls]) => (
             <div key={k} className={`card text-center ${cls}`}>
               <div className="text-3xl font-bold">{v}</div>
               <div className="text-sm font-medium mt-1">{k}</div>
@@ -165,12 +165,12 @@ export default function Dashboard() {
         <h2 className="font-bold mt-6 mb-2">客户阶段分布</h2>
         <div className="card">
           <div className="flex h-5 rounded overflow-hidden mb-2">
-            {[['red', '#ef4444'], ['yellow', '#f59e0b'], ['green', '#10b981']].map(([k, color]) => (
+            {[['red', '#D98880'], ['yellow', '#D9A85F'], ['green', '#9CAF88']].map(([k, color]) => (
               <div key={k} style={{ width: `${(cnt[k] / total) * 100}%`, background: color }}
                 title={`${STATUS_NAME[k]} ${cnt[k]}人`} />
             ))}
           </div>
-          <div className="flex gap-4 text-sm text-gray-600">
+          <div className="flex gap-4 text-sm text-muted">
             <span>🔴 需关注 <b>{cnt.red}</b></span>
             <span>🟡 待跟进 <b>{cnt.yellow}</b></span>
             <span>🟢 正常 <b>{cnt.green}</b></span>
@@ -180,25 +180,25 @@ export default function Dashboard() {
         <h2 className="font-bold mt-6 mb-2">客户管理</h2>
         <div className="card overflow-x-auto">
           <table className="w-full text-sm whitespace-nowrap">
-            <thead><tr className="text-gray-400 text-left">
+            <thead><tr className="text-clay text-left">
               <th className="py-1 pr-3">状态</th><th className="py-1 pr-3">姓名</th>
               <th className="py-1 pr-3">目标</th><th className="py-1 pr-3">出勤率</th>
               <th className="py-1 pr-3">上次评估</th><th className="py-1">建议动作</th>
             </tr></thead>
             <tbody>
               {clients.map((c) => (
-                <tr key={c.id} className="border-t border-gray-100">
+                <tr key={c.id} className="border-t border-sand">
                   <td className="py-2 pr-3">{LIGHT[c.status]}</td>
                   <td className="py-2 pr-3 font-medium">{c.name}</td>
-                  <td className="py-2 pr-3 text-gray-500">{c.goal || '-'}</td>
+                  <td className="py-2 pr-3 text-muted">{c.goal || '-'}</td>
                   <td className="py-2 pr-3">{Math.round((c.attendance_rate || 0) * 100)}%</td>
-                  <td className="py-2 pr-3 text-gray-500">
+                  <td className="py-2 pr-3 text-muted">
                     {c.days_since_assessment == null ? '尚未评估' : `${c.days_since_assessment}天前`}
                   </td>
-                  <td className="py-2 text-amber-700">{c.action || '-'}</td>
+                  <td className="py-2 text-[#96690F]">{c.action || '-'}</td>
                 </tr>
               ))}
-              {!clients.length && <tr><td colSpan="6" className="py-3 text-gray-400">暂无客户</td></tr>}
+              {!clients.length && <tr><td colSpan="6" className="py-3 text-clay">暂无客户</td></tr>}
             </tbody>
           </table>
         </div>
@@ -208,7 +208,7 @@ export default function Dashboard() {
           {d.coach_perf.map((c) => (
             <div key={c.coach_id} className="flex justify-between">
               <span>{c.name}</span>
-              <span className="text-gray-500">客户{c.clients} · 课程{c.courses} · 签到{c.checkins}</span>
+              <span className="text-muted">客户{c.clients} · 课程{c.courses} · 签到{c.checkins}</span>
             </div>
           ))}
         </div>
@@ -223,14 +223,14 @@ export default function Dashboard() {
     <Layout>
       <h1 className="text-xl font-bold mb-4">教练工作台</h1>
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="card text-center"><div className="text-3xl font-bold text-teal-700">{d.todos.pending_diets}</div><div className="text-sm text-gray-500">待确认饮食方案</div></div>
-        <div className="card text-center"><div className="text-3xl font-bold text-amber-600">{d.todos.due_reassess}</div><div className="text-sm text-gray-500">需复测客户</div></div>
+        <div className="card text-center"><div className="text-3xl font-bold text-brand-700">{d.todos.pending_diets}</div><div className="text-sm text-muted">待确认饮食方案</div></div>
+        <div className="card text-center"><div className="text-3xl font-bold text-[#B57E35]">{d.todos.due_reassess}</div><div className="text-sm text-muted">需复测客户</div></div>
       </div>
       <div className="space-y-2">
         {coachClients.map((c) => (
           <div key={c.id} className="card flex justify-between text-sm">
-            <span>{LIGHT[c.status]} {c.name} <span className="text-gray-400">{c.goal}</span></span>
-            <span className="text-gray-500">
+            <span>{LIGHT[c.status]} {c.name} <span className="text-clay">{c.goal}</span></span>
+            <span className="text-muted">
               出勤 {Math.round((c.attendance_rate || 0) * 100)}%
               {c.days_since_assessment == null ? ' · 尚未评估' : ` · 距上次评估${c.days_since_assessment}天`}
             </span>

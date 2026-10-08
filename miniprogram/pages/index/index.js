@@ -100,7 +100,7 @@ Page({
       const metric = this.data.metric;
       const dates = charts.trends.dates;
       const series = charts.trends[metric] || [];
-      const color = metric === 'weight' ? '#147d73' : '#e8a13c';
+      const color = metric === 'weight' ? '#B76E79' : '#D9A85F';
       const q = wx.createSelectorQuery();
       q.select('#trendCanvas').boundingClientRect();
       q.exec((res) => {
@@ -129,11 +129,11 @@ Page({
           ctx.beginPath();
           ctx.arc(x, y, 3, 0, 2 * Math.PI);
           ctx.fill();
-          ctx.setFillStyle('#8a9694');
+          ctx.setFillStyle('#9A8F84');
           ctx.setFontSize(9);
           ctx.setTextAlign('center');
           ctx.fillText(String(dates[i]).slice(5), x, H - 8);
-          ctx.setFillStyle('#5b6665');
+          ctx.setFillStyle('#4A4239');
           ctx.fillText(String(v), x, y - 8);
           ctx.setFillStyle(color);
         });
@@ -150,12 +150,12 @@ Page({
       const cx = 60, cy = 60, R = 46;
       ctx.setLineWidth(12);
       ctx.setLineCap('round');
-      ctx.setStrokeStyle('#e6efed');
+      ctx.setStrokeStyle('#F1E9DE');
       ctx.beginPath();
       ctx.arc(cx, cy, R, 0, 2 * Math.PI);
       ctx.stroke();
       if (rate > 0) {
-        ctx.setStrokeStyle('#147d73');
+        ctx.setStrokeStyle('#A25964');
         ctx.beginPath();
         ctx.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * Math.min(rate, 1));
         ctx.stroke();

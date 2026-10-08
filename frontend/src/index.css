@@ -2,25 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 全局极简样式 */
+/* 全局：暖米白底、暖深灰正文、放宽行高 */
 body {
-  @apply bg-gray-50 text-gray-800;
+  @apply bg-cream text-ink;
+  line-height: 1.75;
+  letter-spacing: 0.015em;
+  font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+h1, h2, h3 {
+  @apply text-ink font-bold;
+  letter-spacing: 0.06em;
 }
 .input {
-  @apply w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500;
+  @apply w-full rounded-xl px-4 py-2.5 text-sm bg-white text-ink transition;
+  border: 1px solid #EDE5D8;
+}
+.input::placeholder { color: #9A8F84; }
+.input:focus {
+  outline: none;
+  border-color: #DB9FAB;
+  box-shadow: 0 0 0 3px rgba(183, 110, 121, 0.14);
 }
 .btn {
-  @apply px-4 py-2 rounded text-sm font-medium transition;
+  @apply px-5 py-2.5 rounded-full text-sm font-medium transition;
+  letter-spacing: 0.04em;
 }
 .btn-primary {
-  @apply btn bg-teal-600 text-white hover:bg-teal-700;
+  @apply btn text-white;
+  background: #A25964;
+  box-shadow: 0 8px 22px rgba(162, 89, 100, 0.28);
 }
+.btn-primary:hover { background: #854750; }
 .btn-ghost {
-  @apply btn border hover:bg-gray-100;
+  @apply btn bg-white text-ink;
+  border: 1px solid #EDE5D8;
 }
+.btn-ghost:hover { background: #FBF4F5; }
 .card {
-  @apply bg-white rounded-lg shadow-sm border p-4;
+  @apply bg-white rounded-2xl p-5;
+  border: 1px solid #F4ECE1;
+  box-shadow: 0 8px 28px rgba(122, 100, 84, 0.07);
 }
 .label {
-  @apply block text-xs text-gray-500 mb-1;
+  @apply block text-xs mb-1.5;
+  color: #776A5D;
+  letter-spacing: 0.08em;
 }
+/* 柔和状态色（语义保留） */
+.dot-soft-red { background: #D98880; }
+.dot-soft-amber { background: #D9A85F; }
+.dot-soft-green { background: #9CAF88; }

@@ -48,7 +48,7 @@ export default function Plans() {
           {editing && (<><button className="btn-primary" onClick={save}>保存</button><button className="btn-ghost" onClick={() => setEditing(null)}>取消</button></>)}
         </div>
       </div>
-      {!view && <div className="text-gray-400 text-sm">暂无计划，点“自动生成”</div>}
+      {!view && <div className="text-clay text-sm">暂无计划，点“自动生成”</div>}
       {view && (
         <div className="space-y-3">
           {(editing || view).days.map((d, di) => (
@@ -57,20 +57,20 @@ export default function Plans() {
                 <span className="font-medium">{d.day}</span>
                 {editing
                   ? <input className="input !w-32" placeholder="时间" value={d.time || ''} onChange={(e) => updDay(di, { time: e.target.value })} />
-                  : d.time && <span className="text-sm text-gray-500">{d.time}</span>}
+                  : d.time && <span className="text-sm text-muted">{d.time}</span>}
                 {editing && <button className="btn-ghost !py-1 ml-auto" onClick={() => addExercise(di)}>+ 动作</button>}
               </div>
               {d.exercises.map((ex, ei) => (
                 <div key={ei} className="flex justify-between text-sm py-1 border-b last:border-0">
                   <span>{ex.name}</span>
-                  <span className="text-gray-500">{ex.sets}组 × {ex.reps}
-                    {editing && <button className="text-red-500 ml-2" onClick={() => delExercise(di, ei)}>删</button>}
+                  <span className="text-muted">{ex.sets}组 × {ex.reps}
+                    {editing && <button className="text-[#C07878] ml-2" onClick={() => delExercise(di, ei)}>删</button>}
                   </span>
                 </div>
               ))}
             </div>
           ))}
-          <div className="text-xs text-gray-400">开始日期：{(editing || view).week_start} · 状态：{(editing || view).status}</div>
+          <div className="text-xs text-clay">开始日期：{(editing || view).week_start} · 状态：{(editing || view).status}</div>
         </div>
       )}
     </Layout>

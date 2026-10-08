@@ -22,13 +22,16 @@ export default function Layout({ children }) {
       ];
   return (
     <div className="min-h-screen flex">
-      <aside className="w-44 bg-white border-r p-4 space-y-1 shrink-0">
-        <div className="font-bold text-teal-700 mb-1">客户管理</div>
-        <div className="text-xs text-gray-400 mb-4">{user.name || user.username}（{ROLE_NAME[role] || role}）</div>
+      <aside className="w-44 bg-white border-r border-sand p-4 space-y-1 shrink-0">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-brand-400"></span>
+          <span className="font-bold text-brand-700 tracking-widest text-sm">客户管理</span>
+        </div>
+        <div className="text-xs text-clay mb-4">{user.name || user.username}（{ROLE_NAME[role] || role}）</div>
         {items.map(([to, label]) => (
-          <Link key={to} to={to} className="block px-3 py-2 rounded hover:bg-teal-50 text-sm">{label}</Link>
+          <Link key={to} to={to} className="block px-4 py-2 rounded-full text-sm text-muted hover:bg-brand-50 hover:text-brand-700 transition">{label}</Link>
         ))}
-        <button onClick={logout} className="block w-full text-left px-3 py-2 rounded hover:bg-red-50 text-sm text-red-600">退出</button>
+        <button onClick={logout} className="block w-full text-left px-4 py-2 rounded-full text-sm text-[#B4655F] hover:bg-[#FBF0EE] transition">退出</button>
       </aside>
       <main className="flex-1 p-6 max-w-5xl">{children}</main>
     </div>

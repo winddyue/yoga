@@ -5,6 +5,8 @@ import datetime
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .. import auth as auth_lib
@@ -40,10 +42,58 @@ def _parse_course_time(value: str):
 
 
 def _booked_count(db: Session, course_id: int) -> int:
-    """当前有效预约人数（已约+已签到，不含候补/取消/爽约）。"""
+    """当前有效预约人数（已约+已签到，不含候补/取消/爽约）。仅用于展示；
+    并发名额校验走 courses.booked_seats 原子计数（见 _take_seat）。"""
     return (db.query(models.Booking)
             .filter(models.Booking.course_id == course_id,
                     models.Booking.status.in_((ST_BOOKED, ST_CHECKED_IN))).count())
+
+
+def _take_seat(db: Session, course_id: int) -> bool:
+    """原子抢座：booked_seats < capacity 时 +1，返回是否抢到。
+
+    单条 UPDATE … WHERE …，在 SQLite 与 Postgres 下都是原子执行，
+    不存在"先查名额再插入"的竞态窗口。这是防超卖的唯一关口。
+    """
+    result = db.execute(
+        update(models.Course)
+        .where(models.Course.id == course_id,
+               models.Course.booked_seats < models.Course.capacity)
+        .values(booked_seats=models.Course.booked_seats + 1))
+    return result.rowcount == 1
+
+
+def _adjust_seats(db: Session, course_id: int, delta: int) -> None:
+    """无条件增减座位数（释放座位 / 人工放行时的配额同步）。
+
+    单条原子 UPDATE；delta 为负数时不会把计数器减到 0 以下。
+    """
+    stmt = (update(models.Course)
+            .where(models.Course.id == course_id)
+            .values(booked_seats=models.Course.booked_seats + delta))
+    if delta < 0:
+        stmt = stmt.where(models.Course.booked_seats >= -delta)
+    db.execute(stmt)
+
+
+def _promote_waitlist(db: Session, course_id: int) -> int | None:
+    """原子转正：把最早的一条候补翻成已约，返回其 client_id。
+
+    转正只改预约状态、不动座位计数器（座位从取消者手里直接过户）。
+    WHERE status='waitlist' 保证两个并发取消不会把同一条候补转正两次。
+    """
+    first = (db.query(models.Booking.id, models.Booking.client_id)
+             .filter(models.Booking.course_id == course_id,
+                     models.Booking.status == ST_WAITLIST)
+             .order_by(models.Booking.created_at.asc()).first())
+    if not first:
+        return None
+    result = db.execute(
+        update(models.Booking)
+        .where(models.Booking.id == first.id,
+               models.Booking.status == ST_WAITLIST)
+        .values(status=ST_BOOKED))
+    return first.client_id if result.rowcount == 1 else None
 
 
 def _course_out(db: Session, course: models.Course,
@@ -127,7 +177,13 @@ def _resolve_client(db: Session, user: models.User,
 def book_course(course_id: int, body: dict | None = None,
                 db: Session = Depends(get_db),
                 user: models.User = Depends(auth_lib.get_current_user)):
-    """预约课程：名额校验，满员自动进候补名单。"""
+    """预约课程：原子抢座，满员自动进候补名单。
+
+    并发安全：名额校验是单条 UPDATE … WHERE booked_seats < capacity
+    （_take_seat），SQLite / Postgres 下都原子，不存在"先查后插"的
+    超卖窗口；同一客户的重复预约另有应用层检查 + bookings 表部分
+    唯一索引兜底（uq_booking_active），穿透时转为友好的 400。
+    """
     course = db.query(models.Course).filter(models.Course.id == course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="课程不存在")
@@ -138,10 +194,16 @@ def book_course(course_id: int, body: dict | None = None,
                    models.Booking.status.in_((ST_BOOKED, ST_WAITLIST, ST_CHECKED_IN))).first())
     if dup:
         raise HTTPException(status_code=400, detail="已预约该课程，无需重复预约")
-    status = ST_BOOKED if _booked_count(db, course_id) < course.capacity else ST_WAITLIST
+    status = ST_BOOKED if _take_seat(db, course_id) else ST_WAITLIST
     booking = models.Booking(course_id=course_id, client_id=client.id, status=status)
     db.add(booking)
-    db.commit()
+    try:
+        db.commit()  # 抢座与插入同属一个事务：索引冲突回滚时座位一并归还
+    except IntegrityError:
+        # 极端竞态下应用层检查被穿透，部分唯一索引 uq_booking_active
+        # 兜底，转为友好的 400
+        db.rollback()
+        raise HTTPException(status_code=400, detail="已预约该课程，无需重复预约")
     db.refresh(booking)
     audit_service.log(db, user.id, "booking.create", "booking", booking.id)
     return {"id": booking.id, "course_id": course_id, "client_id": client.id,
@@ -152,7 +214,15 @@ def book_course(course_id: int, body: dict | None = None,
 def cancel_booking(course_id: int, body: dict | None = None,
                    db: Session = Depends(get_db),
                    user: models.User = Depends(auth_lib.get_current_user)):
-    """取消预约：候补名单第一位自动转正。"""
+    """取消预约：候补名单第一位自动转正。
+
+    座位交接：取消的是已约座位时，优先把座位过户给最早候补
+    （_promote_waitlist 原子转正）；没有候补才释放座位。
+    取消候补本身不占座位，无需调整计数器。
+    """
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="课程不存在")
     client = _resolve_client(db, user, (body or {}).get("client_id"))
     booking = (db.query(models.Booking)
                .filter(models.Booking.course_id == course_id,
@@ -160,18 +230,14 @@ def cancel_booking(course_id: int, body: dict | None = None,
                        models.Booking.status.in_((ST_BOOKED, ST_WAITLIST))).first())
     if not booking:
         raise HTTPException(status_code=404, detail="没有可取消的预约")
+    was_booked = (booking.status == ST_BOOKED)
     booking.status = ST_CANCELLED
-    db.flush()  # session 为 autoflush=False，需手动刷入以便名额计数准确
+    db.flush()  # session 为 autoflush=False，需手动刷入
     promoted = None
-    if _booked_count(db, course_id) < db.query(models.Course).filter(
-            models.Course.id == course_id).first().capacity:
-        first = (db.query(models.Booking)
-                 .filter(models.Booking.course_id == course_id,
-                         models.Booking.status == ST_WAITLIST)
-                 .order_by(models.Booking.created_at.asc()).first())
-        if first:
-            first.status = ST_BOOKED
-            promoted = first.client_id
+    if was_booked:
+        promoted = _promote_waitlist(db, course_id)
+        if promoted is None:
+            _adjust_seats(db, course_id, -1)
     db.commit()
     audit_service.log(db, user.id, "booking.cancel", "booking", booking.id)
     return {"ok": True, "promoted_client_id": promoted}
@@ -233,6 +299,11 @@ def checkin(course_id: int, data: schemas.CheckInIn,
     # 已签到时给出准确提示，避免重复扫码被误报成"未预约"
     if booking.status == ST_CHECKED_IN:
         raise HTTPException(status_code=400, detail="您已签到，无需重复签到")
+    if booking.status == ST_WAITLIST:
+        # 候补直接签到 = 教练/馆主人工放行：同步占用一个座位。
+        # 计数器如实记录（可能短暂超出 capacity），后续预约关口
+        # 仍以 booked_seats < capacity 为准，不会因此超卖。
+        _adjust_seats(db, course_id, 1)
     booking.status = ST_CHECKED_IN
     db.add(models.CheckIn(course_id=course_id, client_id=client.id, method=method))
     db.commit()
@@ -276,6 +347,8 @@ def mark_noshow(course_id: int,
                     models.Booking.status == ST_BOOKED).all())
     for b in rows:
         b.status = ST_NO_SHOW
+    if rows:
+        _adjust_seats(db, course_id, -len(rows))  # 释放座位
     db.commit()
     for b in rows:
         update_attendance(db, b.client_id)

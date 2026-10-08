@@ -49,7 +49,7 @@ export default function Users() {
         {list.map((u) => (
           <div key={u.id} className="card text-sm flex justify-between">
             <span className="font-medium">{u.name || u.username}</span>
-            <span className="text-gray-500">{u.username} · {roleName[u.role] || u.role}</span>
+            <span className="text-muted">{u.username} · {roleName[u.role] || u.role}</span>
           </div>
         ))}
       </div>

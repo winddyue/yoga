@@ -38,10 +38,10 @@ export default function CustomFields() {
         {list.map((f) => (
           <div key={f.id} className="card text-sm flex justify-between">
             <span>{f.name}（{f.field_type === 'number' ? '数字' : '文本'} · {f.target === 'client' ? '客户档案' : '评估记录'}）</span>
-            <button className="text-red-500" onClick={() => del(f.id)}>删除</button>
+            <button className="text-[#C07878]" onClick={() => del(f.id)}>删除</button>
           </div>
         ))}
-        {!list.length && <div className="text-gray-400 text-sm">暂无自定义字段</div>}
+        {!list.length && <div className="text-clay text-sm">暂无自定义字段</div>}
       </div>
     </Layout>
   );

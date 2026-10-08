@@ -27,7 +27,7 @@ export default function QrScanner({ onScan, onClose }) {
       <div className="card w-full max-w-sm">
         <div className="font-medium mb-2">扫描评估二维码</div>
         <div id="qr-reader" ref={ref} />
-        {err && <div className="text-red-500 text-sm mt-2">{err}</div>}
+        {err && <div className="text-[#C07878] text-sm mt-2">{err}</div>}
         <button className="btn-ghost mt-3 w-full" onClick={onClose}>关闭</button>
       </div>
     </div>

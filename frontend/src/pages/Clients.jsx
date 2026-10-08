@@ -33,12 +33,12 @@ export default function Clients() {
       </form>
       <div className="grid gap-2">
         {list.map((c) => (
-          <Link key={c.id} to={`/clients/${c.id}`} className="card hover:border-teal-400 flex justify-between">
+          <Link key={c.id} to={`/clients/${c.id}`} className="card hover:border-brand-300 flex justify-between">
             <span className="font-medium">{c.name}</span>
-            <span className="text-sm text-gray-500">{c.goal} · {c.phone}</span>
+            <span className="text-sm text-muted">{c.goal} · {c.phone}</span>
           </Link>
         ))}
-        {!list.length && <div className="text-gray-400 text-sm">暂无客户</div>}
+        {!list.length && <div className="text-clay text-sm">暂无客户</div>}
       </div>
     </Layout>
   );

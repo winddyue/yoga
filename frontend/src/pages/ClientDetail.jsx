@@ -22,7 +22,7 @@ export default function ClientDetail() {
   return (
     <Layout>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">{client.name} <span className="text-sm font-normal text-gray-500">{client.gender} {client.age}岁 · 目标{client.goal} · 出勤{Math.round((client.attendance_rate || 0) * 100)}%</span></h1>
+        <h1 className="text-xl font-bold">{client.name} <span className="text-sm font-normal text-muted">{client.gender} {client.age}岁 · 目标{client.goal} · 出勤{Math.round((client.attendance_rate || 0) * 100)}%</span></h1>
         <div className="space-x-2">
           <Link to={`/clients/${id}/assess`} className="btn-primary inline-block">新增评估</Link>
           <Link to={`/clients/${id}/plans`} className="btn-ghost inline-block">训练计划</Link>
@@ -30,9 +30,9 @@ export default function ClientDetail() {
         </div>
       </div>
       {warnings.length > 0 && (
-        <div className="card mb-4 border-l-4 border-l-amber-400">
-          <div className="font-medium text-amber-700 mb-1">健康提示</div>
-          {warnings.map((w, i) => <div key={i} className="text-sm text-amber-700">• {w}</div>)}
+        <div className="card mb-4 border-l-4 border-l-[#D9A85F]">
+          <div className="font-medium text-[#96690F] mb-1">健康提示</div>
+          {warnings.map((w, i) => <div key={i} className="text-sm text-[#96690F]">• {w}</div>)}
         </div>
       )}
       <div className="grid md:grid-cols-2 gap-4 mb-4">
@@ -50,12 +50,12 @@ export default function ClientDetail() {
         {list.map((a) => (
           <div key={a.id} className="card text-sm">
             <span className="font-medium">{a.date || '未填日期'}</span>
-            <span className="text-gray-500 ml-3">体重{a.weight_kg}kg · 体脂{a.body_fat_pct}% · 腰围{a.waist_cm}cm</span>
-            {a.blood_pressure && <span className="text-gray-500 ml-3">血压{a.blood_pressure}</span>}
-            {a.injuries && <div className="text-amber-600 mt-1">注意：{a.injuries}</div>}
+            <span className="text-muted ml-3">体重{a.weight_kg}kg · 体脂{a.body_fat_pct}% · 腰围{a.waist_cm}cm</span>
+            {a.blood_pressure && <span className="text-muted ml-3">血压{a.blood_pressure}</span>}
+            {a.injuries && <div className="text-[#B57E35] mt-1">注意：{a.injuries}</div>}
           </div>
         ))}
-        {!list.length && <div className="text-gray-400 text-sm">暂无评估记录</div>}
+        {!list.length && <div className="text-clay text-sm">暂无评估记录</div>}
       </div>
     </Layout>
   );

@@ -70,22 +70,22 @@ export default function Courses() {
           <div key={c.id} className="card">
             <div className="flex justify-between items-start">
               <div>
-                <div className="font-bold">{c.title} <span className="text-xs text-gray-400">{c.course_type}</span></div>
-                <div className="text-sm text-gray-500">{c.start_time} ~ {c.end_time} · {c.location} · 已约 {c.booked_count}/{c.capacity}</div>
-                {staff && <div className="text-xs text-gray-400 mt-1">签到码：{c.checkin_code}（出示给学员扫码）</div>}
+                <div className="font-bold">{c.title} <span className="text-xs text-clay">{c.course_type}</span></div>
+                <div className="text-sm text-muted">{c.start_time} ~ {c.end_time} · {c.location} · 已约 {c.booked_count}/{c.capacity}</div>
+                {staff && <div className="text-xs text-clay mt-1">签到码：{c.checkin_code}（出示给学员扫码）</div>}
               </div>
               <div className="space-x-2 shrink-0">
                 {!staff && !myBooked.has(c.id) && <button className="btn-primary text-sm" onClick={() => book(c.id)}>预约</button>}
                 {!staff && myBooked.has(c.id) && (
                   <>
                     <button className="btn text-sm" onClick={() => qrCheckin(c.id)}>扫码签到</button>
-                    <button className="text-sm text-red-600" onClick={() => cancel(c.id)}>取消</button>
+                    <button className="text-sm text-[#B4655F]" onClick={() => cancel(c.id)}>取消</button>
                   </>
                 )}
                 {staff && (
                   <>
                     <button className="btn text-sm" onClick={() => openRoster(c.id)}>名单</button>
-                    <button className="text-sm text-gray-500" onClick={() => markNoshow(c.id)}>标记爽约</button>
+                    <button className="text-sm text-muted" onClick={() => markNoshow(c.id)}>标记爽约</button>
                   </>
                 )}
               </div>
@@ -94,18 +94,18 @@ export default function Courses() {
               <div className="mt-3 border-t pt-2 text-sm">
                 {roster.list.map((b) => (
                   <div key={b.id} className="flex justify-between py-1">
-                    <span>{b.client_name} <span className="text-gray-400">（{statusName[b.status] || b.status}）</span></span>
+                    <span>{b.client_name} <span className="text-clay">（{statusName[b.status] || b.status}）</span></span>
                     {(b.status === 'booked' || b.status === 'waitlist') && (
-                      <button className="text-teal-600" onClick={() => manualCheckin(c.id, b.client_id)}>手动签到</button>
+                      <button className="text-brand-600" onClick={() => manualCheckin(c.id, b.client_id)}>手动签到</button>
                     )}
                   </div>
                 ))}
-                {roster.list.length === 0 && <div className="text-gray-400">暂无预约</div>}
+                {roster.list.length === 0 && <div className="text-clay">暂无预约</div>}
               </div>
             )}
           </div>
         ))}
-        {courses.length === 0 && <div className="text-gray-400">暂无课程</div>}
+        {courses.length === 0 && <div className="text-clay">暂无课程</div>}
       </div>
 
       {!staff && mine.length > 0 && (

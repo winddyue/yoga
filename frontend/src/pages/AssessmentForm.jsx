@@ -60,7 +60,7 @@ export default function AssessmentForm() {
       <div className="flex gap-2 mb-4">
         <label className="btn-ghost cursor-pointer">拍照/上传体测单<input type="file" accept="image/*" className="hidden" onChange={onPhoto} /></label>
         <button type="button" className="btn-ghost" onClick={() => setScan(true)}>扫码录入</button>
-        {msg && <span className="text-sm text-gray-500 self-center">{msg}</span>}
+        {msg && <span className="text-sm text-muted self-center">{msg}</span>}
       </div>
       {scan && <QrScanner onClose={() => setScan(false)} onScan={(d) => { setForm({ ...EMPTY, injuries: '', ...d }); setScan(false); }} />}
       <form onSubmit={submit} className="card grid grid-cols-2 md:grid-cols-3 gap-3">

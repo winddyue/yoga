@@ -2,7 +2,7 @@
 """数据模型：用户、客户、自定义字段、评估记录、训练计划、饮食方案、系统设置。"""
 import datetime
 
-from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, DateTime, Float, ForeignKey, Index, Integer, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -155,6 +155,9 @@ class Course(Base):
     end_time: Mapped[str] = mapped_column(String(32), default="")
     location: Mapped[str] = mapped_column(String(64), default="")
     capacity: Mapped[int] = mapped_column(Integer, default=20)         # 人数上限
+    # 已占座位数（已约+已签到，不含候补/取消/爽约）。预约走原子 UPDATE 抢座，
+    # 避免"先计数后插入"的并发超卖；取消/爽约/候补转正时同步增减。
+    booked_seats: Mapped[int] = mapped_column(Integer, default=0)
     checkin_code: Mapped[str] = mapped_column(String(16), default="")  # 签到二维码码值
     created_by: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
@@ -164,6 +167,17 @@ class Booking(Base):
     """预约记录：booked（已约）/ waitlist（候补）/ cancelled（取消）
     / checked_in（已签到）/ no_show（爽约）。"""
     __tablename__ = "bookings"
+    # 防重复预约的兜底：同一客户对同一课程只能有一条"有效"预约。
+    # 取消/爽约后可重新约，所以用部分唯一索引（WHERE status IN …）
+    # 而不是普通唯一约束。SQLite 与 Postgres 都支持部分索引；
+    # 应用层在 book_course 事务内另有检查，索引是防竞态穿透的最后一道。
+    __table_args__ = (
+        Index(
+            "uq_booking_active", "course_id", "client_id", unique=True,
+            sqlite_where=text("status IN ('booked','waitlist','checked_in')"),
+            postgresql_where=text("status IN ('booked','waitlist','checked_in')"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)

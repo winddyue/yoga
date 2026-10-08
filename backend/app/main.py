@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import func, select, update
 
 from . import models
 from .auth import hash_password
@@ -29,6 +30,24 @@ async def lifespan(app: FastAPI):
             db.commit()
         from .services import ai_gate
         ai_gate.ensure_default_plans(db)
+        # 座位计数器自愈：老库已有预约数据但 booked_seats 未回填/过期时，
+        # 按实际有效预约数（booked + checked_in）校准，保证预约关口
+        # 不因计数器过期而超卖。幂等，多实例同时启动也安全。
+        # 列本身由 backend/alembic 迁移补齐（0001_booking_seats）；
+        # 列不存在时跳过，避免老库启动报错。
+        # 正式的表结构迁移见 backend/alembic（0001_booking_seats）。
+        from sqlalchemy import inspect as _sa_inspect
+        _cols = {c["name"] for c in
+                 _sa_inspect(db.get_bind()).get_columns("courses")}
+        if "booked_seats" in _cols:
+            db.execute(
+                update(models.Course).values(
+                    booked_seats=(
+                        select(func.count(models.Booking.id))
+                        .where(models.Booking.course_id == models.Course.id,
+                               models.Booking.status.in_(("booked", "checked_in")))
+                        .scalar_subquery())))
+            db.commit()
     finally:
         db.close()
     yield

@@ -1,6 +1,6 @@
 // 极简 SVG 柱状图：展示月度出勤率等，不引入图表库（与 TrendChart.jsx 风格一致）
-export default function BarChart({ labels = [], values = [], unit = '', color = '#0d9488' }) {
-  if (!labels.length || !values.length) return <div className="text-sm text-gray-400">暂无数据</div>;
+export default function BarChart({ labels = [], values = [], unit = '', color = '#B76E79' }) {
+  if (!labels.length || !values.length) return <div className="text-sm text-clay">暂无数据</div>;
   const W = 560, H = 180, P = 28;
   const max = Math.max(...values, 1);
   const n = labels.length;
@@ -15,9 +15,9 @@ export default function BarChart({ labels = [], values = [], unit = '', color = 
           <rect x={X(i)} y={H - P - bh(v)} width={bw} height={Math.max(bh(v), 2)}
             rx="3" fill={color} opacity={v > 0 ? 1 : 0.2} />
           <text x={X(i) + bw / 2} y={H - P - bh(v) - 6} fontSize="11"
-            textAnchor="middle" fill="#4b5563">{v}{unit}</text>
+            textAnchor="middle" fill="#4A4239">{v}{unit}</text>
           <text x={X(i) + bw / 2} y={H - 8} fontSize="10"
-            textAnchor="middle" fill="#9ca3af">{labels[i]}</text>
+            textAnchor="middle" fill="#9A8F84">{labels[i]}</text>
         </g>
       ))}
     </svg>

@@ -36,22 +36,22 @@ export default function Diets() {
               <span className="font-medium">{d.date}</span>
               {d.status === 'pending'
                 ? <button className="btn-primary !py-1" onClick={() => confirm(d.id)}>教练确认</button>
-                : <span className="text-xs text-teal-600 border border-teal-300 rounded px-2 py-0.5">已确认</span>}
+                : <span className="text-xs text-brand-600 border border-brand-200 rounded px-2 py-0.5">已确认</span>}
             </div>
-            <div className="text-sm text-gray-500 mb-2">
+            <div className="text-sm text-muted mb-2">
               目标 {d.calories_target}千卡 · 蛋白质{d.protein_g}g · 脂肪{d.fat_g}g · 碳水{d.carbs_g}g
             </div>
             <div className="grid md:grid-cols-2 gap-2">
               {Object.entries(d.meals || {}).map(([k, foods]) => (
-                <div key={k} className="text-sm bg-gray-50 rounded p-2">
+                <div key={k} className="text-sm bg-cream rounded p-2">
                   <div className="font-medium">{MEAL_NAMES[k] || k}</div>
-                  {(foods || []).map((f, i) => <div key={i} className="text-gray-600">• {f}</div>)}
+                  {(foods || []).map((f, i) => <div key={i} className="text-muted">• {f}</div>)}
                 </div>
               ))}
             </div>
           </div>
         ))}
-        {!list.length && <div className="text-gray-400 text-sm">暂无方案，点“生成方案”（需先录入含体重的评估）</div>}
+        {!list.length && <div className="text-clay text-sm">暂无方案，点“生成方案”（需先录入含体重的评估）</div>}
       </div>
     </Layout>
   );

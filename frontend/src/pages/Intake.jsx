@@ -72,7 +72,7 @@ export default function Intake() {
             <input type="file" accept="audio/*" className="hidden" onChange={doVoice} />
           </label>
         </div>
-        <p className="text-xs text-gray-400">拍照识别请在评估页上传体测单照片（需配置 OCR）。三路录入统一经人工确认后入库。</p>
+        <p className="text-xs text-clay">拍照识别请在评估页上传体测单照片（需配置 OCR）。三路录入统一经人工确认后入库。</p>
       </div>
 
       {fields && (
@@ -81,7 +81,7 @@ export default function Intake() {
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(fields).map(([k, v]) => (
               <div key={k} className="flex items-center gap-2">
-                <span className="text-sm text-gray-500 w-24 shrink-0">{FIELD_LABELS[k] || k}</span>
+                <span className="text-sm text-muted w-24 shrink-0">{FIELD_LABELS[k] || k}</span>
                 <input className="input" value={v} onChange={(e) => setFields({ ...fields, [k]: e.target.value })} />
               </div>
             ))}
