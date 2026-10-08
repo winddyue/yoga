@@ -1,5 +1,6 @@
 const api = require('../../api.js');
 const { syncTheme, getTheme, currentThemeId } = require('../../utils/themes.js');
+const chart = require('../../utils/chart.js');
 
 Page({
   data: {
@@ -93,77 +94,20 @@ Page({
     this.setData({ metric: m }, () => this.drawTrend());
   },
 
-  // 客户首页迷你趋势图：手画折线，不引入第三方库
+  // 客户首页迷你趋势图：逻辑在 utils/chart.js，index 只做指标配色
   drawTrend() {
-    try {
-      const charts = this.data.charts;
-      if (!charts || !charts.trends || !charts.trends.dates.length) return;
-      const metric = this.data.metric;
-      const dates = charts.trends.dates;
-      const series = charts.trends[metric] || [];
-      const th = getTheme(currentThemeId());
-      const color = metric === 'weight' ? th.pri : '#D9A85F';
-      const q = wx.createSelectorQuery();
-      q.select('#trendCanvas').boundingClientRect();
-      q.exec((res) => {
-        if (!res || !res[0]) return;
-        const W = res[0].width || 300, H = 150;
-        const P = 26, top = 18, bottom = 24;
-        const vals = series.filter((v) => v > 0);
-        if (!vals.length) return;
-        const min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
-        const span = (max - min) || 1;
-        const X = (i) => (dates.length === 1 ? W / 2 : P + (i * (W - 2 * P)) / (dates.length - 1));
-        const Y = (v) => H - bottom - ((v - min) / span) * (H - top - bottom);
-        const ctx = wx.createCanvasContext('trendCanvas', this);
-        ctx.clearRect(0, 0, W, H);
-        ctx.setStrokeStyle(color);
-        ctx.setLineWidth(2);
-        ctx.beginPath();
-        series.forEach((v, i) => {
-          const x = X(i), y = Y(v);
-          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-        ctx.setFillStyle(color);
-        series.forEach((v, i) => {
-          const x = X(i), y = Y(v);
-          ctx.beginPath();
-          ctx.arc(x, y, 3, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.setFillStyle(th.mut);
-          ctx.setFontSize(9);
-          ctx.setTextAlign('center');
-          ctx.fillText(String(dates[i]).slice(5), x, H - 8);
-          ctx.setFillStyle(th.txt);
-          ctx.fillText(String(v), x, y - 8);
-          ctx.setFillStyle(color);
-        });
-        ctx.draw();
-      });
-    } catch (e) {}
+    const charts = this.data.charts;
+    if (!charts || !charts.trends) return;
+    const th = getTheme(currentThemeId());
+    const color = this.data.metric === 'weight' ? th.pri : '#D9A85F';
+    chart.drawTrend(this, 'trendCanvas', charts.trends, this.data.metric, color);
   },
 
   // 出勤目标圆环：当前出勤率 vs 100% 目标（行业共识做法，一眼看到差距）
   drawRing() {
-    try {
-      const rate = (this.data.s && this.data.s.attendance_rate) || 0;
-      const ctx = wx.createCanvasContext('goalRing', this);
-      const cx = 60, cy = 60, R = 46;
-      ctx.setLineWidth(12);
-      ctx.setLineCap('round');
-      const th2 = getTheme(currentThemeId());
-      ctx.setStrokeStyle(th2.line);
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, 0, 2 * Math.PI);
-      ctx.stroke();
-      if (rate > 0) {
-        ctx.setStrokeStyle(th2.prid);
-        ctx.beginPath();
-        ctx.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * Math.min(rate, 1));
-        ctx.stroke();
-      }
-      ctx.draw();
-    } catch (e) {}
+    const rate = (this.data.s && this.data.s.attendance_rate) || 0;
+    chart.drawRing(this, 'goalRing', rate);
   },
+
+  goMeasure() { wx.navigateTo({ url: '/pages/measure/measure' }); },
 });

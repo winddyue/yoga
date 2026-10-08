@@ -60,6 +60,7 @@
         <text class="tab {{metric === 'body_fat' ? 'tab-active' : ''}}" bindtap="switchMetric" data-m="body_fat">体脂</text>
       </view>
       <canvas canvas-id="trendCanvas" id="trendCanvas" class="trend-canvas" />
+      <view class="more-link" bindtap="goMeasure">＋ 记录体测</view>
     </view>
     <view class="tip" wx:else>暂无评估数据，多测几次就有曲线了</view>
     <view class="section-title">下一步</view>

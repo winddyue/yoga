@@ -39,6 +39,10 @@
       <text>签到记录</text>
       <text class="arrow">›</text>
     </view>
+    <view wx:if="{{user.role === 'client'}}" class="menu-item" bindtap="goMeasure">
+      <text>体测记录</text>
+      <text class="arrow">›</text>
+    </view>
     <view class="menu-item" bindtap="goNotices">
       <text>通知</text>
       <view class="right"><text wx:if="{{unread > 0}}" class="badge">{{unread > 99 ? '99+' : unread}}</text><text class="arrow">›</text></view>

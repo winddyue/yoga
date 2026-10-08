@@ -178,3 +178,16 @@
 .t-k .tick { color: #147A70; }
 .t-l .cell.on { border-color: #BC3A64; }
 .t-l .tick { color: #BC3A64; }
+
+/* more-link 跟随主题主色（体测记录入口） */
+.t-a .more-link{color:#4C6043}
+.t-b .more-link{color:#3C5C7E}
+.t-c .more-link{color:#6E5638}
+.t-d .more-link{color:#1E3833}
+.t-e .more-link{color:#96502F}
+.t-f .more-link{color:#66569B}
+.t-h .more-link{color:#57524A}
+.t-i .more-link{color:#C74E38}
+.t-j .more-link{color:#B87A10}
+.t-k .more-link{color:#147A70}
+.t-l .more-link{color:#BC3A64}

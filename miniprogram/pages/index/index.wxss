@@ -31,3 +31,4 @@
 .fi-green{background:#EFF4EB;color:#5D6A4E}
 .fi-yellow{background:#FBF3E2;color:#96690F}
 .fi-red{background:#FBF0EE;color:#A85D5D}
+.more-link{font-size:26rpx;color:#357771;text-align:center;padding:18rpx 0 6rpx}

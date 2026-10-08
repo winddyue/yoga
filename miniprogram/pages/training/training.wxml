@@ -12,7 +12,26 @@
     <view>{{loadErr}}</view>
     <button size="mini" bindtap="load">重试</button>
   </view>
+
+  <!-- 全空：引导先记录体测 -->
+  <view wx:elif="{{empty}}" class="empty-guide">
+    <text class="empty-title">还没有数据</text>
+    <text class="empty-sub">先记录一次体测吧，身体趋势曲线和训练建议就会出现</text>
+    <button class="primary" bindtap="goMeasure">去记录体测</button>
+  </view>
+
   <block wx:else>
+    <view class="sec">身体趋势</view>
+    <view class="chart-card" wx:if="{{charts && charts.trends && charts.trends.dates.length}}">
+      <view class="tabs">
+        <text class="tab {{metric === 'weight' ? 'tab-active' : ''}}" bindtap="switchMetric" data-m="weight">体重</text>
+        <text class="tab {{metric === 'body_fat' ? 'tab-active' : ''}}" bindtap="switchMetric" data-m="body_fat">体脂</text>
+        <text class="tab {{metric === 'waist' ? 'tab-active' : ''}}" bindtap="switchMetric" data-m="waist">腰围</text>
+      </view>
+      <canvas canvas-id="trainTrend" id="trainTrend" class="trend-canvas" />
+      <view class="more-link" bindtap="goMeasure">＋ 记录体测</view>
+    </view>
+
     <view class="sec">训练计划（{{plans.length}}）</view>
     <view wx:if="{{!plans.length}}" class="tip">暂无训练计划</view>
     <view wx:for="{{plans}}" wx:key="id" class="card"><view class="t">第 {{item.week_start}} 周计划</view></view>

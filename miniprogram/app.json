@@ -11,7 +11,8 @@
     "pages/records/records",
     "pages/about/about",
     "pages/theme/theme",
-    "pages/notices/notices"
+    "pages/notices/notices",
+    "pages/measure/measure"
   ],
   "tabBar": {
     "color": "#8b93a7",

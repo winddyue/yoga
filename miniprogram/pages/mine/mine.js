@@ -44,6 +44,8 @@ Page({
   goAbout() { wx.navigateTo({ url: '/pages/about/about' }); },
   goTheme() { wx.navigateTo({ url: '/pages/theme/theme' }); },
 
+  goMeasure() { wx.navigateTo({ url: '/pages/measure/measure' }); },
+
   async logout() {
     if (!await fb.confirm('确定退出登录吗？下次进入需重新登录。', '退出')) return;
     api.logout();
