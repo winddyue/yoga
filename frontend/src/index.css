@@ -4,14 +4,14 @@
 
 /* 主题变量：默认值=薄荷青（G），ThemeProvider 会按 localStorage 所选主题覆盖 */
 :root {
-  --th-bg: #EFF6F4;
+  --th-bg: #F5F7F2;
   --th-card: #FFFFFF;
-  --th-pri: #4FA39B;
-  --th-prid: #357771;
-  --th-acc: #93C9C2;
-  --th-txt: #2F3F3C;
-  --th-mut: #85948F;
-  --th-line: #DCEBE8;
+  --th-pri: #6F8563;
+  --th-prid: #4C6043;
+  --th-acc: #A9BC9C;
+  --th-txt: #39412F;
+  --th-mut: #8A917F;
+  --th-line: #E4E8DD;
 }
 
 /* 全局：主题底色、主题正文、放宽行高 */

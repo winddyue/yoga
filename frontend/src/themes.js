@@ -15,6 +15,6 @@ export const THEMES = {
   l: { name: '樱花粉', bg: '#FFF1F5', card: '#FFFFFF', pri: '#E85D8A', prid: '#BC3A64', acc: '#F5A3BE', txt: '#4A2E38', mut: '#A08894', line: '#F6DCE6' },
 };
 
-export const DEFAULT_THEME = 'g';
+export const DEFAULT_THEME = 'a';
 export const THEME_IDS = Object.keys(THEMES);
 export const getTheme = (id) => THEMES[id] || THEMES[DEFAULT_THEME];

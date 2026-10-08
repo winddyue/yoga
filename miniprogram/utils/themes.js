@@ -14,7 +14,7 @@ const THEMES = {
   k: { name: '薄荷亮', bg: '#ECFAF8', card: '#FFFFFF', pri: '#1FA89A', prid: '#147A70', acc: '#7FD1C7', txt: '#2B3F3C', mut: '#7E9894', line: '#D2ECE9' },
   l: { name: '樱花粉', bg: '#FFF1F5', card: '#FFFFFF', pri: '#E85D8A', prid: '#BC3A64', acc: '#F5A3BE', txt: '#4A2E38', mut: '#A08894', line: '#F6DCE6' },
 };
-const DEFAULT_THEME = 'g';
+const DEFAULT_THEME = 'a';
 const THEME_IDS = Object.keys(THEMES);
 const STORAGE_KEY = 'theme';
 

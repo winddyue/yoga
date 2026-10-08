@@ -36,8 +36,8 @@
     "selectedColor": "#1f8f83"
   },
   "window": {
-    "backgroundColor": "#EFF6F4",
-    "navigationBarBackgroundColor": "#4FA39B",
+    "backgroundColor": "#F5F7F2",
+    "navigationBarBackgroundColor": "#6F8563",
     "navigationBarTextStyle": "white",
     "navigationBarTitleText": "瑜伽馆客户管理"
   }
