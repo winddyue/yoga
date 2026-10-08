@@ -3,7 +3,7 @@ const { syncTheme } = require('../../utils/themes.js');
 const fb = require('../../utils/feedback.js');
 
 Page({
-  data: { courses: [], roster: [], cur: null, qr: null, qrTitle: '' },
+  data: { courses: [], roster: [], cur: null, qr: null, qrTitle: '', pendingDiets: [] },
 
   onShow() { syncTheme(this); this.load(); },
 
@@ -14,6 +14,10 @@ Page({
     } catch (e) {
       fb.showError(e, '课程加载失败');
     }
+    try {
+      const diets = await api.get('/api/diets/pending');
+      this.setData({ pendingDiets: diets || [] });
+    } catch (e) { /* 非馆主/教练不可见时忽略 */ }
   },
 
   // 出示签到二维码：客户用约课页"扫码签到"扫描
@@ -52,5 +56,17 @@ Page({
       );
       this.openRoster({ currentTarget: { dataset: { id: this.data.cur } } });
     } catch (e) { /* 已提示 */ }
+  },
+
+  // 待确认饮食：一键确认
+  async confirmDiet(e) {
+    const id = e.currentTarget.dataset.id;
+    const ok = await fb.confirm('确认该饮食方案？确认后将通知客户。', '确认');
+    if (!ok) return;
+    try {
+      await fb.withFeedback(api.post(`/api/diets/${id}/confirm`, {}), { loading: '确认中…' });
+      fb.showSuccess('已确认');
+      this.load();
+    } catch (err) { /* 已提示 */ }
   },
 });

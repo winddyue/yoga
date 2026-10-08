@@ -1,0 +1,19 @@
+<view class="container t-{{theme}}">
+  <view class="head">
+    <view class="title">通知</view>
+    <text class="readall" bindtap="markAll">全部已读</text>
+  </view>
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+  <view wx:elif="{{!list.length}}" class="tip">暂无通知</view>
+  <block wx:else>
+    <view wx:for="{{list}}" wx:key="id" class="card {{item.is_read ? 'read' : ''}}" data-id="{{item.id}}" bindtap="markRead">
+      <view class="t"><text wx:if="{{!item.is_read}}" class="dot"></text>{{item.title}}</view>
+      <view class="b">{{item.body}}</view>
+      <view class="time">{{item.created_at}}</view>
+    </view>
+  </block>
+</view>

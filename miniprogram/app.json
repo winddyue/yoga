@@ -10,7 +10,8 @@
     "pages/profile/profile",
     "pages/records/records",
     "pages/about/about",
-    "pages/theme/theme"
+    "pages/theme/theme",
+    "pages/notices/notices"
   ],
   "tabBar": {
     "color": "#8b93a7",

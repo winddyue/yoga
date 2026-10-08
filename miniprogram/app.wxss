@@ -119,3 +119,10 @@ page {
 .info-row .label { width: 170rpx; color: #85948F; }
 .info-row .value { flex: 1; color: #2F3F3C; }
 .info-row .value.link { color: #357771; }
+
+/* 免责小字（AI 生成内容） */
+.disclaimer { color: #A09468; font-size: 22rpx; margin-top: 10rpx; line-height: 1.6; }
+
+/* 通知未读红点 */
+.menu-item .right { display: flex; align-items: center; gap: 12rpx; }
+.badge { min-width: 36rpx; height: 36rpx; padding: 0 10rpx; border-radius: 20rpx; background: #C0392B; color: #fff; font-size: 22rpx; display: flex; align-items: center; justify-content: center; }

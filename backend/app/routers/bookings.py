@@ -13,6 +13,7 @@ from .. import auth as auth_lib
 from .. import models, schemas
 from ..config import settings
 from ..database import get_db
+from ..services import notify as notify_service
 from ..services import audit as audit_service
 
 router = APIRouter(prefix="/api", tags=["约课签到"])
@@ -206,6 +207,17 @@ def book_course(course_id: int, body: dict | None = None,
         raise HTTPException(status_code=400, detail="已预约该课程，无需重复预约")
     db.refresh(booking)
     audit_service.log(db, user.id, "booking.create", "booking", booking.id)
+    # 通知客户：预约成功 / 进入候补
+    if booking.status == ST_BOOKED:
+        notify_service.notify_client(
+            db, client.id, "booking_created", "预约成功",
+            f"已预约「{course.title}」，请准时到场",
+            ref_type="booking", ref_id=booking.id)
+    else:
+        notify_service.notify_client(
+            db, client.id, "booking_created", "已进入候补",
+            f"「{course.title}」已满，你排在候补名单，有空位会第一时间通知你",
+            ref_type="booking", ref_id=booking.id)
     return {"id": booking.id, "course_id": course_id, "client_id": client.id,
             "client_name": client.name, "status": booking.status}
 
@@ -240,6 +252,15 @@ def cancel_booking(course_id: int, body: dict | None = None,
             _adjust_seats(db, course_id, -1)
     db.commit()
     audit_service.log(db, user.id, "booking.cancel", "booking", booking.id)
+    # 候补转正：通知转正的客户
+    if promoted:
+        promoted_client = db.query(models.Client).filter(
+            models.Client.id == promoted).first()
+        if promoted_client:
+            notify_service.notify_client(
+                db, promoted, "booking_promoted", "候补转正",
+                f"「{course.title}」有空位了，你已自动转正，请准时到场",
+                ref_type="booking", ref_id=booking.id)
     return {"ok": True, "promoted_client_id": promoted}
 
 
@@ -309,6 +330,11 @@ def checkin(course_id: int, data: schemas.CheckInIn,
     db.commit()
     update_attendance(db, client.id)
     audit_service.log(db, user.id, "booking.checkin", "booking", booking.id)
+    # 通知教练：客户已签到
+    notify_service.notify_coach(
+        db, client.id, "checkin", "客户已签到",
+        f"{client.name} 已签到「{course.title}」",
+        ref_type="checkin", ref_id=booking.id)
     return {"ok": True, "method": method}
 
 

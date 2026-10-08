@@ -2,7 +2,7 @@
 """Pydantic 数据校验模型：请求入参 / 响应出参。"""
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 # ---------- 通用 ----------
@@ -157,6 +157,12 @@ class DietPlanOut(DietPlanIn):
     id: int
     client_id: int
     status: str
+    source: str = "coach"
+    disclaimer: str = ""  # AI 生成时附带免责声明
+
+
+class DietConfirmIn(BaseModel):
+    meals: Optional[Dict[str, List[str]]] = None  # 教练确认时可附带微调后的餐单
 
 
 class DietGenerateIn(BaseModel):
@@ -288,3 +294,22 @@ class ConsentOut(BaseModel):
     client_id: Optional[int] = None
     consent_type: str
     version: str
+
+
+# ---------- 通知 ----------
+class NotificationOut(BaseModel):
+    id: int
+    type: str
+    title: str
+    body: str
+    ref_type: str = ""
+    ref_id: int = 0
+    is_read: bool = False
+    created_at: str = ""
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def _dt_to_str(cls, v):
+        if hasattr(v, "isoformat"):
+            return v.isoformat(sep=" ", timespec="seconds")
+        return v or ""

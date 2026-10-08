@@ -1,0 +1,7 @@
+.head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx; }
+.readall { font-size: 26rpx; }
+.card.read { opacity: 0.62; }
+.t { font-size: 30rpx; font-weight: 600; margin-bottom: 8rpx; display: flex; align-items: center; }
+.dot { width: 14rpx; height: 14rpx; border-radius: 50%; background: #C0392B; margin-right: 10rpx; flex: none; }
+.b { font-size: 26rpx; line-height: 1.6; }
+.time { font-size: 22rpx; margin-top: 8rpx; }

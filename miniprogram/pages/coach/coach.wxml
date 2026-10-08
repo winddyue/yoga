@@ -1,5 +1,17 @@
 <view class="container t-{{theme}}">
   <view class="title">教练工作台</view>
+
+  <view wx:if="{{pendingDiets.length}}">
+    <view class="sec">待确认饮食（{{pendingDiets.length}}）</view>
+    <view wx:for="{{pendingDiets}}" wx:key="id" class="card">
+      <view class="t">{{item.client_name}} · {{item.date}} · {{item.status === 'ai_draft' ? 'AI 生成' : '待确认'}}</view>
+      <view class="sub">目标 {{item.calories_target}}千卡</view>
+      <view class="btns">
+        <button size="mini" type="primary" data-id="{{item.id}}" bindtap="confirmDiet">一键确认</button>
+      </view>
+    </view>
+  </view>
+
   <view wx:if="{{!courses.length}}" class="tip">暂无课程</view>
   <view wx:for="{{courses}}" wx:key="id" class="card">
     <view class="t">{{item.title}}</view>

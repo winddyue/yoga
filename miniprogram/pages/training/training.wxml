@@ -18,6 +18,9 @@
     <view wx:for="{{plans}}" wx:key="id" class="card"><view class="t">第 {{item.week_start}} 周计划</view></view>
     <view class="sec">饮食方案（{{diets.length}}）</view>
     <view wx:if="{{!diets.length}}" class="tip">暂无饮食方案</view>
-    <view wx:for="{{diets}}" wx:key="id" class="card"><view class="t">{{item.date}} · {{item.status === 'confirmed' ? '已确认' : '待确认'}}</view></view>
+    <view wx:for="{{diets}}" wx:key="id" class="card">
+      <view class="t">{{item.date}} · {{item.status === 'confirmed' ? '已确认' : (item.status === 'ai_draft' ? 'AI 生成·待教练确认' : '待确认')}}</view>
+      <view wx:if="{{item.status === 'ai_draft'}}" class="disclaimer">AI 生成内容仅供参考，不构成医疗建议，请遵医嘱</view>
+    </view>
   </block>
 </view>

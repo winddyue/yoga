@@ -50,6 +50,12 @@ h1, h2, h3 {
   border: 1px solid var(--th-line);
 }
 .btn-ghost:hover { background: color-mix(in srgb, var(--th-pri) 6%, var(--th-card)); }
+.btn-secondary {
+  @apply btn bg-white;
+  color: var(--th-prid);
+  border: 1px solid color-mix(in srgb, var(--th-pri) 40%, transparent);
+}
+.btn-secondary:hover { background: color-mix(in srgb, var(--th-pri) 8%, var(--th-card)); }
 .card {
   @apply bg-white rounded-2xl p-5;
   border: 1px solid var(--th-line);

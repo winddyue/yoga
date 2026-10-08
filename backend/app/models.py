@@ -2,7 +2,7 @@
 """数据模型：用户、客户、自定义字段、评估记录、训练计划、饮食方案、系统设置。"""
 import datetime
 
-from sqlalchemy import JSON, DateTime, Float, ForeignKey, Index, Integer, String, Text, text
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -130,7 +130,8 @@ class DietPlan(Base):
     protein_g: Mapped[float] = mapped_column(Float, default=0)
     fat_g: Mapped[float] = mapped_column(Float, default=0)
     carbs_g: Mapped[float] = mapped_column(Float, default=0)
-    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending / confirmed
+    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending / ai_draft / confirmed
+    source: Mapped[str] = mapped_column(String(8), default="coach")  # coach / ai
     confirmed_by: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
 
@@ -281,4 +282,19 @@ class WxBinding(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, index=True)
     openid: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class Notification(Base):
+    """站内通知：AI 饮食、预约/候补/签到等事件的推送（一期站内，二期微信订阅消息）。"""
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)  # 接收人
+    type: Mapped[str] = mapped_column(String(32), default="")  # diet_ai_ready / diet_confirmed / booking_created / booking_promoted / checkin / system
+    title: Mapped[str] = mapped_column(String(128), default="")
+    body: Mapped[str] = mapped_column(String(512), default="")
+    ref_type: Mapped[str] = mapped_column(String(32), default="")
+    ref_id: Mapped[int] = mapped_column(Integer, default=0)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
