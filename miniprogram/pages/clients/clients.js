@@ -4,11 +4,17 @@ const { syncTheme } = require('../../utils/themes.js');
 const fb = require('../../utils/feedback.js');
 
 const LIGHT = { red: '🔴', yellow: '🟡', green: '🟢' };
+const SEG_NAMES = { new: '新客', active: '活跃客户', dormant: '沉默客户', risk: '流失风险' };
 
 Page({
   data: {
     theme: '', keyword: '', all: [], list: [],
     loading: true, loadErr: '', needLogin: false,
+    segment: '', segTitle: '',
+  },
+
+  onLoad(options) {
+    this.setData({ segment: (options && options.segment) || '' });
   },
 
   onShow() { syncTheme(this); this.load(); },
@@ -34,6 +40,8 @@ Page({
         goal: c.goal || '',
         light: LIGHT[c.status] || '',
         att: Math.round((c.attendance_rate || 0) * 100),
+        status: c.status || '',
+        created_at: c.created_at || '',
       }));
       this.setData({ all }, () => {
         this.applyFilter();
@@ -51,12 +59,31 @@ Page({
     this.setData({ keyword: e.detail.value }, () => this.applyFilter());
   },
 
+  // 分层过滤：new=30天内新建；active/dormant/risk=状态灯
+  matchSegment(c) {
+    const seg = this.data.segment;
+    if (!seg) return true;
+    if (seg === 'new') {
+      if (!c.created_at) return true; // 无字段时不过滤
+      const days = (Date.now() - new Date(c.created_at + 'T00:00:00').getTime()) / 86400000;
+      return days <= 30;
+    }
+    if (seg === 'active') return c.status === 'green';
+    if (seg === 'dormant') return c.status === 'yellow';
+    if (seg === 'risk') return c.status === 'red';
+    return true;
+  },
+
   applyFilter() {
     const kw = (this.data.keyword || '').trim();
-    const list = kw
-      ? this.data.all.filter((c) => (c.name || '').indexOf(kw) >= 0)
-      : this.data.all.slice();
-    this.setData({ list });
+    const list = this.data.all
+      .filter((c) => this.matchSegment(c))
+      .filter((c) => !kw || (c.name || '').indexOf(kw) >= 0);
+    const segName = SEG_NAMES[this.data.segment];
+    this.setData({
+      list,
+      segTitle: segName ? `${segName}（${list.length}）` : '',
+    });
   },
 
   goDetail(e) {

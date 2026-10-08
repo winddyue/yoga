@@ -18,10 +18,16 @@ function pickCustoms(customValues, fieldMap) {
   return out;
 }
 
+// 上课情况：预约/签到记录（后端并行开发中，失败则静默不显示该区）
+const BOOKING_STATUS = {
+  booked: '已约', waitlist: '候补', cancelled: '已取消',
+  checked_in: '已签到', no_show: '爽约',
+};
+
 Page({
   data: {
     theme: '', id: null, client: null, history: [], trends: null,
-    metric: 'weight', latestStatus: [],
+    metric: 'weight', latestStatus: [], bookings: null,
     loading: true, loadErr: '', needLogin: false,
   },
 
@@ -54,6 +60,16 @@ Page({
       ]), { loading: '加载中…' });
       let trends = null;
       try { trends = await api.get(`/api/clients/${this.data.id}/trends`); } catch (e) {}
+      // 上课情况：失败静默，该区不显示
+      let bookings = null;
+      try {
+        const bl = await api.get(`/api/clients/${this.data.id}/bookings`);
+        bookings = (bl || []).map((b) => ({
+          title: b.course_title || '',
+          time: b.start_time || '',
+          status: BOOKING_STATUS[b.status] || b.status || '',
+        }));
+      } catch (e) {}
       // 自定义字段 id→name 映射（用于历史记录中显示字段名；字段被删则显示"已删除字段"）
       let fieldMap = {};
       try {
@@ -106,7 +122,7 @@ Page({
           };
         }),
         trends, loading: false,
-        latestStatus,
+        latestStatus, bookings,
       }, () => { setTimeout(() => this.drawTrend(), 80); });
     } catch (e) {
       const expired = e.message === '未登录';

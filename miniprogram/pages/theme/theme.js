@@ -1,5 +1,5 @@
 // 界面风格：12 套配色宫格选择，即时生效
-const { THEMES, THEME_IDS, getTheme, currentThemeId, STORAGE_KEY } = require('../../utils/themes.js');
+const { THEMES, THEME_IDS, getTheme, currentThemeId, setTheme } = require('../../utils/themes.js');
 
 Page({
   data: { themes: [], current: 'g', theme: 'g' },
@@ -19,14 +19,12 @@ Page({
   pick(e) {
     const id = e.currentTarget.dataset.id;
     if (!THEMES[id]) return;
-    wx.setStorageSync(STORAGE_KEY, id);
-    const t = getTheme(id);
-    try {
-      wx.setNavigationBarColor({ frontColor: '#ffffff', backgroundColor: t.pri });
-      wx.setBackgroundColor({ backgroundColor: t.bg });
-    } catch (err) {}
-    getApp().globalData._themeId = id;
-    this.setData({ current: id, theme: id });
-    wx.showToast({ title: '已切换为' + t.name, icon: 'none' });
+    const ok = setTheme(id);
+    if (ok) {
+      this.setData({ current: id, theme: id });
+      wx.showToast({ title: '已切换为' + THEMES[id].name, icon: 'none' });
+    } else {
+      wx.showToast({ title: '切换失败，请重试', icon: 'none' });
+    }
   },
 });

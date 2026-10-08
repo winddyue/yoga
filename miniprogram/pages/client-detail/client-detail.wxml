@@ -64,5 +64,15 @@
         <text class="sub">{{c.name}}：{{c.value}}</text>
       </block>
     </view>
+
+    <!-- 上课情况 -->
+    <block wx:if="{{bookings !== null}}">
+      <view class="sec">上课情况</view>
+      <view wx:if="{{!bookings.length}}" class="tip">暂无上课记录</view>
+      <view wx:for="{{bookings}}" wx:key="time" class="card">
+        <view class="t">{{item.title}}</view>
+        <view class="sub">{{item.time}} · {{item.status}}</view>
+      </view>
+    </block>
   </block>
 </view>

@@ -88,6 +88,20 @@ def get_client(client_id: int,
     return _present(auth_lib.client_visible_to(db, user, client_id), user)
 
 
+@router.get("/{client_id}/bookings")
+def client_bookings(client_id: int,
+                    db: Session = Depends(get_db),
+                    user: models.User = Depends(auth_lib.get_current_user)):
+    """客户上课记录（预约记录，按课程开始时间倒序）。"""
+    client = auth_lib.client_visible_to(db, user, client_id)
+    rows = (db.query(models.Booking, models.Course.title, models.Course.start_time)
+            .join(models.Course, models.Course.id == models.Booking.course_id)
+            .filter(models.Booking.client_id == client.id)
+            .order_by(models.Course.start_time.desc()).all())
+    return [{"course_title": title, "start_time": start_time, "status": b.status}
+            for b, title, start_time in rows]
+
+
 @router.put("/{client_id}", response_model=schemas.ClientOut)
 def update_client(client_id: int, data: schemas.ClientIn,
                   db: Session = Depends(get_db),

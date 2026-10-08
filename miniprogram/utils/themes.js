@@ -19,7 +19,51 @@ const THEME_IDS = Object.keys(THEMES);
 const STORAGE_KEY = 'theme';
 
 function getTheme(id) { return THEMES[id] || THEMES[DEFAULT_THEME]; }
-function currentThemeId() { return wx.getStorageSync(STORAGE_KEY) || DEFAULT_THEME; }
+
+/**
+ * 三级 fallback：storage → 内存 globalData._themeId → DEFAULT_THEME。
+ * storage 异常或被清空时，内存值保证本次会话内主题不丢失。
+ */
+function currentThemeId() {
+  try {
+    const s = wx.getStorageSync(STORAGE_KEY);
+    if (s && THEMES[s]) return s;
+  } catch (e) {}
+  try {
+    const app = getApp();
+    const mem = app && app.globalData && app.globalData._themeId;
+    if (mem && THEMES[mem]) return mem;
+  } catch (e) {}
+  return DEFAULT_THEME;
+}
+
+/**
+ * 设置主题：校验 → 写 storage → 读回校验 → 更新内存 → 同步导航栏。
+ * 写入失败（抛异常或读回不一致）返回 false，调用方提示用户重试。
+ */
+function setTheme(id) {
+  if (!THEMES[id]) return false;
+  const t = THEMES[id];
+  try {
+    wx.setStorageSync(STORAGE_KEY, id);
+  } catch (e) {
+    return false;
+  }
+  let ok = false;
+  try {
+    ok = wx.getStorageSync(STORAGE_KEY) === id;
+  } catch (e) {}
+  if (!ok) return false;
+  try {
+    const app = getApp();
+    if (app && app.globalData) app.globalData._themeId = id;
+  } catch (e) {}
+  try {
+    wx.setNavigationBarColor({ frontColor: '#ffffff', backgroundColor: t.pri });
+    wx.setBackgroundColor({ backgroundColor: t.bg });
+  } catch (e) {}
+  return true;
+}
 
 /**
  * 页面 onShow 调用：一行接入主题。
@@ -40,4 +84,4 @@ function syncTheme(page) {
   }
 }
 
-module.exports = { THEMES, THEME_IDS, DEFAULT_THEME, STORAGE_KEY, getTheme, currentThemeId, syncTheme };
+module.exports = { THEMES, THEME_IDS, DEFAULT_THEME, STORAGE_KEY, getTheme, currentThemeId, setTheme, syncTheme };

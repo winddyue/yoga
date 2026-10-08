@@ -244,7 +244,9 @@ def coach_overview(db: Session = Depends(get_db),
                       "attendance_rate": c.attendance_rate or 0,
                       "status": st,
                       "days_since_assessment": _latest_assessment_days(db, c),
-                      "action": _action_for(c, st)})
+                      "action": _action_for(c, st),
+                      "created_at": c.created_at.strftime("%Y-%m-%d")
+                      if c.created_at else ""})
     return {
         "clients": items,
         "todos": {"pending_diets": pending_diets, "due_reassess": due},

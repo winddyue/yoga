@@ -41,3 +41,7 @@
 .summary-num .k{display:block;font-size:22rpx;color:#85948F;margin-top:8rpx}
 .summary-num.wc-good .n{color:#4C7A4C}
 .summary-num.wc-bad .n{color:#B4655F}
+
+/* 工作人员视图：快捷入口按钮行 */
+.btn-row{display:flex;gap:16rpx;margin-bottom:20rpx}
+.btn-row button{flex:1}

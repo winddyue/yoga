@@ -111,19 +111,19 @@
     </view>
     <view class="section-title">会员分层</view>
     <view class="funnel" wx:if="{{coachData}}">
-      <view class="funnel-item fi-blue">
+      <view class="funnel-item fi-blue" bindtap="goSegment" data-seg="new">
         <text class="funnel-num">{{s.new_clients_30d || 0}}</text>
         <text class="funnel-label">新客</text>
       </view>
-      <view class="funnel-item fi-green">
+      <view class="funnel-item fi-green" bindtap="goSegment" data-seg="active">
         <text class="funnel-num">{{coachData.greenN}}</text>
         <text class="funnel-label">活跃</text>
       </view>
-      <view class="funnel-item fi-yellow">
+      <view class="funnel-item fi-yellow" bindtap="goSegment" data-seg="dormant">
         <text class="funnel-num">{{coachData.yellowN}}</text>
         <text class="funnel-label">沉默</text>
       </view>
-      <view class="funnel-item fi-red">
+      <view class="funnel-item fi-red" bindtap="goSegment" data-seg="risk">
         <text class="funnel-num">{{coachData.redN}}</text>
         <text class="funnel-label">流失风险</text>
       </view>

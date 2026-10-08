@@ -110,4 +110,10 @@ Page({
   },
 
   goMeasure() { wx.navigateTo({ url: '/pages/measure/measure' }); },
+
+  // 会员分层下钻：跳客户列表并按分层过滤
+  goSegment(e) {
+    const seg = e.currentTarget.dataset.seg;
+    wx.navigateTo({ url: `/pages/clients/clients?segment=${seg}` });
+  },
 });
