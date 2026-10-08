@@ -59,6 +59,8 @@ def trends(client_id: int,
         "dates": [r.date for r in rows],
         "weight": [r.weight_kg for r in rows],
         "body_fat": [r.body_fat_pct for r in rows],
+        "waist": [r.waist_cm for r in rows],
+        "hip": [r.hip_cm for r in rows],
     }
 
 

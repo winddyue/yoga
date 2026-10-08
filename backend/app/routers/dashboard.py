@@ -46,6 +46,34 @@ def overview(db: Session = Depends(get_db),
     }
 
 
+def _latest_assessment_days(db: Session, client: models.Client):
+    """距上次评估天数；无评估或日期非法返回 None。"""
+    latest = (db.query(models.Assessment)
+              .filter(models.Assessment.client_id == client.id)
+              .order_by(models.Assessment.date.desc()).first())
+    if not latest or not latest.date:
+        return None
+    try:
+        return (datetime.now() - datetime.strptime(latest.date, "%Y-%m-%d")).days
+    except (ValueError, TypeError):
+        return None
+
+
+def _action_for(client: models.Client, status: str) -> str:
+    """按状态灯推导建议动作。
+
+    注：red ⟺ 无评估或超 60 天未评估，因此"出勤低"优先于"安排复测"判断，
+    否则第二条规则永远不可达。
+    """
+    if status == "red":
+        if (client.attendance_rate or 0) < 0.5:
+            return "出勤低，需跟进"
+        return "安排复测"
+    if status == "yellow":
+        return "提醒复测/关注出勤"
+    return ""
+
+
 def _client_status(db: Session, client: models.Client) -> str:
     """客户状态灯：红（长期未评估/出勤差）/ 黄（30 天未复测）/ 绿（正常）。"""
     latest = (db.query(models.Assessment)
@@ -94,6 +122,66 @@ def my_summary(db: Session = Depends(get_db),
     }
 
 
+def _monthly_attendance(db: Session, client_id: int):
+    """近 6 个月出勤：只计已发生课程（课程 start_time <= now 的预约）。
+
+    attended=checked_in 数，total=attended+no_show。
+    """
+    now = datetime.now()
+    now_s = now.strftime("%Y-%m-%d %H:%M")
+    months, y, m = [], now.year, now.month
+    for _ in range(6):
+        months.append("%04d-%02d" % (y, m))
+        m -= 1
+        if m == 0:
+            m, y = 12, y - 1
+    months.reverse()
+    buckets = {k: [0, 0] for k in months}  # month -> [attended, total]
+    rows = (db.query(models.Booking, models.Course.start_time)
+            .join(models.Course, models.Booking.course_id == models.Course.id)
+            .filter(models.Booking.client_id == client_id,
+                    models.Booking.status.in_(("checked_in", "no_show"))).all())
+    for b, start_time in rows:
+        if not start_time or start_time > now_s:
+            continue  # 未发生的课程不计
+        mk = start_time[:7]
+        if mk not in buckets:
+            continue
+        buckets[mk][1] += 1
+        if b.status == "checked_in":
+            buckets[mk][0] += 1
+    return [{"month": k, "attended": a, "total": t,
+             "rate": round(a / t, 3) if t else 0}
+            for k, (a, t) in buckets.items()]
+
+
+@router.get("/me/charts")
+def my_charts(db: Session = Depends(get_db),
+              user: models.User = Depends(auth_lib.get_current_user)):
+    """客户图表数据包：趋势序列、相对首次评估的变化、近 6 个月出勤。"""
+    client = auth_lib.get_own_client(db, user)
+    rows = (db.query(models.Assessment)
+            .filter(models.Assessment.client_id == client.id)
+            .order_by(models.Assessment.date.asc()).all())
+    trends = {
+        "dates": [r.date for r in rows],
+        "weight": [r.weight_kg for r in rows],
+        "body_fat": [r.body_fat_pct for r in rows],
+        "waist": [r.waist_cm for r in rows],
+        "hip": [r.hip_cm for r in rows],
+    }
+
+    def _change(vals):
+        v = [x for x in vals if x and x > 0]
+        return round(v[-1] - v[0], 1) if len(v) >= 2 else 0
+
+    changes = {"weight": _change(trends["weight"]),
+               "body_fat": _change(trends["body_fat"]),
+               "waist": _change(trends["waist"])}
+    return {"trends": trends, "changes": changes,
+            "monthly_attendance": _monthly_attendance(db, client.id)}
+
+
 @router.get("/coach/overview")
 def coach_overview(db: Session = Depends(get_db),
                    user: models.User = Depends(auth_lib.require_staff)):
@@ -107,10 +195,16 @@ def coach_overview(db: Session = Depends(get_db),
                      .filter(models.DietPlan.client_id.in_(cids),
                              models.DietPlan.status == "pending").count())
     due = sum(1 for c in clients if _client_status(db, c) in ("red", "yellow"))
+    items = []
+    for c in clients:
+        st = _client_status(db, c)
+        items.append({"id": c.id, "name": c.name, "goal": c.goal,
+                      "attendance_rate": c.attendance_rate or 0,
+                      "status": st,
+                      "days_since_assessment": _latest_assessment_days(db, c),
+                      "action": _action_for(c, st)})
     return {
-        "clients": [{"id": c.id, "name": c.name, "goal": c.goal,
-                     "attendance_rate": c.attendance_rate or 0,
-                     "status": _client_status(db, c)} for c in clients],
+        "clients": items,
         "todos": {"pending_diets": pending_diets, "due_reassess": due},
     }
 
