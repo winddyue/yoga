@@ -44,6 +44,7 @@
             <input class="time-input" placeholder="时间，如 19:00" value="{{d.time}}" bindinput="onDayTimeInput" data-i="{{i}}" />
           </view>
           <textarea class="ex-text" placeholder="每行一个动作，格式：深蹲 3x12" value="{{d.text}}" bindinput="onDayTextInput" data-i="{{i}}" auto-height />
+          <view class="btns"><button size="mini" bindtap="openPicker" data-i="{{i}}">＋ 动作库</button></view>
         </view>
         <view class="btns">
           <button size="mini" type="primary" bindtap="saveEdit" disabled="{{saving}}">{{saving ? '保存中…' : '保存'}}</button>
@@ -52,4 +53,30 @@
       </block>
     </view>
   </block>
+
+  <!-- 动作库选择器 -->
+  <view wx:if="{{pickerShow}}" class="ex-mask" bindtap="closePicker">
+    <view class="ex-sheet card" catchtap="noop">
+      <view class="ex-head">
+        <text class="t">选择动作</text>
+        <text class="ex-close" bindtap="closePicker">✕</text>
+      </view>
+      <input class="ex-search" placeholder="搜索动作名" value="{{pickerKw}}" bindinput="onPickerKw" />
+      <view class="ex-cats">
+        <text class="tab {{pickerCat === 'all' ? 'on' : ''}}" data-c="all" bindtap="onPickerCat">全部</text>
+        <text class="tab {{pickerCat === '瑜伽' ? 'on' : ''}}" data-c="瑜伽" bindtap="onPickerCat">瑜伽</text>
+        <text class="tab {{pickerCat === '力量' ? 'on' : ''}}" data-c="力量" bindtap="onPickerCat">力量</text>
+        <text class="tab {{pickerCat === '有氧' ? 'on' : ''}}" data-c="有氧" bindtap="onPickerCat">有氧</text>
+        <text class="tab {{pickerCat === '拉伸' ? 'on' : ''}}" data-c="拉伸" bindtap="onPickerCat">拉伸</text>
+      </view>
+      <view wx:if="{{exLoading}}" class="tip">加载中…</view>
+      <scroll-view wx:else scroll-y class="ex-list">
+        <view wx:if="{{!exFiltered.length}}" class="tip">没有匹配的动作，可手动输入</view>
+        <view wx:for="{{exFiltered}}" wx:key="name" class="ex-item" data-name="{{item.name}}" bindtap="pickEx">
+          <text class="ex-name">{{item.name}}</text>
+          <text class="ex-muscle">{{item.muscle}}</text>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
 </view>

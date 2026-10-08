@@ -34,6 +34,25 @@
       </view>
     </view>
 
+    <!-- 本月总结 -->
+    <view wx:if="{{summary}}" class="card summary-card">
+      <view class="summary-text">{{summary.text}}</view>
+      <view wx:if="{{summary.assess_count > 0}}" class="summary-nums">
+        <view class="summary-num">
+          <text class="n">{{summary.assess_count}}</text>
+          <text class="k">体测（次）</text>
+        </view>
+        <view class="summary-num {{summary.weight_change < 0 ? 'wc-good' : (summary.weight_change > 0 ? 'wc-bad' : '')}}" wx:if="{{summary.weight_change !== null}}">
+          <text class="n">{{summary.weight_change > 0 ? '+' : ''}}{{summary.weight_change}}<text class="u">kg</text></text>
+          <text class="k">体重变化</text>
+        </view>
+        <view class="summary-num">
+          <text class="n">{{summary.checkin_count}}</text>
+          <text class="k">出勤（次）</text>
+        </view>
+      </view>
+    </view>
+
     <view class="sec">身体趋势</view>
     <view class="chart-card" wx:if="{{charts && charts.trends && charts.trends.dates.length}}">
       <view class="tabs">

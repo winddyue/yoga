@@ -12,3 +12,17 @@
 .time-input { font-size: 26rpx; color: #2F3F3C; text-align: right; width: 280rpx; }
 .ex-text { width: 100%; min-height: 120rpx; font-size: 26rpx; background: #FAF7F0; border-radius: 14rpx; padding: 16rpx; box-sizing: border-box; }
 .field .input { flex: 1; font-size: 28rpx; text-align: right; }
+
+/* 动作库选择器 */
+.ex-mask { position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,.45); z-index: 99; display: flex; align-items: flex-end; }
+.ex-sheet { width: 100%; max-height: 76vh; border-radius: 28rpx 28rpx 0 0; margin-bottom: 0; display: flex; flex-direction: column; }
+.ex-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14rpx; }
+.ex-head .t { font-size: 32rpx; font-weight: 700; }
+.ex-close { font-size: 34rpx; color: #85948F; padding: 6rpx 10rpx; }
+.ex-search { background: #FAF7F0; border-radius: 14rpx; padding: 16rpx 20rpx; font-size: 27rpx; margin-bottom: 14rpx; }
+.ex-cats { display: flex; gap: 10rpx; margin-bottom: 10rpx; }
+.ex-cats .tab { padding: 12rpx 0; font-size: 25rpx; }
+.ex-list { max-height: 52vh; }
+.ex-item { display: flex; justify-content: space-between; align-items: center; padding: 20rpx 4rpx; border-bottom: 2rpx solid #F6F1E8; }
+.ex-name { font-size: 29rpx; }
+.ex-muscle { font-size: 24rpx; color: #85948F; }

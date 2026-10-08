@@ -25,6 +25,9 @@ Page({
     theme: '', clientId: null, clientName: '',
     plans: [], loading: true, loadErr: '', needLogin: false,
     editingId: null, editWeek: '', editDays: [], saving: false, generating: false,
+    // 动作库选择器
+    pickerShow: false, pickerDay: -1, pickerKw: '', pickerCat: 'all',
+    exList: [], exFiltered: [], exLoading: false,
   },
 
   onLoad(options) {
@@ -118,7 +121,45 @@ Page({
     } catch (e) { fb.showError(e, '加载计划详情失败'); }
   },
 
-  cancelEdit() { this.setData({ editingId: null, editDays: [] }); },
+  cancelEdit() { this.setData({ editingId: null, editDays: [], pickerShow: false }); },
+
+  // ---- 动作库选择器 ----
+  async openPicker(e) {
+    const i = e.currentTarget.dataset.i;
+    this.setData({ pickerShow: true, pickerDay: i, pickerKw: '', pickerCat: 'all' });
+    if (this.data.exList.length || this.data.exLoading) { this._filterEx(); return; }
+    this.setData({ exLoading: true });
+    try {
+      const list = await api.get('/api/exercises');
+      this.setData({ exList: list || [], exLoading: false }, () => this._filterEx());
+    } catch (err) {
+      // 接口失败：退回手动输入，不阻塞
+      this.setData({ exLoading: false, pickerShow: false });
+      fb.showError(err, '动作库加载失败，请手动输入');
+    }
+  },
+  closePicker() { this.setData({ pickerShow: false }); },
+  noop() {},
+  onPickerKw(e) { this.setData({ pickerKw: e.detail.value }, () => this._filterEx()); },
+  onPickerCat(e) { this.setData({ pickerCat: e.currentTarget.dataset.c }, () => this._filterEx()); },
+  _filterEx() {
+    const kw = (this.data.pickerKw || '').trim();
+    const cat = this.data.pickerCat;
+    const filtered = (this.data.exList || []).filter((x) =>
+      (cat === 'all' || x.category === cat) && (!kw || (x.name || '').includes(kw)));
+    this.setData({ exFiltered: filtered });
+  },
+  // 点选动作：回填动作名，组数×次数保留默认 3x12（用户可在文本中再改）
+  pickEx(e) {
+    const name = e.currentTarget.dataset.name;
+    const i = this.data.pickerDay;
+    const days = this.data.editDays.slice();
+    if (i >= 0 && days[i] && name) {
+      const cur = (days[i].text || '').trim();
+      days[i].text = cur ? `${cur}\n${name} 3x12` : `${name} 3x12`;
+      this.setData({ editDays: days, pickerShow: false });
+    }
+  },
 
   onWeekInput(e) { this.setData({ editWeek: e.detail.value }); },
   onDayTimeInput(e) {

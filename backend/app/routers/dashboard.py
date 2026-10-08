@@ -122,6 +122,48 @@ def my_summary(db: Session = Depends(get_db),
     }
 
 
+@router.get("/me/monthly")
+def my_monthly(db: Session = Depends(get_db),
+               user: models.User = Depends(auth_lib.get_current_user)):
+    """本月总结（SparkyFitness 式长期报告的月度版）：评估次数、体重/体脂变化、本月签到、一句话总结。"""
+    client = auth_lib.get_own_client(db, user)
+    now = datetime.now()
+    month = now.strftime("%Y-%m")
+    month_start = datetime(now.year, now.month, 1)
+    rows = (db.query(models.Assessment)
+            .filter(models.Assessment.client_id == client.id,
+                    models.Assessment.date.like(f"{month}%"))
+            .order_by(models.Assessment.date.asc()).all())
+    weights = [r.weight_kg for r in rows if r.weight_kg and r.weight_kg > 0]
+    fats = [r.body_fat_pct for r in rows if r.body_fat_pct and r.body_fat_pct > 0]
+    weight_change = round(weights[-1] - weights[0], 1) if len(weights) >= 2 else None
+    body_fat_change = round(fats[-1] - fats[0], 1) if len(fats) >= 2 else None
+    checkin_count = (db.query(models.CheckIn)
+                     .filter(models.CheckIn.client_id == client.id,
+                             models.CheckIn.checked_at >= month_start).count())
+    m = now.month
+    if not rows:
+        text = "先记录一次体测吧"
+    else:
+        parts = [f"{m}月你记录了{len(rows)}次体测"]
+        if weight_change is None:
+            parts.append("多测一次就能看到体重变化趋势")
+        else:
+            d = "下降" if weight_change < 0 else ("上升" if weight_change > 0 else "持平")
+            parts.append(f"体重{d}{abs(weight_change)}kg")
+        if body_fat_change is not None and body_fat_change != 0:
+            d = "下降" if body_fat_change < 0 else "上升"
+            parts.append(f"体脂{d}{abs(body_fat_change)}%")
+        parts.append(f"本月出勤{checkin_count}次")
+        tail = "继续保持！" if (weight_change or 0) <= 0 else "别灰心，坚持就是胜利"
+        text = "，".join(parts) + "。" + tail
+    return {
+        "month": month, "assess_count": len(rows),
+        "weight_change": weight_change, "body_fat_change": body_fat_change,
+        "checkin_count": checkin_count, "text": text,
+    }
+
+
 def _monthly_attendance(db: Session, client_id: int):
     """近 6 个月出勤：只计已发生课程（课程 start_time <= now 的预约）。
 

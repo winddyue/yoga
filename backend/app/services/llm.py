@@ -9,6 +9,7 @@ import json
 import httpx
 
 from ..config import settings
+from .nutrition import targets as nutrition_targets
 
 
 class LlmNotConfigured(Exception):
@@ -96,6 +97,7 @@ DIET_SYSTEM_PROMPT = (
     '"calories_target": 1800, "protein_g": 120, "fat_g": 50, "carbs_g": 200}\n'
     "要求：餐单用中文、具体到食物和分量；热量与营养素与目标匹配；"
     "数字请转为数值类型；meals 四个 key 缺一不可。"
+    "热量与宏量营养素以给定的目标值为准，不得自行其是。"
 )
 
 
@@ -109,11 +111,25 @@ def generate_diet_plan(profile: dict) -> dict:
     if not url or not key or not model:
         raise LlmNotConfigured("未配置大模型：请在设置页填写接口地址与模型，并在服务器环境变量中配置 AI_API_KEY")
     desc = "\n".join(f"- {k}：{v}" for k, v in profile.items() if v not in ("", None, 0))
+    # 先用 Mifflin 公式算出热量与宏量目标，作为硬约束喂给模型（Fud AI 思路）
+    constraint = ""
+    try:
+        t = nutrition_targets(profile.get("gender"), profile.get("age"),
+                              profile.get("height_cm"), profile.get("weight_kg"),
+                              profile.get("goal") or "")
+        if t:
+            constraint = (
+                f"\n硬约束：热量目标{t['calories_target']}千卡、"
+                f"蛋白质{t['protein_g']}g、脂肪{t['fat_g']}g、碳水{t['carbs_g']}g，"
+                f"四餐合计必须吻合（误差±5%）。"
+            )
+    except Exception:
+        pass  # 公式算不出时走原逻辑，不阻塞生成
     payload = {
         "model": model,
         "messages": [
             {"role": "system", "content": DIET_SYSTEM_PROMPT},
-            {"role": "user", "content": "客户身体档案：\n" + desc},
+            {"role": "user", "content": "客户身体档案：\n" + desc + constraint},
         ],
         "temperature": 0.7,
         "response_format": {"type": "json_object"},

@@ -15,6 +15,7 @@ Page({
     charts: null, metric: 'weight', empty: false,
     delta: null, deltaCls: '',
     attPct: 0, attRate: 0, monthCount: 0, daysSince: null,
+    summary: null,
     loading: true, loadErr: '', needLogin: false,
   },
   onShow() { syncTheme(this); this.load(); },
@@ -34,6 +35,9 @@ Page({
       ]);
       let charts = null;
       try { charts = await api.get('/api/dashboard/me/charts'); } catch (e) {}
+      // 本月总结：失败静默不显示
+      let summary = null;
+      try { summary = await api.get('/api/dashboard/me/monthly'); } catch (e) {}
       const hasTrend = !!(charts && charts.trends && charts.trends.dates.length);
       // 健康仪表盘数据：出勤率 / 本月体测次数 / 距上次评估天数
       const attRate = c.attendance_rate || 0;
@@ -51,7 +55,7 @@ Page({
         clientId: c.id,
         plans: plans || [], diets: diets || [], charts,
         attRate, attPct: Math.round(attRate * 100),
-        monthCount, daysSince,
+        monthCount, daysSince, summary,
         empty: !(plans || []).length && !(diets || []).length && !hasTrend,
         loading: false,
       }, () => {

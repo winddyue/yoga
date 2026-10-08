@@ -82,3 +82,52 @@ def generate_meals(calories_target: int) -> Dict[str, list]:
     if calories_target < 2000:
         return _MEAL_TEMPLATES["mid"]
     return _MEAL_TEMPLATES["high"]
+
+
+# ---------------------------------------------------------------------------
+# 简化版 API（供小程序端直接调用）：固定轻度活动系数，目标按关键字解析。
+# 公式参考 Fud AI 的思路：BMR 用 Mifflin-St Jeor。
+# ---------------------------------------------------------------------------
+
+def bmr(gender, age, height_cm, weight_kg):
+    """基础代谢率（Mifflin-St Jeor）。gender 含"男"/"male"判男，其余按女；缺数据返回 None。"""
+    try:
+        w, h, a = float(weight_kg or 0), float(height_cm or 0), float(age or 0)
+    except (TypeError, ValueError):
+        return None
+    if w <= 0 or h <= 0 or a <= 0:
+        return None
+    g = str(gender or "").strip().lower()
+    s = 5 if (g in ("男", "male", "m", "man") or "男" in g) else -161
+    return round(10 * w + 6.25 * h - 5 * a + s, 2)
+
+
+def targets(gender, age, height_cm, weight_kg, goal_text):
+    """每日热量与宏量目标。goal 含"减"→减脂，含"增"→增肌，否则保持。
+
+    返回 {bmr, tdee, calories_target, protein_g, fat_g, carbs_g, note}，
+    缺关键数据（体重/身高/年龄）时返回 None。
+    """
+    b = bmr(gender, age, height_cm, weight_kg)
+    if b is None:
+        return None
+    w = float(weight_kg)
+    tdee = b * 1.375
+    goal = str(goal_text or "")
+    if "减" in goal:
+        calories = tdee - 400
+        protein_per_kg, note = 2.0, "按 Mifflin 公式，减脂目标每日少400千卡"
+    elif "增" in goal:
+        calories = tdee + 250
+        protein_per_kg, note = 1.8, "按 Mifflin 公式，增肌目标每日多250千卡"
+    else:
+        calories = tdee
+        protein_per_kg, note = 1.6, "按 Mifflin 公式，保持当前热量摄入"
+    calories_target = int(round(calories, -1))  # 四舍五入到十位
+    protein_g = round(protein_per_kg * w, 1)
+    fat_g = round(calories_target * 0.25 / 9, 1)
+    carbs_g = round(max(calories_target - protein_g * 4 - fat_g * 9, 0) / 4, 1)
+    return {
+        "bmr": b, "tdee": round(tdee, 1), "calories_target": calories_target,
+        "protein_g": protein_g, "fat_g": fat_g, "carbs_g": carbs_g, "note": note,
+    }

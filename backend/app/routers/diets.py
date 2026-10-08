@@ -12,7 +12,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..services import ai_gate, llm
 from ..services import notify as notify_service
-from ..services.nutrition import calc_targets, generate_meals
+from ..services.nutrition import calc_targets, generate_meals, targets as nutrition_targets
 import datetime
 
 router = APIRouter(prefix="/api", tags=["饮食方案"])
@@ -50,6 +50,24 @@ def generate(client_id: int, data: schemas.DietGenerateIn,
     db.commit()
     db.refresh(diet)
     return diet
+
+
+@router.get("/clients/{client_id}/nutrition-targets")
+def get_nutrition_targets(client_id: int,
+                         db: Session = Depends(get_db),
+                         user: models.User = Depends(auth_lib.get_current_user)):
+    """热量与宏量目标（Mifflin 公式）：{bmr, tdee, calories_target, protein_g, fat_g, carbs_g, note}。
+
+    用客户档案（性别/年龄/身高/目标）+ 最新体重计算；档案信息不全时 400。
+    """
+    client = auth_lib.client_visible_to(db, user, client_id)
+    a = _latest_assessment(db, client_id)
+    weight = a.weight_kg if a and a.weight_kg else None
+    t = nutrition_targets(client.gender, client.age, client.height_cm,
+                          weight, client.goal or "")
+    if t is None:
+        raise HTTPException(status_code=400, detail="档案信息不全：需要性别/年龄/身高/体重")
+    return t
 
 
 @router.post("/clients/{client_id}/diets/ai-generate",
