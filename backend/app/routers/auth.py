@@ -54,6 +54,11 @@ def _code2session(code: str) -> str:
     """
     if settings.WX_DEV_MOCK and code.startswith("mock:"):
         return "mock_openid_" + code[5:]
+    if code.startswith("mock:"):
+        # 前端处于开发版会自动发 mock: code；后端未开模拟时给出可操作的提示，
+        # 不要笼统说"未配置 AppID"，否则会误导排查方向。
+        raise HTTPException(status_code=400,
+                            detail="本地模拟登录已禁用（后端 WX_DEV_MOCK=false），请改用账号密码登录")
     if not settings.WX_APPID or not settings.WX_SECRET:
         raise HTTPException(status_code=400,
                             detail="服务器未配置微信 AppID/Secret（WX_APPID/WX_SECRET）")
@@ -91,6 +96,9 @@ def _get_phone_by_code(code: str) -> str:
         if raw.isdigit() and len(raw) == 11 and raw.startswith("1"):
             return raw
         raise HTTPException(status_code=400, detail="模拟手机号格式不正确，请填 11 位手机号")
+    if code.startswith("mock:"):
+        raise HTTPException(status_code=400,
+                            detail="本地模拟登录已禁用（后端 WX_DEV_MOCK=false），请改用账号密码登录")
     if not settings.WX_APPID or not settings.WX_SECRET:
         raise HTTPException(status_code=400,
                             detail="服务器未配置微信 AppID/Secret（WX_APPID/WX_SECRET）")

@@ -51,9 +51,18 @@ Page({
       if (e.message && e.message.indexOf('尚未绑定') >= 0) {
         this.setData({ loading: false, step: 'profile', err: '' });
       } else {
-        this.setData({ loading: false, err: e.message });
+        this.setData({ loading: false, err: this.friendlyWxErr(e.message) });
       }
     }
+  },
+
+  // 把后端的技术性报错转成用户能照着做的提示
+  friendlyWxErr(msg) {
+    const m = msg || '登录失败';
+    if (m.indexOf('AppID/Secret') >= 0 || m.indexOf('模拟登录已禁用') >= 0) {
+      return '微信一键登录暂未开通，请用下方账号密码登录';
+    }
+    return m;
   },
 
   // 新用户：填姓名（手机号可选）后建档并绑定微信，之后即可一键登录

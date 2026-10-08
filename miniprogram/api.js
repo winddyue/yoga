@@ -76,9 +76,27 @@ function req(path, { method = 'GET', data = null } = {}) {
 const WX_MOCK_FLAG = 'DEV_WX_MOCK';
 const WX_MOCK_DID = 'DEV_WX_DID';
 
+// 当前运行环境：develop=开发者工具/真机调试，trial=体验版，release=正式版
+function envVersion() {
+  try {
+    const info = wx.getAccountInfoSync && wx.getAccountInfoSync();
+    return (info && info.miniProgram && info.miniProgram.envVersion) || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+// 本地模拟开关。取值优先级：
+//   storage 显式设 '0' → 关；显式设 '1' → 开；
+//   未设置 → 开发版（开发者工具）默认开，体验版/正式版默认关。
+// 早期版本要求手工往 storage 里塞 '1'，结果手工点「微信一键登录」必然报
+// "服务器未配置微信 AppID/Secret"，非常容易误判成配置缺失——改为按环境自动判定。
 function devWxMock() {
   try {
-    return String(wx.getStorageSync(WX_MOCK_FLAG)) === '1';
+    const flag = String(wx.getStorageSync(WX_MOCK_FLAG));
+    if (flag === '1') return true;
+    if (flag === '0') return false;
+    return envVersion() === 'develop';
   } catch (e) {
     return false;
   }
@@ -154,11 +172,13 @@ module.exports = {
     if (res && res.access_token) { wx.setStorageSync('token', res.access_token); markLoggedIn(); }
     return res;
   },
-  // 微信免密登录：wx.login 的 code 换 JWT（需后端已配置 WX_APPID/WX_SECRET）
+  // 微信免密登录：wx.login 的 code 换 JWT（需后端已配置 WX_APPID/WX_SECRET，
+  // 或本地联调时后端开 WX_DEV_MOCK=true）
   async wxLogin() {
     const code = await getWxCode();
     const res = await req('/api/auth/wx-login', { method: 'POST', data: { code } });
     wx.setStorageSync('token', res.access_token);
+    markLoggedIn();   // 用户主动登录：清除"已退出"标记，恢复静默续期
     return res;
   },
   // 静默续期：用 wx.login 免密换一个新 token。
