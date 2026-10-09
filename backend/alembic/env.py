@@ -3,6 +3,16 @@
 
 SQLite 下默认开启 batch 模式（render_as_batch），以支持
 ALTER TABLE … ADD/DROP COLUMN 等受限操作。
+
+常用命令（在 backend/ 目录下执行）：
+  alembic upgrade head          升级到最新（改过 models.py 后执行）
+  alembic downgrade -1          回滚一个版本
+  alembic revision --autogenerate -m "描述"   models.py 改动后生成新迁移
+
+注意：alembic.ini 必须保持纯 ASCII。Python 的 configparser 读 ini 时固定用
+encoding="locale"（见 alembic/util/compat.py），在中文 Windows 上即 GBK，
+ini 里一旦出现中文就会 UnicodeDecodeError，导致 upgrade 直接失败。
+中文说明请写在本文件（有 -*- coding: utf-8 -*- 声明），不要写进 ini。
 """
 import os
 import sys
