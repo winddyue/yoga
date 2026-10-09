@@ -80,7 +80,8 @@ if [ -f "$ENV_FILE" ]; then
 else
   info "生成生产配置与随机密钥"
   SECRET_KEY="$(openssl rand -hex 32)"
-  ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '/+=' | cut -c1-16)"
+  # 用 hex 而不是 base64：base64 会产出 / + =，既要转义又可能在裁剪后长度不足
+  ADMIN_PASSWORD="$(openssl rand -hex 8)"
   # Fernet 密钥：手机号等敏感字段的加密密钥。丢了就解不开，必须随数据库一起备份
   DATA_ENC_KEY="$("$VENV/bin/python" -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')"
   if [ -n "$DOMAIN" ]; then CORS_LINE="CORS_ORIGINS=https://$DOMAIN"; else CORS_LINE=""; fi
