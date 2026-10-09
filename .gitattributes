@@ -1,0 +1,4 @@
+# Shell 脚本强制 LF 换行。
+# deploy/install.sh 要在 Linux 服务器上执行，一旦变成 CRLF，
+# 运行时会报 "$'\r': command not found" 这类莫名其妙的错误。
+*.sh text eol=lf
