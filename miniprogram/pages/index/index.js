@@ -1,6 +1,7 @@
 const api = require('../../api.js');
 const { syncTheme, getTheme, currentThemeId } = require('../../utils/themes.js');
 const chart = require('../../utils/chart.js');
+const checkinLib = require('../../utils/checkin.js');
 
 Page({
   data: {
@@ -8,6 +9,8 @@ Page({
     coachData: null,      // 馆主：全馆客户状态（阶段分布/管理表）
     charts: null,         // 客户：图表数据包
     metric: 'weight',     // 客户迷你趋势：weight / body_fat
+    checkinDays: 0,       // 客户：本月打卡天数
+    pendingDiets: 0,      // 馆主：待确认饮食数
   },
 
   onShow() { syncTheme(this); this.load(); },
@@ -30,12 +33,19 @@ Page({
       if (user.role === 'client') {
         s.attendancePct = Math.round((s.attendance_rate || 0) * 100);
         try { patch.charts = await api.get('/api/dashboard/me/charts'); } catch (e) {}
+        // 本月打卡天数（替代此前的"待上课程"，约课功能已暂隐）
+        try {
+          const cks = await api.get('/api/checkins/mine') || [];
+          patch.checkinDays = new Set(cks.map((c) => c.date)).size;
+        } catch (e) {}
       }
       if (user.role === 'owner') {
         // 馆主额外拿全馆客户状态灯，用于阶段分布和管理表
         try {
           const cd = await api.get('/api/dashboard/coach/overview');
-          patch.coachData = this._enrichCoachData(cd);
+          const enriched = this._enrichCoachData(cd);
+          patch.coachData = enriched;
+          patch.pendingDiets = enriched.pendingDiets;
         } catch (e) {}
       }
       if (user.role === 'coach' && s.clients) {
@@ -82,6 +92,7 @@ Page({
       redPct: (cnt.red / total) * 100,
       yellowPct: (cnt.yellow / total) * 100,
       greenPct: (cnt.green / total) * 100,
+      pendingDiets: (cd.todos && cd.todos.pending_diets) || 0,
     });
   },
 
@@ -115,5 +126,33 @@ Page({
   goSegment(e) {
     const seg = e.currentTarget.dataset.seg;
     wx.navigateTo({ url: `/pages/clients/clients?segment=${seg}` });
+  },
+
+  // ↓↓↓ 金刚区快捷入口（工作人员）
+  goIntake() { wx.navigateTo({ url: '/pages/intake/intake' }); },
+  goIntakePhoto() { wx.navigateTo({ url: '/pages/intake/intake?tab=photo' }); },
+  goNewClient() { wx.navigateTo({ url: '/pages/client-form/client-form' }); },
+  goClients() { wx.navigateTo({ url: '/pages/clients/clients' }); },
+
+  // ↓↓↓ 首页数字 / 客户行下钻
+  goAllClients() { wx.navigateTo({ url: '/pages/clients/clients' }); },
+  goActiveClients() { wx.navigateTo({ url: '/pages/clients/clients?segment=active30' }); },
+  goRiskClients() { wx.navigateTo({ url: '/pages/clients/clients?segment=risk' }); },
+  // 待确认饮食在训练页处理（工作人员视图）
+  goPendingDiets() { wx.switchTab({ url: '/pages/training/training' }); },
+  goTraining() { wx.switchTab({ url: '/pages/training/training' }); },
+  goClientDetail(e) {
+    const id = e.currentTarget.dataset.id;
+    if (id) wx.navigateTo({ url: `/pages/client-detail/client-detail?id=${id}` });
+  },
+
+  // 客户端金刚区「拍照打卡」：先选训练/饮食，再调起拍照上传
+  async quickPhotoCheckin() {
+    let r;
+    try { r = await wx.showActionSheet({ itemList: ['训练打卡', '饮食打卡'] }); }
+    catch (e) { return; } // 用户取消
+    const kind = r.tapIndex === 0 ? 'training' : 'diet';
+    await checkinLib.photo(kind);
+    this.load(); // 刷新「本月打卡」数字
   },
 });

@@ -1,5 +1,8 @@
 <view class="container t-{{theme}}">
-  <view class="title-row"><text class="title">{{segTitle || '客户管理'}}</text></view>
+  <view class="title-row">
+    <text class="title">{{segTitle || '客户管理'}}</text>
+    <text wx:if="{{!needLogin}}" class="new-btn" bindtap="goNewClient">＋ 新增客户</text>
+  </view>
 
   <view wx:if="{{needLogin}}" class="login-bar" bindtap="goLogin">
     <text>登录后查看客户列表</text>

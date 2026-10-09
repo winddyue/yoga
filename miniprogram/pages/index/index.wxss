@@ -32,3 +32,16 @@
 .fi-yellow{background:#FBF3E2;color:#96690F}
 .fi-red{background:#FBF0EE;color:#A85D5D}
 .more-link{font-size:26rpx;color:#357771;text-align:center;padding:18rpx 0 6rpx}
+/* 金刚区：首屏快捷入口（替代此前埋 3 层的入口） */
+.quick-grid{display:flex;background:#fff;border-radius:28rpx;padding:26rpx 12rpx;margin-bottom:36rpx;box-shadow:0 8rpx 24rpx rgba(122,100,84,.05)}
+.quick-item{flex:1;display:flex;flex-direction:column;align-items:center}
+.quick-icon{width:88rpx;height:88rpx;border-radius:26rpx;display:flex;align-items:center;justify-content:center;font-size:34rpx;font-weight:700;line-height:1}
+.qi-teal{background:#E6F2F1;color:#357771}
+.qi-blue{background:#E8F0F8;color:#3F6E9E}
+.qi-amber{background:#FBF3E2;color:#96690F}
+.qi-green{background:#EFF4EB;color:#5D6A4E}
+.quick-label{font-size:23rpx;color:#4F5C57;margin-top:14rpx}
+/* 段落标题 + 右侧「全部 ›」 */
+.sec-row{display:flex;align-items:center;justify-content:space-between}
+.sec-more{font-size:24rpx;color:#357771}
+.client-arrow{color:#C4B7A3;font-size:34rpx;margin-left:10rpx;flex-shrink:0}

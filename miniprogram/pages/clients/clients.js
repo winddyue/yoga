@@ -4,7 +4,13 @@ const { syncTheme } = require('../../utils/themes.js');
 const fb = require('../../utils/feedback.js');
 
 const LIGHT = { red: '🔴', yellow: '🟡', green: '🟢' };
-const SEG_NAMES = { new: '新客', active: '活跃客户', dormant: '沉默客户', risk: '流失风险' };
+// 分层口径：new=30天内新建；active30=近30天有预约；其余按状态灯
+// 注意 status=green 的含义是"状态正常"，不是"活跃"，故不再叫"活跃客户"，
+// 避免与首页「近30天活跃」两个"活跃"打架。
+const SEG_NAMES = {
+  new: '新客', active30: '近30天活跃',
+  active: '状态正常', dormant: '待跟进', risk: '需关注',
+};
 
 Page({
   data: {
@@ -41,6 +47,7 @@ Page({
         light: LIGHT[c.status] || '',
         att: Math.round((c.attendance_rate || 0) * 100),
         status: c.status || '',
+        recent: !!c.recent_active,
         created_at: c.created_at || '',
       }));
       this.setData({ all }, () => {
@@ -59,7 +66,7 @@ Page({
     this.setData({ keyword: e.detail.value }, () => this.applyFilter());
   },
 
-  // 分层过滤：new=30天内新建；active/dormant/risk=状态灯
+  // 分层过滤：new=30天内新建；active30=近30天有预约；active/dormant/risk=状态灯
   matchSegment(c) {
     const seg = this.data.segment;
     if (!seg) return true;
@@ -68,6 +75,7 @@ Page({
       const days = (Date.now() - new Date(c.created_at + 'T00:00:00').getTime()) / 86400000;
       return days <= 30;
     }
+    if (seg === 'active30') return c.recent === true;
     if (seg === 'active') return c.status === 'green';
     if (seg === 'dormant') return c.status === 'yellow';
     if (seg === 'risk') return c.status === 'red';
@@ -90,4 +98,6 @@ Page({
     const id = e.currentTarget.dataset.id;
     wx.navigateTo({ url: `/pages/client-detail/client-detail?id=${id}` });
   },
+
+  goNewClient() { wx.navigateTo({ url: '/pages/client-form/client-form' }); },
 });

@@ -1,15 +1,35 @@
 <view class="container t-{{theme}}">
   <view class="title">教练工作台</view>
 
-  <view class="sec">管理</view>
-  <view class="btns">
-    <button size="mini" type="primary" bindtap="goClients">客户管理</button>
-    <button size="mini" type="primary" bindtap="goCourseEdit">发布课程</button>
-    <button size="mini" type="primary" bindtap="goIntake">智能录入</button>
+  <view wx:if="{{needLogin}}" class="login-bar" bindtap="goLogin">
+    <text>登录后进入教练工作台</text>
+    <text class="go">去登录 ›</text>
   </view>
 
-  <view wx:if="{{pendingDiets.length}}">
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+
+  <block wx:elif="{{!needLogin}}">
+    <view class="sec">快捷操作</view>
+    <view class="btns">
+      <button size="mini" type="primary" bindtap="goIntake">智能录入</button>
+      <button size="mini" type="primary" bindtap="goNewClient">新增客户</button>
+      <button size="mini" bindtap="goClients">客户管理</button>
+    </view>
+
+    <view wx:if="{{dueReassess > 0}}" class="card">
+      <view class="t">有 {{dueReassess}} 位客户需要复测</view>
+      <view class="sub">超期未复测或出勤偏低，建议尽快安排</view>
+      <view class="btns">
+        <button size="mini" type="primary" bindtap="goClients">去看看</button>
+      </view>
+    </view>
+
     <view class="sec">待确认饮食（{{pendingDiets.length}}）</view>
+    <view wx:if="{{!pendingDiets.length}}" class="tip">暂无待确认的饮食方案</view>
     <view wx:for="{{pendingDiets}}" wx:key="id" class="card">
       <view class="t">{{item.client_name}} · {{item.date}} · {{item.status === 'ai_draft' ? 'AI 生成' : '待确认'}}</view>
       <view class="sub">目标 {{item.calories_target}}千卡</view>
@@ -17,33 +37,12 @@
         <button size="mini" type="primary" data-id="{{item.id}}" bindtap="confirmDiet">一键确认</button>
       </view>
     </view>
-  </view>
 
-  <view wx:if="{{!courses.length}}" class="tip">暂无课程</view>
-  <view wx:for="{{courses}}" wx:key="id" class="card">
-    <view class="t">{{item.title}}</view>
-    <view class="sub">{{item.start_time}} · 已约{{item.booked_count}}/{{item.capacity}}</view>
-    <view class="btns">
-      <button size="mini" type="primary" data-id="{{item.id}}" bindtap="showQr">签到码</button>
-      <button size="mini" data-id="{{item.id}}" bindtap="openRoster">名单/补签</button>
+    <view class="sec">名下客户（{{clients.length}}）</view>
+    <view wx:if="{{!clients.length}}" class="tip">暂无客户</view>
+    <view wx:for="{{clients}}" wx:key="id" class="card" data-id="{{item.id}}" bindtap="goClientDetail">
+      <view class="t">{{item.name}}<text class="arrow">›</text></view>
+      <view class="sub">{{item.goal}} · 出勤{{item.att}}%<text wx:if="{{item.action}}"> · {{item.action}}</text></view>
     </view>
-  </view>
-
-  <view wx:if="{{roster.length}}">
-    <view class="sec">名单</view>
-    <view wx:for="{{roster}}" wx:key="id" class="card">
-      <view>{{item.client_name}} · {{item.status}}</view>
-      <button wx:if="{{item.status === 'booked' || item.status === 'waitlist'}}"
-              size="mini" data-cid="{{item.client_id}}" bindtap="checkin">确认签到</button>
-    </view>
-  </view>
-
-  <!-- 签到二维码弹层：学员扫码 -->
-  <view wx:if="{{qr}}" class="qr-mask" bindtap="hideQr">
-    <view class="qr-panel" catchtap="">
-      <view class="qr-title">{{qrTitle}} · 签到码</view>
-      <image class="qr-img" src="{{qr}}" mode="aspectFit" />
-      <view class="qr-tip">请学员在「约课」页点"扫码签到"扫描</view>
-    </view>
-  </view>
+  </block>
 </view>

@@ -1,0 +1,57 @@
+<view class="container t-{{theme}}">
+  <view class="title">新增客户</view>
+
+  <view wx:if="{{needLogin}}" class="login-bar" bindtap="goLogin">
+    <text>登录后新增客户</text>
+    <text class="go">去登录 ›</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+
+  <block wx:elif="{{!needLogin}}">
+    <view class="card">
+      <view class="field">
+        <text class="label">姓名<text class="req">*</text></text>
+        <input class="input" placeholder="客户姓名" value="{{name}}" bindinput="onInput" data-k="name" maxlength="20" />
+      </view>
+      <view class="field">
+        <text class="label">性别</text>
+        <picker mode="selector" range="{{genders}}" value="{{genderIdx}}" bindchange="onGender">
+          <view class="picker-value"><text>{{genders[genderIdx]}}</text><text class="arrow">›</text></view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="label">年龄</text>
+        <input class="input" type="number" placeholder="选填" value="{{age}}" bindinput="onInput" data-k="age" maxlength="3" />
+      </view>
+      <view class="field">
+        <text class="label">身高</text>
+        <input class="input" type="digit" placeholder="选填" value="{{height}}" bindinput="onInput" data-k="height" maxlength="5" />
+        <text class="unit">cm</text>
+      </view>
+      <view class="field">
+        <text class="label">手机号</text>
+        <input class="input" type="number" placeholder="选填，仅用于联系" value="{{phone}}" bindinput="onInput" data-k="phone" maxlength="11" />
+      </view>
+      <view class="field">
+        <text class="label">健身目标</text>
+        <picker mode="selector" range="{{goals}}" value="{{goalIdx}}" bindchange="onGoal">
+          <view class="picker-value"><text>{{goals[goalIdx]}}</text><text class="arrow">›</text></view>
+        </picker>
+      </view>
+      <view class="field" wx:if="{{hasCoach}}">
+        <text class="label">负责教练</text>
+        <picker mode="selector" range="{{coachNames}}" value="{{coachIdx}}" bindchange="onCoach">
+          <view class="picker-value"><text>{{coachNames[coachIdx]}}</text><text class="arrow">›</text></view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="sec">备注</view>
+    <view class="card">
+      <textarea class="ta" placeholder="伤病、禁忌、特殊要求…（选填）" value="{{notes}}" bindinput="onInput" data-k="notes" maxlength="300" />
+    </view>
+
+    <button class="primary" bindtap="submit" disabled="{{submitting}}">{{submitting ? '保存中…' : '保存'}}</button>
+  </block>
+</view>

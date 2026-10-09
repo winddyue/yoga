@@ -3,6 +3,7 @@ const { syncTheme, getTheme, currentThemeId } = require('../../utils/themes.js')
 const chart = require('../../utils/chart.js');
 const delta = require('../../utils/delta.js');
 const fb = require('../../utils/feedback.js');
+const checkinLib = require('../../utils/checkin.js');
 
 function todayYM() {
   const d = new Date();
@@ -181,61 +182,12 @@ Page({
     } catch (e) { /* 后端未就绪时静默 */ }
   },
 
-  // 打卡：选直接打卡 / 拍照打卡
+  // 打卡：选「直接打卡 / 拍照打卡」。上传与提交逻辑抽到 utils/checkin.js，
+  // 首页金刚区「拍照打卡」复用同一份，避免两处维护。
   async checkin(e) {
     const kind = e.currentTarget.dataset.kind;
-    let r;
-    try {
-      r = await wx.showActionSheet({ itemList: ['直接打卡', '拍照打卡'] });
-    } catch (err) { return; } // 用户取消
-    if (r.tapIndex === 1) {
-      this.photoCheckin(kind);
-    } else {
-      this.doCheckin(kind, '');
-    }
-  },
-
-  // 打卡：拍照上传后再打卡（写法参考 intake 页）
-  photoCheckin(kind) {
-    wx.chooseMedia({ count: 1, mediaType: ['image'], sourceType: ['album', 'camera'] })
-      .then((res) => {
-        if (!res || !res.tempFiles || !res.tempFiles.length) return;
-        const filePath = res.tempFiles[0].tempFilePath;
-        const token = wx.getStorageSync('token') || '';
-        fb.showLoading('上传中…');
-        wx.uploadFile({
-          url: api.BASE + '/api/uploads',
-          filePath,
-          name: 'file',
-          header: { Authorization: token ? `Bearer ${token}` : '' },
-          success: (up) => {
-            let data = null;
-            try { data = JSON.parse(up.data); } catch (err) {}
-            if (up.statusCode >= 400 || !data || !data.path) {
-              fb.showError(new Error((data && data.detail) || '上传失败，请重试'));
-              return;
-            }
-            this.doCheckin(kind, data.path);
-          },
-          fail: () => fb.showError(new Error('网络连接失败，请检查网络')),
-          complete: () => fb.hideLoading(),
-        });
-      })
-      .catch(() => { /* 用户取消 */ });
-  },
-
-  // 打卡提交
-  async doCheckin(kind, photoPath) {
-    try {
-      const body = { kind };
-      if (photoPath) body.photo_path = photoPath;
-      await fb.withFeedback(api.post('/api/checkins', body), { loading: '打卡中…' });
-      fb.showSuccess('打卡成功');
-      this.loadCheckins();
-    } catch (e) {
-      // 重复打卡 400 等，后端返回友好提示，已显示
-      this.loadCheckins(); // 刷新已打卡态
-    }
+    await checkinLib.interactive(kind);
+    this.loadCheckins(); // 无论成功与否都刷新今日打卡态（重复打卡后端会给提示）
   },
 
   // 计划详情 / 饮食展开

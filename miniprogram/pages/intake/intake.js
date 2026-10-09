@@ -26,6 +26,8 @@ Page({
 
   onLoad(opts) {
     if (opts.clientId) this.setData({ clientId: Number(opts.clientId) });
+    // 首页金刚区「拍照录入」直接进拍照 tab
+    if (opts.tab === 'photo') this.setData({ tab: 'photo' });
   },
 
   onShow() {

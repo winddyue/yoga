@@ -23,7 +23,8 @@
     "pages/users/users",
     "pages/settings/settings",
     "pages/fields/fields",
-    "pages/plan-detail/plan-detail"
+    "pages/plan-detail/plan-detail",
+    "pages/client-form/client-form"
   ],
   "tabBar": {
     "color": "#8b93a7",

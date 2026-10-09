@@ -1,0 +1,4 @@
+/* 教练工作台：复用 app.wxss 全局 token，此处仅补按钮排与可点卡片的箭头 */
+.btns { display: flex; gap: 16rpx; flex-wrap: wrap; }
+.btns button { margin: 0; }
+.card .arrow { color: #C4B7A3; font-size: 30rpx; margin-left: 8rpx; }

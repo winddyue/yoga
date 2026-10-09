@@ -65,7 +65,7 @@
       </block>
     </view>
 
-    <!-- 上课情况 -->
+    <!-- 上课情况：课程预约功能暂隐，恢复时取消注释
     <block wx:if="{{bookings !== null}}">
       <view class="sec">上课情况</view>
       <view wx:if="{{!bookings.length}}" class="tip">暂无上课记录</view>
@@ -74,6 +74,7 @@
         <view class="sub">{{item.time}} · {{item.status}}</view>
       </view>
     </block>
+    -->
 
     <!-- 打卡记录 -->
     <block wx:if="{{checkins !== null}}">

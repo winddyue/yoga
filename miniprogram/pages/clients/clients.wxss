@@ -1,4 +1,5 @@
 /* 客户列表：复用 app.wxss 全局 token，此处仅补搜索框与列表行 */
+.new-btn { font-size: 26rpx; color: #357771; font-weight: 600; padding: 6rpx 0 6rpx 16rpx; }
 .search-bar { margin-bottom: 20rpx; }
 .search-input { background: #fff; border-radius: 999rpx; padding: 18rpx 30rpx; font-size: 28rpx; box-shadow: 0 4rpx 16rpx rgba(122,100,84,.06); }
 .client-row { display: flex; align-items: center; justify-content: space-between; padding: 26rpx 28rpx; }

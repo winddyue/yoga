@@ -7,6 +7,42 @@
     <view class="avatar">瑜</view>
   </view>
 
+  <!-- 金刚区：登录后常驻首屏，按角色给不同快捷动作（替代此前埋 3 层的入口） -->
+  <view wx:if="{{s && user}}" class="quick-grid">
+    <block wx:if="{{user.role === 'owner' || user.role === 'coach'}}">
+      <view class="quick-item" bindtap="goIntake">
+        <view class="quick-icon qi-teal">AI</view>
+        <text class="quick-label">智能录入</text>
+      </view>
+      <view class="quick-item" bindtap="goIntakePhoto">
+        <view class="quick-icon qi-blue">📷</view>
+        <text class="quick-label">拍照录入</text>
+      </view>
+      <view class="quick-item" bindtap="goNewClient">
+        <view class="quick-icon qi-amber">＋</view>
+        <text class="quick-label">新增客户</text>
+      </view>
+      <view class="quick-item" bindtap="goClients">
+        <view class="quick-icon qi-green">☰</view>
+        <text class="quick-label">客户管理</text>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="quick-item" bindtap="quickPhotoCheckin">
+        <view class="quick-icon qi-teal">📷</view>
+        <text class="quick-label">拍照打卡</text>
+      </view>
+      <view class="quick-item" bindtap="goMeasure">
+        <view class="quick-icon qi-amber">＋</view>
+        <text class="quick-label">记录体测</text>
+      </view>
+      <view class="quick-item" bindtap="goTraining">
+        <view class="quick-icon qi-green">☰</view>
+        <text class="quick-label">我的计划</text>
+      </view>
+    </block>
+  </view>
+
   <view wx:if="{{loading}}" class="tip">加载中…</view>
 
   <!-- 未登录：引导态，不强制跳转 -->
@@ -43,7 +79,7 @@
     <view class="stats">
       <view class="stat"><text class="stat-value">{{s.attendancePct || 0}}<text class="unit">%</text></text><text class="stat-label">出勤率</text></view>
       <view class="stat"><text class="stat-value">{{s.weight_change || 0}}<text class="unit">kg</text></text><text class="stat-label">体重变化</text></view>
-      <view class="stat"><text class="stat-value">{{s.upcoming_bookings || 0}}</text><text class="stat-label">待上课程</text></view>
+      <view class="stat"><text class="stat-value">{{checkinDays}}</text><text class="stat-label">本月打卡</text></view>
     </view>
     <view class="ring-card">
       <view class="ring-wrap">
@@ -87,17 +123,18 @@
   <!-- 教练视图 -->
   <view wx:elif="{{s && user && user.role === 'coach'}}" class="content">
     <view class="stats">
-      <view class="stat"><text class="stat-value">{{s.todos.pending_diets || 0}}</text><text class="stat-label">待确认饮食</text></view>
-      <view class="stat"><text class="stat-value">{{s.todos.due_reassess || 0}}</text><text class="stat-label">需复测客户</text></view>
+      <view class="stat" bindtap="goPendingDiets"><text class="stat-value">{{s.todos.pending_diets || 0}}</text><text class="stat-label">待确认饮食</text></view>
+      <view class="stat" bindtap="goRiskClients"><text class="stat-value">{{s.todos.due_reassess || 0}}</text><text class="stat-label">需复测客户</text></view>
     </view>
     <view class="section-title">名下客户</view>
-    <view wx:for="{{s.clients}}" wx:key="id" class="client-row">
+    <view wx:for="{{s.clients}}" wx:key="id" class="client-row" bindtap="goClientDetail" data-id="{{item.id}}">
       <view class="client-dot dot-{{item.status}}"></view>
       <view class="client-main">
         <text class="client-name">{{item.name}}</text>
         <text class="client-sub">{{item.goal || ''}} · 出勤{{item.attendancePct}}% · {{item.daysText}}</text>
       </view>
       <text class="client-action">{{item.action}}</text>
+      <text class="client-arrow">›</text>
     </view>
     <view class="tip" wx:if="{{!s.clients || !s.clients.length}}">暂无客户</view>
   </view>
@@ -105,9 +142,9 @@
   <!-- 馆主视图 -->
   <view wx:elif="{{s && user && user.role === 'owner'}}" class="content">
     <view class="stats">
-      <view class="stat"><text class="stat-value">{{s.total_clients || 0}}</text><text class="stat-label">总客户</text></view>
-      <view class="stat"><text class="stat-value">{{s.active_clients_30d || 0}}</text><text class="stat-label">近30天活跃</text></view>
-      <view class="stat"><text class="stat-value">{{s.bookings_30d || 0}}</text><text class="stat-label">近30天预约</text></view>
+      <view class="stat" bindtap="goAllClients"><text class="stat-value">{{s.total_clients || 0}}</text><text class="stat-label">总客户</text></view>
+      <view class="stat" bindtap="goActiveClients"><text class="stat-value">{{s.active_clients_30d || 0}}</text><text class="stat-label">近30天活跃</text></view>
+      <view class="stat" bindtap="goPendingDiets"><text class="stat-value">{{pendingDiets}}</text><text class="stat-label">待确认饮食</text></view>
     </view>
     <view class="section-title">会员分层</view>
     <view class="funnel" wx:if="{{coachData}}">
@@ -117,15 +154,15 @@
       </view>
       <view class="funnel-item fi-green" bindtap="goSegment" data-seg="active">
         <text class="funnel-num">{{coachData.greenN}}</text>
-        <text class="funnel-label">活跃</text>
+        <text class="funnel-label">状态正常</text>
       </view>
       <view class="funnel-item fi-yellow" bindtap="goSegment" data-seg="dormant">
         <text class="funnel-num">{{coachData.yellowN}}</text>
-        <text class="funnel-label">沉默</text>
+        <text class="funnel-label">待跟进</text>
       </view>
       <view class="funnel-item fi-red" bindtap="goSegment" data-seg="risk">
         <text class="funnel-num">{{coachData.redN}}</text>
-        <text class="funnel-label">流失风险</text>
+        <text class="funnel-label">需关注</text>
       </view>
     </view>
     <view class="section-title">客户阶段分布</view>
@@ -138,17 +175,21 @@
       <view class="stage-legend">
         <text>🔴 需关注 {{coachData.redN}}</text>
         <text>🟡 待跟进 {{coachData.yellowN}}</text>
-        <text>🟢 正常 {{coachData.greenN}}</text>
+        <text>🟢 状态正常 {{coachData.greenN}}</text>
       </view>
     </view>
-    <view class="section-title">客户管理</view>
-    <view wx:for="{{coachData.clients}}" wx:key="id" class="client-row" wx:if="{{coachData}}">
+    <view class="sec-row" bindtap="goAllClients">
+      <text class="section-title">客户管理</text>
+      <text class="sec-more">全部 ›</text>
+    </view>
+    <view wx:for="{{coachData.clients}}" wx:key="id" class="client-row" wx:if="{{coachData}}" bindtap="goClientDetail" data-id="{{item.id}}">
       <view class="client-dot dot-{{item.status}}"></view>
       <view class="client-main">
         <text class="client-name">{{item.name}}</text>
         <text class="client-sub">出勤{{item.attendancePct}}% · {{item.daysText}}</text>
       </view>
       <text class="client-action">{{item.action}}</text>
+      <text class="client-arrow">›</text>
     </view>
     <view class="tip" wx:if="{{!coachData || !coachData.clients.length}}">暂无客户</view>
   </view>

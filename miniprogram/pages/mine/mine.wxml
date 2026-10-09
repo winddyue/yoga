@@ -9,7 +9,7 @@
       </block>
       <block wx:else>
         <text class="name">您好，请登录</text>
-        <text class="role">登录后可预约课程、查看训练记录</text>
+        <text class="role">登录后可查看训练记录与打卡</text>
       </block>
     </view>
     <text wx:if="{{!user}}" class="go">登录 ›</text>

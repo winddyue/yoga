@@ -34,7 +34,7 @@
     <!-- ============ 新用户：补全资料（极简建档） ============ -->
     <block wx:else>
       <text class="title-row">完善资料</text>
-      <text class="hint">首次使用需登记姓名，便于预约与课堂点名</text>
+      <text class="hint">首次使用需登记姓名，便于教练记录与跟进</text>
       <view class="field">
         <text class="icon">人</text>
         <input placeholder="请填写姓名" placeholder-class="placeholder"
@@ -42,7 +42,7 @@
       </view>
       <view class="field">
         <text class="icon">机</text>
-        <input type="number" maxlength="11" placeholder="手机号（选填，用于课程通知）"
+        <input type="number" maxlength="11" placeholder="手机号（选填，用于联系）"
                placeholder-class="placeholder" data-k="phone" value="{{phone}}" bindinput="onInput" />
       </view>
       <button class="primary" loading="{{loading}}" disabled="{{loading}}" bindtap="doWxRegister">

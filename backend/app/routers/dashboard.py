@@ -237,6 +237,8 @@ def coach_overview(db: Session = Depends(get_db),
                      .filter(models.DietPlan.client_id.in_(cids),
                              models.DietPlan.status == "pending").count())
     due = sum(1 for c in clients if _client_status(db, c) in ("red", "yellow"))
+    # 近 30 天活跃客户集合：供前端「近30天活跃」下钻过滤（口径见 _recent_active_cids）
+    recent_cids = _recent_active_cids(db, 30)
     items = []
     for c in clients:
         st = _client_status(db, c)
@@ -245,12 +247,31 @@ def coach_overview(db: Session = Depends(get_db),
                       "status": st,
                       "days_since_assessment": _latest_assessment_days(db, c),
                       "action": _action_for(c, st),
+                      "recent_active": c.id in recent_cids,
                       "created_at": c.created_at.strftime("%Y-%m-%d")
                       if c.created_at else ""})
     return {
         "clients": items,
         "todos": {"pending_diets": pending_diets, "due_reassess": due},
     }
+
+
+def _recent_active_cids(db: Session, days: int = 30) -> set:
+    """近 N 天「活跃」客户：有预约 / 评估 / 打卡任一记录的客户。
+
+    不能只看预约——课程预约功能暂隐后该指标会恒为 0；把评估与打卡一并纳入，
+    指标才会随客户真实活动变化，首页「近30天活跃」的下钻也有内容。
+    """
+    since_dt = datetime.now() - timedelta(days=days)
+    since_day = since_dt.date().isoformat()
+    cids = set()
+    cids |= {r[0] for r in db.query(models.Booking.client_id)
+             .filter(models.Booking.created_at >= since_dt).all()}
+    cids |= {r[0] for r in db.query(models.Assessment.client_id)
+             .filter(models.Assessment.date >= since_day).all()}
+    cids |= {r[0] for r in db.query(models.DailyCheckin.client_id)
+             .filter(models.DailyCheckin.date >= since_day).all()}
+    return cids
 
 
 @router.get("/owner/overview")
@@ -261,9 +282,7 @@ def owner_overview(db: Session = Depends(get_db),
     new_clients = (db.query(models.Client)
                    .filter(models.Client.created_at >= month_ago).count())
     total_clients = db.query(models.Client).count()
-    active_cids = {r[0] for r in
-                   db.query(models.Booking.client_id)
-                   .filter(models.Booking.created_at >= month_ago).all()}
+    active_cids = _recent_active_cids(db, 30)
     course_count = db.query(models.Course).count()
     booking_count = (db.query(models.Booking)
                      .filter(models.Booking.created_at >= month_ago).count())
