@@ -133,7 +133,7 @@
     </view>
     <view wx:for="{{plans}}" wx:key="id" class="card" data-id="{{item.id}}" bindtap="goPlanDetail">
       <view class="t">第 {{item.week_start}} 周计划 <text class="arrow">›</text></view>
-      <view class="sub">{{(item.days || []).length}} 天 · 点查看每天动作</view>
+      <view class="sub">{{item.days ? item.days.length : 0}} 天 · 点查看每天动作</view>
     </view>
     <view class="sec">饮食方案（{{diets.length}}）</view>
     <view wx:if="{{!diets.length}}">

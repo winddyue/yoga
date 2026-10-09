@@ -7,6 +7,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from datetime import date, timedelta
+
 from .. import auth as auth_lib
 from .. import models, schemas
 from ..database import get_db
@@ -14,6 +16,17 @@ from ..services import notify as notify_service
 from ..services.training import generate_plan
 
 router = APIRouter(prefix="/api", tags=["训练计划"])
+
+
+def _default_week_start() -> str:
+    """本周一的 ISO 日期。
+
+    小程序端（pages/training、pages/plans）调用生成接口时不传 week_start，
+    会产出标题为「第  周计划」的空标题卡片。在这里兜底，任何调用方都能拿到
+    可读的标题，不必依赖前端逐个补参数。
+    """
+    today = date.today()
+    return (today - timedelta(days=today.weekday())).isoformat()
 
 
 @router.post("/clients/{client_id}/plans/generate", response_model=schemas.TrainingPlanOut)
@@ -25,6 +38,8 @@ def generate(client_id: int, week_start: str = "",
     模板生成免费：客户只能给自己生成，工作人员可为名下/全馆客户生成。
     """
     client = auth_lib.client_visible_to(db, user, client_id)
+    if not week_start:
+        week_start = _default_week_start()
     db.query(models.TrainingPlan).filter(
         models.TrainingPlan.client_id == client.id,
         models.TrainingPlan.status == "active").update({"status": "archived"})
