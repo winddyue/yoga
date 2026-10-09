@@ -52,6 +52,10 @@ if [ -d "$APP_ROOT/.git" ]; then
   info "代码已存在，拉取最新版本"
   git -C "$APP_ROOT" pull --ff-only || warn "git pull 失败（本地有改动？）继续使用当前代码"
 else
+  # 目录已存在且非空，又不是 git 仓库 → git clone 会直接失败，提前给出人话提示
+  if [ -d "$APP_ROOT" ] && [ -n "$(ls -A "$APP_ROOT" 2>/dev/null)" ]; then
+    die "$APP_ROOT 已存在且不是空目录，但不是 git 仓库。\n     请先清空再重试：rm -rf $APP_ROOT"
+  fi
   info "克隆代码到 $APP_ROOT"
   mkdir -p "$APP_ROOT"
   git clone --depth 1 "$REPO_URL" "$APP_ROOT"
