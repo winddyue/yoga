@@ -1,6 +1,25 @@
 // API 客户端：指向 FastAPI 后端，JWT 登录态复用（与 Web 版同一套接口）
-// 使用前在下方修改 BASE 为后端地址；生产环境必须用 HTTPS 域名并完成 ICP 备案
-const BASE = 'http://127.0.0.1:8000';
+//
+// ---- 上线只需要改下面 PROD_BASE 这一行 ----
+// 体验版 / 正式版一律走 PROD_BASE。必须是 HTTPS 域名：
+// 微信不允许填 IP，也不允许非 443 端口，且要先在公众平台配成 request 合法域名。
+// 例：https://api.你的域名.com   （结尾不要带斜杠）
+const PROD_BASE = 'https://REPLACE_WITH_YOUR_DOMAIN';
+
+// 开发版（开发者工具 / 真机调试）走本地后端。
+// 真机调试时把 127.0.0.1 换成电脑的局域网 IP，并在「详情 → 本地设置」
+// 勾选"不校验合法域名、web-view、TLS 版本"，否则手机连不上。
+const DEV_BASE = 'http://127.0.0.1:8000';
+
+// 按运行环境自动选地址：同一个代码包在开发者工具和顾客手机上都能跑，
+// 不用每次上传前手改。（envVersion 是下面的函数声明，会被提升，这里调用安全）
+const BASE = (function () {
+  try {
+    return envVersion() === 'develop' ? DEV_BASE : PROD_BASE;
+  } catch (e) {
+    return PROD_BASE;
+  }
+})();
 
 // 请求超时（毫秒）：超时按网络错误处理，避免"看起来成功实际没结果"
 const TIMEOUT = 15000;
