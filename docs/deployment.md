@@ -62,7 +62,8 @@ sudo bash deploy/setup-domain.sh
 ```bash
 sudo apt install -y nginx certbot
 # 顺序很关键：必须先有证书，才能启用引用证书路径的配置，否则 nginx -t 直接失败
-sudo certbot certonly --webroot -w /var/www/html -d api.zytzml.cn -d www.zytzml.cn
+sudo certbot certonly --webroot -w /var/www/html --cert-name zytzml.cn \
+     -d zytzml.cn -d api.zytzml.cn -d www.zytzml.cn
 sudo cp deploy/nginx/zytzml.conf /etc/nginx/sites-available/yoga
 sudo ln -sf /etc/nginx/sites-available/yoga /etc/nginx/sites-enabled/yoga
 sudo rm -f /etc/nginx/sites-enabled/default

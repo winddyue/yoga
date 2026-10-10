@@ -10,9 +10,13 @@
 # 用法：sudo bash deploy/setup-domain.sh
 set -euo pipefail
 
+DOMAIN_ROOT="zytzml.cn"
 DOMAIN_API="api.zytzml.cn"
 DOMAIN_WWW="www.zytzml.cn"
 SERVER_IP="43.128.26.65"
+# 三个域名共用一张证书，用 --cert-name 固定目录名，
+# 否则 certbot 会按第一个 -d 命名（这里是 zytzml.cn，恰好一致，但显式指定更稳）
+CERT_NAME="zytzml.cn"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONF_SRC="$REPO_DIR/deploy/nginx/zytzml.conf"
 WEBROOT="/var/www/html"
@@ -30,7 +34,7 @@ mkdir -p "$WEBROOT"
 # ---------- 1. DNS 解析检查 ----------
 info "检查 DNS 解析（应为 $SERVER_IP）…"
 DNS_OK=1
-for d in "$DOMAIN_API" "$DOMAIN_WWW"; do
+for d in "$DOMAIN_API" "$DOMAIN_WWW" "$DOMAIN_ROOT"; do
   resolved="$(dig +short "$d" 2>/dev/null | tail -1 || true)"
   [ -z "$resolved" ] && resolved="$(getent hosts "$d" | awk '{print $1}' | head -1 || true)"
   if [ "$resolved" = "$SERVER_IP" ]; then
@@ -48,17 +52,18 @@ fi
 
 # ---------- 2. 申请证书（webroot 方式，此时 nginx 还是默认配置）----------
 # 注意顺序：必须先有证书，才能启用引用证书路径的站点配置，否则 nginx -t 会失败。
-if [ -d "/etc/letsencrypt/live/$DOMAIN_API" ]; then
-  ok "证书已存在，跳过签发"
+if [ -d "/etc/letsencrypt/live/$CERT_NAME" ]; then
+  ok "证书已存在（/etc/letsencrypt/live/$CERT_NAME），跳过签发"
 else
-  info "签发证书（$DOMAIN_API, $DOMAIN_WWW）…"
+  info "签发证书（$DOMAIN_ROOT, $DOMAIN_API, $DOMAIN_WWW）…"
   # 先确保默认站点在监听 80 且能访问 webroot
   if [ ! -e /etc/nginx/sites-enabled/default ] && [ -z "$(ls -A /etc/nginx/sites-enabled 2>/dev/null)" ]; then
     ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default 2>/dev/null || true
     systemctl reload nginx || true
   fi
   certbot certonly --webroot -w "$WEBROOT" \
-    -d "$DOMAIN_API" -d "$DOMAIN_WWW" \
+    --cert-name "$CERT_NAME" \
+    -d "$DOMAIN_ROOT" -d "$DOMAIN_API" -d "$DOMAIN_WWW" \
     --agree-tos --no-eff-email --keep-until-expiring
   ok "证书签发完成"
 fi
@@ -99,7 +104,7 @@ API_CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "https://$DOMAI
 echo "  https://$DOMAIN_API/api/health  ->  $API_CODE"
 echo "     （200 = 正常；000/502 = 后端未启动或端口不对；证书问题会直接报错）"
 
-CERT_END="$(openssl x509 -enddate -noout -in "/etc/letsencrypt/live/$DOMAIN_API/fullchain.pem" 2>/dev/null | cut -d= -f2 || true)"
+CERT_END="$(openssl x509 -enddate -noout -in "/etc/letsencrypt/live/$CERT_NAME/fullchain.pem" 2>/dev/null | cut -d= -f2 || true)"
 [ -n "$CERT_END" ] && echo "  证书有效期至：$CERT_END"
 
 echo
