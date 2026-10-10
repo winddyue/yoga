@@ -2,6 +2,8 @@
 """认证路由：登录、微信登录、当前用户信息、用户管理（仅馆主可创建教练账号）。"""
 import hashlib
 import httpx
+import time
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
@@ -79,16 +81,46 @@ def _code2session(code: str) -> str:
     return openid
 
 
+# access_token 缓存：微信限制每日调用次数且 token 有效期 7200s，
+# 必须缓存复用，否则每个用户点一次手机号授权就打一次 /cgi-bin/token。
+_WX_TOKEN = {"value": "", "expire_at": 0.0}
+
+
+def _wx_access_token() -> str:
+    """取小程序全局 access_token（带缓存，提前 5 分钟过期续期）。"""
+    now = time.time()
+    if _WX_TOKEN["value"] and _WX_TOKEN["expire_at"] > now + 300:
+        return _WX_TOKEN["value"]
+    try:
+        resp = httpx.get(
+            "https://api.weixin.qq.com/cgi-bin/token",
+            params={"grant_type": "client_credential",
+                    "appid": settings.WX_APPID, "secret": settings.WX_SECRET},
+            timeout=10)
+        data = resp.json()
+    except Exception:
+        raise HTTPException(status_code=502, detail="微信登录服务暂不可用，请稍后重试")
+    token = data.get("access_token") or ""
+    if not token:
+        # 40125/40001 之类：AppID/Secret 不对
+        raise HTTPException(
+            status_code=502,
+            detail=f"获取微信 access_token 失败：{data.get('errmsg') or '未知错误'}")
+    _WX_TOKEN["value"] = token
+    _WX_TOKEN["expire_at"] = now + int(data.get("expires_in") or 7200)
+    return token
+
+
 def _get_phone_by_code(code: str) -> str:
     """getPhoneNumber 的 code -> 手机号。
 
     开发：WX_DEV_MOCK=true 时接受 "mock:11位手机号" 直接取号，方便本地无真实微信环境时联调。
 
-    TODO: 生产路径未实现。需要先拿 access_token（GET /cgi-bin/token，
-    用 appid+secret，应带缓存，有效期 7200s），再调
+    生产：先取 access_token（缓存复用），再调
     POST https://api.weixin.qq.com/wxa/business/getuserphonenumber
-    传 {"code": code} 取 phone_info.purePhoneNumber。
-    另外该接口要求小程序主体为企业/组织，个人主体无法获取手机号。
+    传 {"code": code}，取 phone_info.purePhoneNumber。
+    注意：该接口要求小程序主体为企业/组织，个人主体会返回 41001 类错误，
+    届时前端会拿到明确提示，用户可回退到账号密码登录。
     """
     if settings.WX_DEV_MOCK and code.startswith("mock:"):
         raw = code[5:].strip()
@@ -102,7 +134,25 @@ def _get_phone_by_code(code: str) -> str:
     if not settings.WX_APPID or not settings.WX_SECRET:
         raise HTTPException(status_code=400,
                             detail="服务器未配置微信 AppID/Secret（WX_APPID/WX_SECRET）")
-    raise HTTPException(status_code=501, detail="手机号快捷登录尚未接入，请先用账号密码登录")
+    # 生产路径：access_token + getuserphonenumber
+    try:
+        resp = httpx.post(
+            "https://api.weixin.qq.com/wxa/business/getuserphonenumber",
+            params={"access_token": _wx_access_token()},
+            json={"code": code}, timeout=10)
+        data = resp.json()
+    except Exception:
+        raise HTTPException(status_code=502, detail="微信登录服务暂不可用，请稍后重试")
+    errcode = data.get("errcode") or 0
+    if errcode:
+        # 40029/41001 等：code 失效、主体无权限。给可操作提示而不是笼统 501
+        raise HTTPException(
+            status_code=400,
+            detail=f"获取手机号失败（{errcode}），请改用账号密码登录或联系馆主")
+    phone = (data.get("phone_info") or {}).get("purePhoneNumber") or ""
+    if not _phone_ok(phone):
+        raise HTTPException(status_code=400, detail="未能获取手机号，请改用账号密码登录")
+    return phone
 
 
 def _phone_ok(phone: str) -> bool:

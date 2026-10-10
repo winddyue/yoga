@@ -106,9 +106,15 @@ def client_bookings(client_id: int,
 def update_client(client_id: int, data: schemas.ClientIn,
                   db: Session = Depends(get_db),
                   user: models.User = Depends(auth_lib.require_staff)):
-    """更新客户档案（工作人员）。"""
+    """更新客户档案（工作人员）。
+
+    只更新本次请求真正传了的字段（exclude_unset）。
+    之前用的是全量 model_dump：schema 里 gender/age/height_cm/phone/notes 都有默认值，
+    只改一个字段（比如换教练、改目标）时，其余未传字段会被默认值覆盖成空——
+    等于改一次档案就丢一次性别/年龄/身高/手机号。
+    """
     client = auth_lib.client_visible_to(db, user, client_id)
-    payload = data.model_dump(exclude={"coach_id"})
+    payload = data.model_dump(exclude={"coach_id"}, exclude_unset=True)
     if payload.get("phone") is not None:
         payload["phone"] = crypto_service.encrypt_phone(payload["phone"] or "")
     for k, v in payload.items():
