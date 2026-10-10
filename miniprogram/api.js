@@ -1,10 +1,10 @@
 // API 客户端：指向 FastAPI 后端，JWT 登录态复用（与 Web 版同一套接口）
 //
-// ---- 上线只需要改下面 PROD_BASE 这一行 ----
-// 体验版 / 正式版一律走 PROD_BASE。必须是 HTTPS 域名：
-// 微信不允许填 IP，也不允许非 443 端口，且要先在公众平台配成 request 合法域名。
-// 例：https://api.你的域名.com   （结尾不要带斜杠）
-const PROD_BASE = 'https://REPLACE_WITH_YOUR_DOMAIN';
+// ---- 线上地址：体验版 / 正式版一律走 PROD_BASE ----
+// 必须是 HTTPS 域名：微信不允许填 IP，也不允许非 443 端口，且要先在公众平台
+// 把该域名配成 request / uploadFile / downloadFile 合法域名（结尾不要带斜杠）。
+// 当前域名：zytzml.cn，接口走 api 子域，Web 管理端走 www。
+const PROD_BASE = 'https://api.zytzml.cn';
 
 // 开发版（开发者工具 / 真机调试）走本地后端。
 // 真机调试时把 127.0.0.1 换成电脑的局域网 IP，并在「详情 → 本地设置」

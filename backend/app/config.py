@@ -26,8 +26,11 @@ class Settings(BaseSettings):
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = "admin123"
 
-    # CORS 白名单：逗号分隔。默认只允许本地开发源，生产必须配置为真实域名。
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+    # CORS 白名单：逗号分隔。仅影响浏览器访问的 Web 管理端（小程序不受跨域限制）。
+    # 换域名时用环境变量 CORS_ORIGINS 覆盖即可，无需改代码。
+    # 当前线上：Web 管理端 www.zytzml.cn，接口 api.zytzml.cn。
+    CORS_ORIGINS: str = ("http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,"
+                         "https://www.zytzml.cn,https://zytzml.cn")
 
     # 第三方 API：密钥只能从环境变量读取，前端/日志绝不出现明文
     OCR_API_URL: str = ""   # 拍照识别接口地址（预留）

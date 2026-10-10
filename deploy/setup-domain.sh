@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# 域名 + HTTPS 一键配置：把 api.zytzml.cn（接口）和 www.zytzml.cn（Web 后台）
+# 接到本机 8000 端口的后端上，并签发 Let's Encrypt 证书。
+#
+# 前置条件（脚本会检查）：
+#   1. DNS 已解析：api.zytzml.cn / www.zytzml.cn 的 A 记录指向本机公网 IP
+#   2. 服务器 80 端口可从公网访问（certbot 的 HTTP-01 验证要用）
+#   3. 后端已在 127.0.0.1:8000 运行
+#
+# 用法：sudo bash deploy/setup-domain.sh
+set -euo pipefail
+
+DOMAIN_API="api.zytzml.cn"
+DOMAIN_WWW="www.zytzml.cn"
+SERVER_IP="43.128.26.65"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CONF_SRC="$REPO_DIR/deploy/nginx/zytzml.conf"
+WEBROOT="/var/www/html"
+
+info() { printf '\033[36m[信息]\033[0m %s\n' "$*"; }
+ok()   { printf '\033[32m[完成]\033[0m %s\n' "$*"; }
+err()  { printf '\033[31m[错误]\033[0m %s\n' "$*"; }
+
+# ---------- 0. 环境检查 ----------
+if [ "$(id -u)" -ne 0 ]; then err "请用 sudo 运行：sudo bash deploy/setup-domain.sh"; exit 1; fi
+command -v nginx >/dev/null || { info "安装 nginx…"; apt update -qq && apt install -y nginx; }
+command -v certbot >/dev/null || { info "安装 certbot…"; apt install -y certbot; }
+mkdir -p "$WEBROOT"
+
+# ---------- 1. DNS 解析检查 ----------
+info "检查 DNS 解析（应为 $SERVER_IP）…"
+DNS_OK=1
+for d in "$DOMAIN_API" "$DOMAIN_WWW"; do
+  resolved="$(dig +short "$d" 2>/dev/null | tail -1 || true)"
+  [ -z "$resolved" ] && resolved="$(getent hosts "$d" | awk '{print $1}' | head -1 || true)"
+  if [ "$resolved" = "$SERVER_IP" ]; then
+    ok "$d -> $resolved"
+  else
+    err "$d 解析为 '${resolved:-未解析}'，不等于 $SERVER_IP"
+    DNS_OK=0
+  fi
+done
+if [ "$DNS_OK" -ne 1 ]; then
+  err "请先在域名注册商处添加 A 记录（主机记录 api / www，记录值 $SERVER_IP），"
+  err "等生效（通常 1~10 分钟，最长 24 小时）后重跑本脚本。"
+  exit 1
+fi
+
+# ---------- 2. 申请证书（webroot 方式，此时 nginx 还是默认配置）----------
+# 注意顺序：必须先有证书，才能启用引用证书路径的站点配置，否则 nginx -t 会失败。
+if [ -d "/etc/letsencrypt/live/$DOMAIN_API" ]; then
+  ok "证书已存在，跳过签发"
+else
+  info "签发证书（$DOMAIN_API, $DOMAIN_WWW）…"
+  # 先确保默认站点在监听 80 且能访问 webroot
+  if [ ! -e /etc/nginx/sites-enabled/default ] && [ -z "$(ls -A /etc/nginx/sites-enabled 2>/dev/null)" ]; then
+    ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default 2>/dev/null || true
+    systemctl reload nginx || true
+  fi
+  certbot certonly --webroot -w "$WEBROOT" \
+    -d "$DOMAIN_API" -d "$DOMAIN_WWW" \
+    --agree-tos --no-eff-email --keep-until-expiring
+  ok "证书签发完成"
+fi
+
+# ---------- 3. 启用站点配置 ----------
+info "部署 nginx 配置…"
+cp "$CONF_SRC" /etc/nginx/sites-available/yoga
+ln -sf /etc/nginx/sites-available/yoga /etc/nginx/sites-enabled/yoga
+rm -f /etc/nginx/sites-enabled/default
+
+if nginx -t 2>&1 | tail -3; then
+  systemctl reload nginx
+  ok "nginx 已重载"
+else
+  err "nginx 配置校验失败，已回滚，请检查 /etc/nginx/sites-available/yoga"
+  rm -f /etc/nginx/sites-enabled/yoga
+  [ -e /etc/nginx/sites-available/default ] && ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+  systemctl reload nginx || true
+  exit 1
+fi
+
+# ---------- 4. 自动续期（续期后必须 reload 才会加载新证书）----------
+info "配置证书自动续期…"
+HOOK_DIR="/etc/letsencrypt/renewal-hooks/deploy"
+mkdir -p "$HOOK_DIR"
+cat > "$HOOK_DIR/reload-nginx.sh" <<'EOF'
+#!/bin/sh
+systemctl reload nginx
+EOF
+chmod +x "$HOOK_DIR/reload-nginx.sh"
+systemctl enable --now certbot.timer >/dev/null 2>&1 || true
+ok "续期钩子已就绪（certbot.timer 每 12 小时检查一次）"
+
+# ---------- 5. 验证 ----------
+echo
+info "验证结果："
+API_CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "https://$DOMAIN_API/api/health" || echo "失败")"
+echo "  https://$DOMAIN_API/api/health  ->  $API_CODE"
+echo "     （200 = 正常；000/502 = 后端未启动或端口不对；证书问题会直接报错）"
+
+CERT_END="$(openssl x509 -enddate -noout -in "/etc/letsencrypt/live/$DOMAIN_API/fullchain.pem" 2>/dev/null | cut -d= -f2 || true)"
+[ -n "$CERT_END" ] && echo "  证书有效期至：$CERT_END"
+
+echo
+ok "域名配置完成。下一步：到微信公众平台把 https://$DOMAIN_API 登记为"
+echo "   request / uploadFile / downloadFile 合法域名（不填端口、不带路径）。"
+echo "   未备案期间体验版需让顾客点右上角「⋯」→ 打开调试 才能正常请求。"
