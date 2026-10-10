@@ -2,3 +2,7 @@
 # deploy/install.sh 要在 Linux 服务器上执行，一旦变成 CRLF，
 # 运行时会报 "$'\r': command not found" 这类莫名其妙的错误。
 *.sh text eol=lf
+
+# nginx 配置同理：Linux 上出现 CRLF 会让行尾带上 \r，
+# 轻则 server_name 之类指令匹配异常，重则 nginx -t 直接报错。
+*.conf text eol=lf
