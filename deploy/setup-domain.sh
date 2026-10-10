@@ -36,6 +36,22 @@ command -v nginx >/dev/null || { info "安装 nginx…"; apt update -qq && apt i
 command -v certbot >/dev/null || { info "安装 certbot…"; apt install -y certbot; }
 mkdir -p "$WEBROOT"
 
+# Web 管理端目录：nginx 里 root 指向它。目录或 index.html 不存在时，
+# try_files 回退到 /index.html 会形成内部重定向循环 → 直接 500。
+# 先放个占位页，等前端 npm run build 的产物拷进来自然覆盖。
+ADMIN_DIR="/var/www/yoga-admin"
+mkdir -p "$ADMIN_DIR"
+if [ ! -f "$ADMIN_DIR/index.html" ]; then
+  cat > "$ADMIN_DIR/index.html" <<'EOF'
+<!doctype html>
+<meta charset="utf-8">
+<title>瑜美瑜伽 · 管理端</title>
+<p>管理端静态文件尚未部署。请在服务器上构建后拷入本目录：</p>
+<pre>cd /opt/yoga/frontend &amp;&amp; npm run build &amp;&amp; sudo cp -r dist/* /var/www/yoga-admin/</pre>
+EOF
+  info "已写入管理端占位页（$ADMIN_DIR/index.html）"
+fi
+
 # ---------- 1. DNS 解析检查 ----------
 info "检查 DNS 解析（应为 $SERVER_IP）…"
 DNS_OK=1
