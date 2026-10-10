@@ -155,4 +155,7 @@
       </view>
     </view>
   </block>
+
+  <!-- 隐私授权弹窗：本页可发起签到拍照 -->
+  <privacy-popup />
 </view>

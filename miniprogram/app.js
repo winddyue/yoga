@@ -5,6 +5,7 @@ App({
   globalData: {
     user: null,      // {id, username, role, name, client_id}
     clientId: null,  // 客户角色绑定的客户档案 id（后端解析）
+    privacyResolve: null,  // 微信隐私授权回调，等待用户点「同意」
   },
 
   // 登录态解析结果缓存：页面共用同一个 Promise，避免并发重复请求与状态竞态。
@@ -15,6 +16,27 @@ App({
 
   onLaunch() {
     this.ensureUser();
+    this._setupPrivacy();
+  },
+
+  /**
+   * 隐私授权：公众平台配置《用户隐私保护指引》后，微信会拦截相册/相机等接口，
+   * 调用前必须由用户点「同意」。这里保存微信给的 resolve，
+   * 由页面上的 privacy-popup 组件弹窗承接（见 components/privacy）。
+   * 未配置隐私指引时该回调不会触发，不影响现有功能。
+   */
+  _setupPrivacy() {
+    if (!wx.onNeedPrivacyAuthorization) return;
+    wx.onNeedPrivacyAuthorization((resolve) => {
+      this.globalData.privacyResolve = resolve;
+      if (this._privacyHandler) this._privacyHandler();
+    });
+  },
+
+  // 组件挂载时注册唤醒回调；若已有待处理的授权请求，立即弹窗
+  registerPrivacyHandler(fn) {
+    this._privacyHandler = fn;
+    if (this.globalData.privacyResolve) fn();
   },
 
   /**

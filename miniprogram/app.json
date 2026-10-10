@@ -44,6 +44,9 @@
     ],
     "selectedColor": "#1f8f83"
   },
+  "usingComponents": {
+    "privacy-popup": "/components/privacy/privacy"
+  },
   "window": {
     "backgroundColor": "#F5F7F2",
     "navigationBarBackgroundColor": "#6F8563",

@@ -195,4 +195,7 @@
   </view>
 
   <view wx:else class="tip">暂无数据</view>
+
+  <!-- 隐私授权弹窗：调用相册/相机前由微信唤起 -->
+  <privacy-popup />
 </view>
