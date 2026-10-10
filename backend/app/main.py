@@ -102,6 +102,22 @@ def seed_admin():
         db.close()
 
 
+@app.get("/")
+def root():
+    """根路径回执。
+
+    直接访问域名（如 https://api.zytzml.cn/）时不再返回 FastAPI 默认的
+    {"detail": "Not Found"}，避免误判为服务异常。
+    """
+    return {
+        "service": "瑜伽馆客户管理 API",
+        "version": app.version,
+        "status": "ok",
+        "docs": "/docs",
+        "health": "/api/health",
+    }
+
+
 @app.get("/api/health")
 def health():
     """健康检查。"""
