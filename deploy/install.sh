@@ -45,7 +45,7 @@ info "本机公网 IP：$PUBLIC_IP"
 info "安装系统依赖（python3-venv / nginx / certbot）"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -y -qq python3-venv python3-pip nginx git curl openssl ca-certificates >/dev/null
+apt-get install -y -qq python3-venv python3-pip nginx certbot python3-certbot-nginx git curl openssl ca-certificates >/dev/null
 
 # ---------- 2. 代码 ----------
 if [ -d "$APP_ROOT/.git" ]; then
