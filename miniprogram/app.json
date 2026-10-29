@@ -23,8 +23,7 @@
     "pages/users/users",
     "pages/settings/settings",
     "pages/fields/fields",
-    "pages/plan-detail/plan-detail",
-    "pages/client-form/client-form"
+    "pages/plan-detail/plan-detail"
   ],
   "tabBar": {
     "color": "#8b93a7",
@@ -44,14 +43,10 @@
     ],
     "selectedColor": "#1f8f83"
   },
-  "usingComponents": {
-    "privacy-popup": "/components/privacy/privacy"
-  },
   "window": {
     "backgroundColor": "#F5F7F2",
     "navigationBarBackgroundColor": "#6F8563",
     "navigationBarTextStyle": "white",
-    "navigationBarTitleText": "瑜美瑜伽"
-  },
-  "__usePrivacyCheck__": true
+    "navigationBarTitleText": "瑜伽馆客户管理"
+  }
 }

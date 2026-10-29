@@ -1,46 +1,18 @@
-// 教练工作台：待办驱动。
-// 此前这里把「全量课程列表」当主体，而 /api/courses 既不按教练过滤也不按时间过滤，
-// 把历史课与测试课全列了出来；课程预约功能暂隐后，这里只保留教练真正要处理的事。
 const api = require('../../api.js');
 const { syncTheme } = require('../../utils/themes.js');
 const fb = require('../../utils/feedback.js');
 
 Page({
-  data: {
-    theme: '',
-    pendingDiets: [], dueReassess: 0, clients: [],
-    loading: true, needLogin: false, loadErr: '',
-  },
+  data: { courses: [], roster: [], cur: null, qr: null, qrTitle: '', pendingDiets: [] },
 
   onShow() { syncTheme(this); this.load(); },
 
   async load() {
-    this.setData({ loading: true, loadErr: '', needLogin: false });
-    const user = await getApp().ensureUser();
-    if (!user) { this.setData({ loading: false, needLogin: true }); return; }
-    if (user.role !== 'owner' && user.role !== 'coach') {
-      fb.showError(new Error('仅工作人员可访问'));
-      setTimeout(() => wx.navigateBack(), 900);
-      return;
-    }
     try {
-      // coach/overview：馆主看全馆、教练看名下；含状态灯与待办计数
-      const d = await api.get('/api/dashboard/coach/overview');
-      const clients = (d.clients || []).map((c) => ({
-        id: c.id,
-        name: c.name,
-        goal: c.goal || '',
-        att: Math.round((c.attendance_rate || 0) * 100),
-        status: c.status || '',
-        action: c.action || '',
-      }));
-      this.setData({
-        clients,
-        dueReassess: (d.todos && d.todos.due_reassess) || 0,
-        loading: false,
-      });
+      const courses = await api.get('/api/courses');
+      this.setData({ courses: courses || [] });
     } catch (e) {
-      this.setData({ loading: false, loadErr: e.message });
+      fb.showError(e, '课程加载失败');
     }
     try {
       const diets = await api.get('/api/diets/pending');
@@ -48,14 +20,46 @@ Page({
     } catch (e) { /* 非馆主/教练不可见时忽略 */ }
   },
 
-  goLogin() { wx.navigateTo({ url: '/pages/auth/auth' }); },
-
-  goIntake() { wx.navigateTo({ url: '/pages/intake/intake' }); },
-  goNewClient() { wx.navigateTo({ url: '/pages/client-form/client-form' }); },
-  goClients() { wx.navigateTo({ url: '/pages/clients/clients' }); },
-  goClientDetail(e) {
+  // 出示签到二维码：客户用约课页"扫码签到"扫描
+  async showQr(e) {
     const id = e.currentTarget.dataset.id;
-    if (id) wx.navigateTo({ url: `/pages/client-detail/client-detail?id=${id}` });
+    try {
+      const r = await fb.withFeedback(
+        api.get(`/api/courses/${id}/qrcode`),
+        { loading: '生成二维码…' },
+      );
+      const course = this.data.courses.find((c) => c.id === Number(id));
+      this.setData({ qr: `data:image/png;base64,${r.png_base64}`,
+                     qrTitle: (course && course.title) || '签到' });
+    } catch (e) { /* 已提示 */ }
+  },
+
+  hideQr() { this.setData({ qr: null }); },
+
+  goClients() { wx.navigateTo({ url: '/pages/clients/clients' }); },
+  goCourseEdit() { wx.navigateTo({ url: '/pages/course-edit/course-edit' }); },
+  goIntake() { wx.navigateTo({ url: '/pages/intake/intake' }); },
+
+  async openRoster(e) {
+    const id = e.currentTarget.dataset.id;
+    try {
+      const roster = await api.get(`/api/courses/${id}/roster`);
+      this.setData({ roster: roster || [], cur: id });
+    } catch (e) {
+      fb.showError(e, '名单加载失败');
+    }
+  },
+
+  // 手动确认签到（补签，不受时间窗限制）
+  async checkin(e) {
+    const cid = e.currentTarget.dataset.cid;
+    try {
+      await fb.withFeedback(
+        api.post(`/api/courses/${this.data.cur}/checkin`, { client_id: cid }),
+        { loading: '签到中…', success: '已签到' },
+      );
+      this.openRoster({ currentTarget: { dataset: { id: this.data.cur } } });
+    } catch (e) { /* 已提示 */ }
   },
 
   // 待确认饮食：一键确认

@@ -315,3 +315,88 @@ class DailyCheckin(Base):
     __table_args__ = (
         UniqueConstraint("client_id", "date", "kind", name="uq_checkin_client_date_kind"),
     )
+
+
+class PromoUser(Base):
+    """拓客活动参与用户：通过微信网页授权 OAuth 建档，与系统账号体系独立。"""
+    __tablename__ = "promo_users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    openid: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    nickname: Mapped[str] = mapped_column(String(128), default="")
+    avatar_url: Mapped[str] = mapped_column(String(512), default="")
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class PromoActivity(Base):
+    """拓客活动：标题、有效期、拼团规则（group_size=0 表示不拼团）。"""
+    __tablename__ = "promo_activities"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(128), default="")
+    status: Mapped[str] = mapped_column(String(16), default="draft")  # draft / active / ended
+    start_at: Mapped[str] = mapped_column(String(32), default="")      # YYYY-MM-DD HH:MM
+    end_at: Mapped[str] = mapped_column(String(32), default="")
+    group_size: Mapped[int] = mapped_column(Integer, default=0)       # 拼团成团人数
+    rules: Mapped[str] = mapped_column(Text, default="")              # 活动规则（展示用）
+    created_by: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class PromoShare(Base):
+    """专属分享链接：每人每活动一条，ref_code 即对外传播的推荐码。"""
+    __tablename__ = "promo_shares"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    activity_id: Mapped[int] = mapped_column(ForeignKey("promo_activities.id"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("promo_users.id"), index=True)
+    ref_code: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    visit_count: Mapped[int] = mapped_column(Integer, default=0)
+    signup_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint("activity_id", "user_id", name="uq_share_activity_user"),
+    )
+
+
+class PromoVisit(Base):
+    """归因记录：谁通过谁的分享链接进入了活动页。"""
+    __tablename__ = "promo_visits"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    activity_id: Mapped[int] = mapped_column(ForeignKey("promo_activities.id"), index=True)
+    share_id: Mapped[int] = mapped_column(ForeignKey("promo_shares.id"), nullable=True)
+    referrer_id: Mapped[int] = mapped_column(ForeignKey("promo_users.id"), nullable=True)
+    visitor_id: Mapped[int] = mapped_column(ForeignKey("promo_users.id"), index=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class PromoGroup(Base):
+    """拼团：leader 发起，成员通过报名加入，满 group_size 即成团。"""
+    __tablename__ = "promo_groups"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    activity_id: Mapped[int] = mapped_column(ForeignKey("promo_activities.id"), index=True)
+    leader_id: Mapped[int] = mapped_column(ForeignKey("promo_users.id"), index=True)
+    status: Mapped[str] = mapped_column(String(16), default="forming")  # forming / full / expired
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class PromoSignup(Base):
+    """活动报名：姓名+加密手机号，可归因推荐人、可加入拼团、可核销。"""
+    __tablename__ = "promo_signups"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    activity_id: Mapped[int] = mapped_column(ForeignKey("promo_activities.id"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("promo_users.id"), index=True)
+    name: Mapped[str] = mapped_column(String(64), default="")
+    phone_enc: Mapped[str] = mapped_column(String(256), default="")  # 加密存储
+    referrer_id: Mapped[int] = mapped_column(ForeignKey("promo_users.id"), nullable=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("promo_groups.id"), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending / verified / cancelled
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint("activity_id", "user_id", name="uq_signup_activity_user"),
+    )

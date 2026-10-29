@@ -11,7 +11,7 @@ from . import models
 from .auth import hash_password
 from .config import settings, validate_prod
 from .database import Base, SessionLocal, engine
-from .routers import assessments, auth, bookings, checkins, clients, consents, custom_fields, dashboard, diets, exercises, files, intake, notifications, plans, settings as settings_router, subscriptions, uploads
+from .routers import assessments, auth, bookings, checkins, clients, consents, custom_fields, dashboard, diets, exercises, files, intake, notifications, plans, promo, settings as settings_router, subscriptions, uploads
 
 
 @asynccontextmanager
@@ -86,6 +86,7 @@ app.include_router(consents.router)
 app.include_router(files.router)
 app.include_router(checkins.router)
 app.include_router(uploads.router)
+app.include_router(promo.router)
 
 
 @app.on_event("startup")
@@ -100,22 +101,6 @@ def seed_admin():
             db.commit()
     finally:
         db.close()
-
-
-@app.get("/")
-def root():
-    """根路径回执。
-
-    直接访问域名（如 https://api.zytzml.cn/）时不再返回 FastAPI 默认的
-    {"detail": "Not Found"}，避免误判为服务异常。
-    """
-    return {
-        "service": "瑜伽馆客户管理 API",
-        "version": app.version,
-        "status": "ok",
-        "docs": "/docs",
-        "health": "/api/health",
-    }
 
 
 @app.get("/api/health")
