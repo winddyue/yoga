@@ -46,4 +46,7 @@
     </view>
     <button class="primary" bindtap="confirmSave" disabled="{{confirming}}">{{confirming ? '保存中…' : '确认并保存为评估'}}</button>
   </block>
+
+  <!-- 隐私授权弹窗：拍照/选图属于隐私接口，需用户先同意 -->
+  <privacy-popup />
 </view>

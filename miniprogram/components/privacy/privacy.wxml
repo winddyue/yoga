@@ -1,0 +1,16 @@
+<view wx:if="{{show}}" class="privacy-mask" catchtouchmove="noop">
+  <view class="privacy-dialog">
+    <view class="privacy-title">用户隐私保护提示</view>
+    <view class="privacy-body">
+      感谢你使用本小程序。使用拍照、相册上传等功能前，需要先阅读并同意
+      <text class="privacy-link" bindtap="openPrivacy">《用户隐私保护指引》</text>。
+      我们仅在提供服务所必需的范围内使用这些信息，不会用于其他用途。
+    </view>
+    <view class="privacy-btns">
+      <button class="privacy-btn ghost" bindtap="onDisagree">不同意</button>
+      <button id="agree-btn" class="privacy-btn primary"
+              open-type="agreePrivacyAuthorization"
+              bindagreeprivacyauthorization="onAgree">同意并继续</button>
+    </view>
+  </view>
+</view>

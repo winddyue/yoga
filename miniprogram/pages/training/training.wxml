@@ -151,8 +151,11 @@
         <view wx:if="{{item.meals.lunch}}" class="meal"><text class="mk">午餐</text>{{item.meals.lunch.join('、')}}</view>
         <view wx:if="{{item.meals.dinner}}" class="meal"><text class="mk">晚餐</text>{{item.meals.dinner.join('、')}}</view>
         <view wx:if="{{item.meals.snack}}" class="meal"><text class="mk">加餐</text>{{item.meals.snack.join('、')}}</view>
-        <view class="sub">{{item.calories_target}}千卡 · 蛋白{{item.protein_g}}g · 脂肪{{item.fat_g}}g · 碳水{{item.carbs_g}}g</view>
+        <view class="sub">{{item.calories_target}}千卡 · 蛋白{{item.protein_g}}g · 脂肪{{item.fat_g}}g · 碳水{{item.carbs_g}}g        </view>
       </view>
     </view>
   </block>
+
+  <!-- 隐私授权弹窗：本页可发起签到拍照 -->
+  <privacy-popup />
 </view>
