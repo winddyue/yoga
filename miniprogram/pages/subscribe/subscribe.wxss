@@ -1,3 +1,5 @@
 .desc { color: #8A917F; font-size: 13px; margin-top: 6px; line-height: 1.6; }
+.duration { color: #6F8563; font-size: 13px; margin-top: 4px; font-weight: 600; }
+.sub-tip { text-align: left; padding: 0 4px 8px; }
 .buy-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
 .price { color: #C0392B; font-size: 20px; font-weight: 700; }

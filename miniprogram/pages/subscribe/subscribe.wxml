@@ -1,0 +1,15 @@
+<view class="container t-{{theme}}">
+  <view class="title">AI 会员订阅</view>
+  <view class="tip sub-tip">开通会员，解锁 AI 训练计划、AI 饮食方案等智能功能</view>
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{!products.length}}" class="tip">暂无在售套餐</view>
+  <view wx:else wx:for="{{products}}" wx:key="id" class="card">
+    <view class="t">{{item.name}}</view>
+    <view wx:if="{{item.durationText}}" class="duration">{{item.durationText}}</view>
+    <view wx:if="{{item.description}}" class="desc">{{item.description}}</view>
+    <view class="buy-row">
+      <text class="price">{{item.priceText}}</text>
+      <button size="mini" type="primary" data-id="{{item.id}}" bindtap="buy" loading="{{paying}}">立即开通</button>
+    </view>
+  </view>
+</view>

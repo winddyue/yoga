@@ -318,14 +318,40 @@ class DailyCheckin(Base):
 
 
 class Product(Base):
-    """在售商品：如 399 团购卡。价格以分为单位，避免浮点误差。"""
+    """在售商品：AI 会员订阅套餐（月卡/季卡/年卡）或一次性商品。
+    价格以分为单位，避免浮点误差。kind: subscription（订阅）/ one_time（一次性）。"""
     __tablename__ = "products"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(64), nullable=False)
     price_cents: Mapped[int] = mapped_column(Integer, nullable=False)  # 分
     description: Mapped[str] = mapped_column(Text, default="")
+    kind: Mapped[str] = mapped_column(String(16), nullable=False,
+                                       server_default="subscription",
+                                       default="subscription")  # subscription/one_time
+    duration_days: Mapped[int] = mapped_column(Integer, nullable=False,
+                                               server_default="0",
+                                               default=0)  # 订阅有效天数；一次性商品为 0
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime, default=_now, server_default=text("CURRENT_TIMESTAMP"))
+
+
+class ClientSubscription(Base):
+    """学员 AI 会员订阅：学员付费给馆主后解锁 AI 功能。
+
+    由微信支付回调驱动创建/续期（见 routers/pay.py）。status: active/expired。
+    续费：expires_at = max(now, 当前有效期) + duration_days。
+    """
+    __tablename__ = "client_subscriptions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), index=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
+    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
+    started_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+    status: Mapped[str] = mapped_column(String(16), default="active")  # active/expired
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
 
 

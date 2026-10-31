@@ -50,7 +50,8 @@ def _latest_assessment_days(db: Session, client: models.Client):
     """距上次评估天数；无评估或日期非法返回 None。"""
     latest = (db.query(models.Assessment)
               .filter(models.Assessment.client_id == client.id)
-              .order_by(models.Assessment.date.desc()).first())
+              .order_by(models.Assessment.date.desc(),
+            models.Assessment.id.desc()).first())
     if not latest or not latest.date:
         return None
     try:
@@ -78,7 +79,8 @@ def _client_status(db: Session, client: models.Client) -> str:
     """客户状态灯：红（长期未评估/出勤差）/ 黄（30 天未复测）/ 绿（正常）。"""
     latest = (db.query(models.Assessment)
               .filter(models.Assessment.client_id == client.id)
-              .order_by(models.Assessment.date.desc()).first())
+              .order_by(models.Assessment.date.desc(),
+            models.Assessment.id.desc()).first())
     if not latest:
         return "red"
     try:

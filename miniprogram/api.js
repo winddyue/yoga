@@ -134,6 +134,7 @@ module.exports = {
   get: (p) => req(p),
   post: (p, data) => req(p, { method: 'POST', data }),
   put: (p, data) => req(p, { method: 'PUT', data }),
+  patch: (p, data) => req(p, { method: 'PATCH', data }),
   del: (p) => req(p, { method: 'DELETE' }),
   // 登录：用户名 + 密码，token 存本地
   login(username, password) {

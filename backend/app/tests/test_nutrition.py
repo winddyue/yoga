@@ -114,9 +114,9 @@ def _setup():
     r = c.post("/api/clients", json={"name": f"缺档案客{tag}", "gender": "男"},
                headers=admin_h)
     cid2 = r.json()["id"]
-    # 本月两次评估：体重下降
+    # 本月两次评估：体重下降（d1 取月初，避免月初跨月掉到上月）
     today = datetime.date.today()
-    d1 = (today - datetime.timedelta(days=6)).isoformat()
+    d1 = today.replace(day=1).isoformat()
     d2 = today.isoformat()
     db = SessionLocal()
     db.add(models.Assessment(client_id=cid, date=d1, weight_kg=60, body_fat_pct=30))

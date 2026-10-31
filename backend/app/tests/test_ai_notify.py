@@ -2,6 +2,7 @@
 """AI 饮食双轨制 + 站内通知测试：ai-generate 全流程（mock LLM）、
 通知落库、confirm 触发通知、权限、通知 API、预约/签到通知触发。
 用临时 SQLite 库，不污染正式数据。"""
+import datetime
 import os
 import sys
 
@@ -98,6 +99,15 @@ def _setup(monkeypatch):
                json={"plan_id": pro["id"], "days": 30, "status": "active"},
                headers=admin_h)
     assert r.status_code == 200, r.text
+    # v12 起：客户自助调 AI 接口需学员 AI 会员订阅（测试直接开通）
+    now = datetime.datetime.now()
+    db = SessionLocal()
+    db.add(models.ClientSubscription(
+        client_id=cid, product_id=0, order_id=0,
+        started_at=now, expires_at=now + datetime.timedelta(days=30),
+        status="active"))
+    db.commit()
+    db.close()
     return c, admin_h, _h(coach_t), _h(client_t), cid, tag, coach_u, client_u
 
 

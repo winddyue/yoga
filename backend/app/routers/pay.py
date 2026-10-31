@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-"""微信支付：商品 / 订单 / JSAPI 下单 / 支付回调 / 退款。
+"""微信支付：商品 / 订单 / JSAPI 下单 / 支付回调 / 退款 + AI 会员订阅。
 
-场景：C 端学员付钱给瑜伽馆（如 399 团购卡），用馆主的商户号
-（商户平台把小程序 AppID 绑定到商户号）。
+场景：学员付订阅费给瑜伽馆（馆主商户号）解锁 AI 功能。
+支付回调驱动 ClientSubscription 创建/续期（见 _activate_subscription）。
+商品（套餐价格/时长/上下架）由馆主通过 POST/PATCH /api/products 管理。
 未配置微信支付时相关接口返回 503，不静默降级。
 
 幂等设计：
 - 下单：同一客户同一商品存在未过期（100 分钟内）的 pending 订单则复用，
   只重新生成调起签名（prepay_id 2 小时有效）；
-- 回调：订单已 paid 直接回 SUCCESS，不重复通知；
+- 回调：订单已 paid 直接回 SUCCESS，不重复通知；订阅激活同样幂等；
 - 退款：out_refund_no 由商户订单号派生，微信端天然幂等。
 """
 import datetime
@@ -16,6 +17,16 @@ import random
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
+
+
+def _utcnow() -> datetime.datetime:
+    """UTC wall time（naive），与 models._now() 的入库基准一致。
+
+    注意：绝不能用 naive 的 datetime.now()（本地时区）去和
+    created_at/expires_at 等入库时间比较，否则会有 8 小时偏差。
+    """
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+
 
 from .. import auth as auth_lib
 from .. import models, schemas
@@ -29,10 +40,18 @@ router = APIRouter(prefix="/api", tags=["支付"])
 REUSE_WINDOW_MIN = 100
 
 # 默认商品：随应用启动幂等预置（create_all 建表路径下 alembic 种子不执行，
-# 这里保证新库/测试库也有商品；老库走 alembic 0004 种子）
+# 这里保证新库/测试库也有商品；老库走 alembic 0005 种子）。
+# 价格/时长为初始占位值，馆主可通过 PATCH /api/products/{id} 修改。
 DEFAULT_PRODUCTS = [
-    {"name": "双十一399团购卡", "price_cents": 39900,
-     "description": "身体评估私教×1 + 器械私教×1 + 普拉提小班两周 + 瑜伽团课14天；5人成团、团长免单"},
+    {"name": "AI 会员月卡", "price_cents": 2900, "kind": "subscription",
+     "duration_days": 30,
+     "description": "AI 功能 30 天使用权：AI 生成训练计划、AI 生成饮食方案"},
+    {"name": "AI 会员季卡", "price_cents": 7900, "kind": "subscription",
+     "duration_days": 90,
+     "description": "AI 功能 90 天使用权：AI 生成训练计划、AI 生成饮食方案"},
+    {"name": "AI 会员年卡", "price_cents": 29900, "kind": "subscription",
+     "duration_days": 365,
+     "description": "AI 功能 365 天使用权：AI 生成训练计划、AI 生成饮食方案"},
 ]
 
 
@@ -44,7 +63,10 @@ def ensure_default_products(db: Session) -> None:
                           models.Product.active == True).first())  # noqa: E712
         if not exists:
             db.add(models.Product(name=p["name"], price_cents=p["price_cents"],
-                                  description=p["description"], active=True))
+                                  description=p["description"],
+                                  kind=p["kind"],
+                                  duration_days=p["duration_days"],
+                                  active=True))
     db.commit()
 
 
@@ -73,13 +95,53 @@ def _order_paid_notify(db: Session, order: models.Order) -> None:
         ref_type="order", ref_id=order.id)
 
 
+def _activate_subscription(db: Session, order: models.Order,
+                           product: models.Product) -> None:
+    """支付成功后开通/续期学员 AI 会员订阅（幂等）。
+
+    expires_at = max(now, 当前有效期) + duration_days。
+    过期记录顺手标 expired；同一客户只保留一条 active 记录。
+    """
+    days = product.duration_days or 0
+    if days <= 0:
+        return
+    now = _utcnow()
+    subs = (db.query(models.ClientSubscription)
+            .filter(models.ClientSubscription.client_id == order.client_id)
+            .order_by(models.ClientSubscription.expires_at.desc()).all())
+    current = next((s for s in subs
+                    if s.status == "active" and s.expires_at and s.expires_at > now),
+                   None)
+    base = current.expires_at if current else now
+    new_exp = base + datetime.timedelta(days=days)
+    for s in subs:
+        if s is not current and s.status == "active":
+            s.status = "expired"
+    if current:
+        current.expires_at = new_exp
+        current.order_id = order.id
+        current.product_id = product.id
+    else:
+        db.add(models.ClientSubscription(
+            client_id=order.client_id, product_id=product.id,
+            order_id=order.id, started_at=now,
+            expires_at=new_exp, status="active"))
+    db.commit()
+
+
 @router.get("/products", response_model=list[schemas.ProductOut])
-def list_products(db: Session = Depends(get_db),
+def list_products(all: bool = False,
+                  db: Session = Depends(get_db),
                   user: models.User = Depends(auth_lib.get_current_user)):
-    """在售商品列表（登录即可；不调微信接口，无需支付配置）。"""
-    return (db.query(models.Product)
-            .filter(models.Product.active == True)  # noqa: E712
-            .order_by(models.Product.id).all())  # noqa: E712
+    """在售商品列表（登录即可；不调微信接口，无需支付配置）。
+    ?all=true 时返回含已下架的全部套餐，仅 owner 可用（供订阅套餐管理页）。"""
+    q = db.query(models.Product)
+    if all:
+        if user.role != "owner":
+            raise HTTPException(status_code=403, detail="仅馆主可操作")
+    else:
+        q = q.filter(models.Product.active == True)  # noqa: E712
+    return q.order_by(models.Product.id).all()
 
 
 @router.post("/orders")
@@ -99,7 +161,7 @@ def create_order(data: schemas.OrderCreateIn,
         raise HTTPException(status_code=404, detail="商品不存在或已下架")
     openid = _payer_openid(db, user)
 
-    cutoff = datetime.datetime.now() - datetime.timedelta(minutes=REUSE_WINDOW_MIN)
+    cutoff = _utcnow() - datetime.timedelta(minutes=REUSE_WINDOW_MIN)
     order = (db.query(models.Order)
              .filter(models.Order.client_id == client.id,
                      models.Order.product_id == product.id,
@@ -157,9 +219,14 @@ async def pay_notify(request: Request, db: Session = Depends(get_db)):
     if txn.get("trade_state") == "SUCCESS":
         order.status = "paid"
         order.transaction_id = txn.get("transaction_id", "")
-        order.paid_at = datetime.datetime.now()
+        order.paid_at = _utcnow()
         db.commit()
         _order_paid_notify(db, order)
+        # 订阅类商品：自动开通/续期学员 AI 会员
+        product = (db.query(models.Product)
+                   .filter(models.Product.id == order.product_id).first())
+        if product and product.kind == "subscription":
+            _activate_subscription(db, order, product)
     return {"code": "SUCCESS", "message": "OK"}
 
 
@@ -212,3 +279,64 @@ def all_orders(db: Session = Depends(get_db),
         auth_lib.client_visible_to(db, user, client_id)
         q = q.filter(models.Order.client_id == client_id)
     return q.order_by(models.Order.id.desc()).limit(200).all()
+
+
+@router.get("/subscriptions/mine")
+def my_subscription(db: Session = Depends(get_db),
+                    user: models.User = Depends(auth_lib.get_current_user)):
+    """当前客户的 AI 会员订阅状态。"""
+    from ..services import ai_gate
+    client = auth_lib.get_own_client(db, user)
+    sub = ai_gate.active_client_subscription(db, client.id)
+    if not sub:
+        return {"active": False, "plan_name": None, "expires_at": None}
+    product = (db.query(models.Product)
+               .filter(models.Product.id == sub.product_id).first())
+    return {"active": True,
+            "plan_name": product.name if product else "",
+            "expires_at": sub.expires_at.isoformat(sep=" ", timespec="seconds")
+            if sub.expires_at else None}
+
+
+@router.post("/products", response_model=schemas.ProductOut)
+def create_product(data: schemas.ProductCreateIn,
+                   db: Session = Depends(get_db),
+                   user: models.User = Depends(auth_lib.require_owner)):
+    """新建订阅套餐（仅馆主）：名称/价格/时长/描述。"""
+    product = models.Product(
+        name=data.name, price_cents=data.price_cents,
+        description=data.description or "",
+        kind=data.kind or "subscription",
+        duration_days=data.duration_days or 0,
+        active=True)
+    db.add(product)
+    db.commit()
+    db.refresh(product)
+    return product
+
+
+@router.patch("/products/{product_id}", response_model=schemas.ProductOut)
+def update_product(product_id: int, data: schemas.ProductUpdateIn,
+                   db: Session = Depends(get_db),
+                   user: models.User = Depends(auth_lib.require_owner)):
+    """修改套餐（仅馆主）：改价/改时长/改描述/上下架。
+
+    已售出订单不受影响（Order.amount_cents 是下单时快照）；
+    新订单按下单时的商品现价。
+    """
+    product = (db.query(models.Product)
+               .filter(models.Product.id == product_id).first())
+    if not product:
+        raise HTTPException(status_code=404, detail="商品不存在")
+    for field in ("name", "price_cents", "description", "kind",
+                  "duration_days", "active"):
+        value = getattr(data, field)
+        if value is not None:
+            if field == "price_cents" and value < 0:
+                raise HTTPException(status_code=400, detail="价格不能为负")
+            if field == "duration_days" and value < 0:
+                raise HTTPException(status_code=400, detail="时长不能为负")
+            setattr(product, field, value)
+    db.commit()
+    db.refresh(product)
+    return product

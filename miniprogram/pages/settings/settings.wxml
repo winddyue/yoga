@@ -44,6 +44,10 @@
         <text class="label">界面风格</text>
         <view class="picker-value"><text>去选择</text><text class="arrow">›</text></view>
       </view>
+      <view class="field" bindtap="goPlansAdmin">
+        <text class="label">订阅套餐管理</text>
+        <view class="picker-value"><text>价格/时长/上下架</text><text class="arrow">›</text></view>
+      </view>
       <view class="field">
         <text class="label">版本</text>
         <text class="value">{{version}}</text>

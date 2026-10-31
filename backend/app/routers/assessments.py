@@ -72,7 +72,8 @@ def warnings(client_id: int,
     client = auth_lib.client_visible_to(db, user, client_id)
     latest = (db.query(models.Assessment)
               .filter(models.Assessment.client_id == client.id)
-              .order_by(models.Assessment.date.desc()).first())
+              .order_by(models.Assessment.date.desc(),
+            models.Assessment.id.desc()).first())
     if not latest:
         return {"warnings": []}
     return {"warnings": health_warnings(latest)}

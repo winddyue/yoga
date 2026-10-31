@@ -84,7 +84,8 @@ def active_store_subscription(db: Session) -> models.AiSubscription | None:
 
 
 def _month_start() -> datetime.datetime:
-    now = datetime.datetime.now()
+    # 与入库基准一致用 UTC（AiUsage.created_at 经 _now() 存为 UTC）
+    now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
 
@@ -103,6 +104,30 @@ def quota_remaining(db: Session, plan: models.AiPlan, kind: str) -> float:
         return 0
     limit = getattr(plan, field, 0) or 0
     return max(0.0, float(limit) - month_usage(db, kind))
+
+
+def active_client_subscription(db: Session,
+                               client_id: int) -> models.ClientSubscription | None:
+    """学员有效的 AI 会员订阅（status=active 且未过期），无则 None。"""
+    # 与入库基准一致用 UTC（见 pay._utcnow），不用本地 naive now
+    now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+    return (db.query(models.ClientSubscription)
+            .filter(models.ClientSubscription.client_id == client_id,
+                    models.ClientSubscription.status == "active",
+                    models.ClientSubscription.expires_at > now)
+            .order_by(models.ClientSubscription.expires_at.desc())
+            .first())
+
+
+def check_client_ai_access(db: Session, user: models.User, client_id: int) -> None:
+    """学员 AI 会员门禁：客户自助调用 AI 功能需有效订阅，否则 402。
+
+    工作人员（教练/馆主）调用不受影响——手动开通/代操作通道保留。
+    """
+    if user.role != "client":
+        return
+    if not active_client_subscription(db, client_id):
+        raise HTTPException(status_code=402, detail="开通 AI 会员后使用")
 
 
 def check_ai_access(db: Session, user: models.User, feature: str):

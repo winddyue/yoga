@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """训练计划路由：自动生成、手动调整（增删改）、归档、求助。
 
-模板生成免费开放：客户可为自己一键生成模板计划（走原模板逻辑），
-工作人员不变；生成成功后通知客户。
+客户自助生成（UI 上叫"AI 生成"）需有效 AI 会员订阅（无则 402）；
+工作人员调用不受影响。生成成功后通知客户。
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from .. import auth as auth_lib
 from .. import models, schemas
 from ..database import get_db
+from ..services import ai_gate
 from ..services import notify as notify_service
 from ..services.training import generate_plan
 
@@ -22,9 +23,10 @@ def generate(client_id: int, week_start: str = "",
              user: models.User = Depends(auth_lib.get_current_user)):
     """按客户目标自动生成一周训练计划（旧计划自动归档）。
 
-    模板生成免费：客户只能给自己生成，工作人员可为名下/全馆客户生成。
+    客户自助调用需有效 AI 会员订阅（无则 402）；工作人员不受影响。
     """
     client = auth_lib.client_visible_to(db, user, client_id)
+    ai_gate.check_client_ai_access(db, user, client.id)
     db.query(models.TrainingPlan).filter(
         models.TrainingPlan.client_id == client.id,
         models.TrainingPlan.status == "active").update({"status": "archived"})

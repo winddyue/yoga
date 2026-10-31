@@ -24,7 +24,8 @@ def _latest_assessment(db: Session, client_id: int):
     """取客户最新一次评估（没有则返回 None）。"""
     return (db.query(models.Assessment)
             .filter(models.Assessment.client_id == client_id)
-            .order_by(models.Assessment.date.desc()).first())
+            .order_by(models.Assessment.date.desc(),
+            models.Assessment.id.desc()).first())
 
 
 @router.post("/clients/{client_id}/diets/generate", response_model=schemas.DietPlanOut)
@@ -83,11 +84,11 @@ def ai_generate(client_id: int,
     """AI 饮食双轨制·快轨：AI 即时生成饮食初稿（status=ai_draft，待教练确认）。
 
     权限：客户只能给自己生成；教练/馆主可为名下可见客户生成。
-    走 AI 准入（套餐功能 + 月额度）并记录用量。LLM 未配置时返回 503，
-    不静默降级为模板。生成后通知客户与所属教练。
+    门禁：客户自助调用需有效 AI 会员订阅（无则 402）；工作人员不受影响。
+    LLM 未配置时返回 503，不静默降级为模板。生成后通知客户与所属教练。
     """
     client = auth_lib.client_visible_to(db, user, client_id)
-    ai_gate.check_ai_access(db, user, feature="plan_diet")
+    ai_gate.check_client_ai_access(db, user, client.id)
     a = _latest_assessment(db, client_id)
     if not a or not a.weight_kg:
         raise HTTPException(status_code=400, detail="请先录入一次包含体重的评估记录")

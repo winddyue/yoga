@@ -1,0 +1,40 @@
+<view class="container t-{{theme}}">
+  <view class="title">订阅套餐管理</view>
+
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{loadErr}}" class="tip err">
+    <view>{{loadErr}}</view>
+    <button size="mini" bindtap="load">重试</button>
+  </view>
+  <view wx:else>
+    <view class="bar">
+      <text class="link" bindtap="toggleForm">{{showForm ? '收起' : '＋ 新增套餐'}}</text>
+    </view>
+
+    <view wx:if="{{showForm}}" class="card form">
+      <view class="t">{{form.id ? '编辑套餐' : '新增套餐'}}</view>
+      <input class="input" placeholder="名称*（如 AI 会员月卡）" value="{{form.name}}" data-k="name" bindinput="onInput" />
+      <input class="input" type="digit" placeholder="价格（元）*" value="{{form.price}}" data-k="price" bindinput="onInput" />
+      <input class="input" type="number" placeholder="有效天数*" value="{{form.days}}" data-k="days" bindinput="onInput" />
+      <input class="input" placeholder="描述（可选）" value="{{form.desc}}" data-k="desc" bindinput="onInput" />
+      <view class="btns">
+        <button class="primary sm" bindtap="submit" disabled="{{submitting}}">{{submitting ? '保存中…' : (form.id ? '保存' : '新增')}}</button>
+        <button size="mini" bindtap="cancelEdit">取消</button>
+      </view>
+    </view>
+
+    <view wx:for="{{plans}}" wx:key="id" class="card">
+      <view class="row">
+        <view class="t">{{item.name}}</view>
+        <text class="badge {{item.active ? 'on' : 'off'}}">{{item.active ? '上架中' : '已下架'}}</text>
+      </view>
+      <view class="sub">{{item.priceText}} · 有效 {{item.duration_days}} 天</view>
+      <view wx:if="{{item.description}}" class="desc">{{item.description}}</view>
+      <view class="btns">
+        <button size="mini" data-id="{{item.id}}" bindtap="edit">编辑</button>
+        <button size="mini" data-id="{{item.id}}" bindtap="toggleActive">{{item.active ? '下架' : '上架'}}</button>
+      </view>
+    </view>
+    <view wx:if="{{!plans.length}}" class="tip">暂无套餐，点上方「新增套餐」创建</view>
+  </view>
+</view>

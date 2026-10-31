@@ -1,4 +1,4 @@
-// 团购商城：商品列表 → 下单 → 微信支付
+// AI 会员订阅：套餐列表 → 下单 → 微信支付
 const api = require('../../api.js');
 const { syncTheme } = require('../../utils/themes.js');
 const fb = require('../../utils/feedback.js');
@@ -14,11 +14,15 @@ Page({
     try {
       const list = await api.get('/api/products');
       this.setData({
-        products: (list || []).map((p) => ({ ...p, priceText: fmtYuan(p.price_cents) })),
+        products: (list || []).map((p) => ({
+          ...p,
+          priceText: fmtYuan(p.price_cents),
+          durationText: p.duration_days ? `有效期 ${p.duration_days} 天` : '',
+        })),
         loading: false,
       });
     } catch (e) {
-      fb.showError(e, '商品加载失败');
+      fb.showError(e, '套餐加载失败');
       this.setData({ loading: false });
     }
   },
@@ -35,7 +39,7 @@ Page({
         { loading: '下单中…' }
       );
       await this.requestPay(order.prepay_params);
-      fb.showSuccess('支付成功');
+      fb.showSuccess('开通成功');
       wx.navigateTo({ url: '/pages/orders/orders' });
     } catch (err) {
       if (err && err.message === '__cancel__') {

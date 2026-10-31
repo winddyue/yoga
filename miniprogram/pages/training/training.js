@@ -119,9 +119,27 @@ Page({
   goMeasure() { wx.navigateTo({ url: '/pages/measure/measure' }); },
   goClients() { wx.navigateTo({ url: '/pages/clients/clients' }); },
 
-  // 计划获取：AI 生成训练计划（客户可给自己调用）
+  // 订阅门禁：AI 功能需开通会员；返回 true 表示可继续
+  // 后端 v12：GET /api/subscriptions/mine → {active, plan_name, expires_at}
+  async ensureSub() {
+    let checked = false, active = false;
+    try {
+      const s = await api.get('/api/subscriptions/mine');
+      checked = true;
+      active = !!(s && s.active);
+    } catch (e) { /* 接口未就绪/网络错误：放行，后端 402 会兜底 */ }
+    if (checked && !active) {
+      const ok = await fb.confirm('AI 训练计划、AI 饮食方案需开通 AI 会员后使用', '开通 AI 会员');
+      if (ok) wx.navigateTo({ url: '/pages/subscribe/subscribe' });
+      return false;
+    }
+    return true;
+  },
+
+  // 计划获取：AI 生成训练计划（客户可给自己调用，需订阅）
   async aiGeneratePlan() {
     if (this.data.genPlan || !this.data.clientId) return;
+    if (!await this.ensureSub()) return;
     this.setData({ genPlan: true });
     try {
       await fb.withFeedback(
@@ -130,13 +148,17 @@ Page({
       );
       fb.showSuccess('训练计划已生成');
       this.loadClient();
-    } catch (e) { /* 已提示 */ }
+    } catch (e) {
+      // 402 无订阅兜底：后端也拦一道
+      if (/402/.test(e.message || '')) { this.ensureSub(); }
+    }
     this.setData({ genPlan: false });
   },
 
-  // 计划获取：AI 生成饮食方案（客户可给自己调用）
+  // 计划获取：AI 生成饮食方案（客户可给自己调用，需订阅）
   async aiGenerateDiet() {
     if (this.data.genDiet || !this.data.clientId) return;
+    if (!await this.ensureSub()) return;
     this.setData({ genDiet: true });
     try {
       await fb.withFeedback(
@@ -146,7 +168,8 @@ Page({
       fb.showSuccess('饮食方案已生成');
       this.loadClient();
     } catch (e) {
-      if (/503|未配置/.test(e.message || '')) fb.showError(new Error('馆主尚未配置 AI 服务，请联系馆主'));
+      if (/402/.test(e.message || '')) { this.ensureSub(); }
+      else if (/503|未配置/.test(e.message || '')) fb.showError(new Error('馆主尚未配置 AI 服务，请联系馆主'));
     }
     this.setData({ genDiet: false });
   },

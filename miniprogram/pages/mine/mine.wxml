@@ -15,12 +15,18 @@
     <text wx:if="{{!user}}" class="go">登录 ›</text>
   </view>
 
-  <!-- 团购卡片：点进商城 -->
-  <view class="promo-card" bindtap="goMall">
-    <view class="promo-tag">限时团购</view>
-    <view class="promo-title">双十一 399 超级礼遇卡</view>
-    <view class="promo-sub">身体评估私教 ×1 · 器械私教 ×1 · 普拉提小班两周 · 瑜伽团课 14 天</view>
-    <view class="promo-go">立即抢购 ›</view>
+  <!-- AI 会员订阅卡：客户可见；点进订阅页开通/续费 -->
+  <view wx:if="{{user && user.role === 'client' && sub && !sub.active}}" class="promo-card" bindtap="goSubscribe">
+    <view class="promo-tag">AI 会员</view>
+    <view class="promo-title">开通 AI 会员</view>
+    <view class="promo-sub">解锁 AI 训练计划、AI 饮食方案等智能功能</view>
+    <view class="promo-go">立即开通 ›</view>
+  </view>
+  <view wx:if="{{user && user.role === 'client' && sub && sub.active}}" class="promo-card" bindtap="goSubscribe">
+    <view class="promo-tag">AI 会员 · 已开通</view>
+    <view class="promo-title">{{sub.planName || 'AI 会员'}}</view>
+    <view wx:if="{{sub.expiresText}}" class="promo-sub">有效期至 {{sub.expiresText}}</view>
+    <view class="promo-go">续费 ›</view>
   </view>
 
   <!-- 未登录：直接给登录/注册入口 -->

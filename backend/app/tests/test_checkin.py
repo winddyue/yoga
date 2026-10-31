@@ -17,13 +17,33 @@ for _mod in [m for m in list(sys.modules)
 
 from fastapi.testclient import TestClient  # noqa: E402
 
+import datetime  # noqa: E402
+
+YM = datetime.date.today().strftime("%Y-%m")  # 当月，避免月初跨月导致测试数据掉到上月
+
+from app import models  # noqa: E402
 from app.config import settings  # noqa: E402
+from app.database import SessionLocal  # noqa: E402
 from app.main import app  # noqa: E402
 
 if os.path.exists("test_checkin.db"):
     os.remove("test_checkin.db")
 
 _SETUP_SEQ = 0
+
+
+def _grant_subscription(client_id: int, days: int = 30) -> None:
+    """直接给客户开通 AI 会员（测试用，绕过支付）。"""
+    db = SessionLocal()
+    try:
+        now = datetime.datetime.now()
+        db.add(models.ClientSubscription(
+            client_id=client_id, product_id=0, order_id=0,
+            started_at=now, expires_at=now + datetime.timedelta(days=days),
+            status="active"))
+        db.commit()
+    finally:
+        db.close()
 
 
 def _login(client: TestClient, username: str, password: str) -> str:
@@ -98,14 +118,14 @@ def test_checkin_mine_and_staff_view():
     with TestClient(app) as client:
         client.post("/api/checkins", json={"kind": "training"}, headers=s["a"])
         # 自己按月查
-        r = client.get("/api/checkins/mine?ym=2026-10", headers=s["a"])
+        r = client.get("/api/checkins/mine?ym=" + YM, headers=s["a"])
         assert r.status_code == 200, r.text
         # staff 代打卡（饮食）
         r2 = client.post(f"/api/checkins?client_id={s['aid']}",
                          json={"kind": "diet", "note": "教练代打"}, headers=s["coach"])
         assert r2.status_code == 200, r2.text
         # staff 看客户打卡
-        r3 = client.get(f"/api/clients/{s['aid']}/checkins?ym=2026-10",
+        r3 = client.get(f"/api/clients/{s['aid']}/checkins?ym={YM}",
                         headers=s["coach"])
         assert r3.status_code == 200 and len(r3.json()) == 2, r3.text
         # 客户 B 看 A 的 → 403
@@ -163,8 +183,9 @@ def test_plan_request_no_coach():
 
 
 def test_client_self_generate_plan_notifies():
-    """客户自助生成模板计划 → 200，且客户收到 plan_new 通知。"""
+    """客户自助生成模板计划（需 AI 会员）→ 200，且客户收到 plan_new 通知。"""
     s = _setup()
+    _grant_subscription(s["aid"])
     with TestClient(app) as client:
         r = client.post(f"/api/clients/{s['aid']}/plans/generate",
                         headers=s["a"])

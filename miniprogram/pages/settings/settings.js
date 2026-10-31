@@ -48,6 +48,7 @@ Page({
   onInput(e) { this.setData({ [e.currentTarget.dataset.k]: e.detail.value }); },
   onSwitch(e) { this.setData({ ai_enabled: e.detail.value }); },
   goTheme() { wx.navigateTo({ url: '/pages/theme/theme' }); },
+  goPlansAdmin() { wx.navigateTo({ url: '/pages/plans-admin/plans-admin' }); },
 
   async save() {
     const d = this.data;

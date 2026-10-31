@@ -352,7 +352,26 @@ class ProductOut(BaseModel):
     name: str
     price_cents: int
     description: str = ""
+    kind: str = "subscription"
+    duration_days: int = 0
     active: bool = True
+
+
+class ProductCreateIn(BaseModel):
+    name: str
+    price_cents: int
+    duration_days: int = 0
+    description: str = ""
+    kind: str = "subscription"
+
+
+class ProductUpdateIn(BaseModel):
+    name: str | None = None
+    price_cents: int | None = None
+    duration_days: int | None = None
+    description: str | None = None
+    kind: str | None = None
+    active: bool | None = None
 
 
 class OrderCreateIn(BaseModel):

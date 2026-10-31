@@ -5,7 +5,7 @@ const fb = require('../../utils/feedback.js');
 const ROLE_TEXT = { owner: '馆主', coach: '教练', client: '会员' };
 
 Page({
-  data: { user: null, roleText: '', loading: true, unread: 0 },
+  data: { user: null, roleText: '', loading: true, unread: 0, sub: null },
 
   onShow() { syncTheme(this); this.load(); },
 
@@ -23,6 +23,19 @@ Page({
         const r = await api.get('/api/notifications/unread-count');
         this.setData({ unread: r.unread || 0 });
       } catch (e) { /* 忽略 */ }
+      // 客户查 AI 会员订阅状态（staff 不需要订阅）
+      if (user.role === 'client') {
+        try {
+          const s = await api.get('/api/subscriptions/mine');
+          this.setData({
+            sub: {
+              active: !!s.active,
+              planName: s.plan_name || '',
+              expiresText: s.expires_at ? String(s.expires_at).slice(0, 10) : '',
+            },
+          });
+        } catch (e) { /* 接口未就绪时不显示订阅卡 */ }
+      }
     }
   },
 
@@ -49,7 +62,7 @@ Page({
 
   goMeasure() { wx.navigateTo({ url: '/pages/measure/measure' }); },
 
-  goMall() { wx.navigateTo({ url: '/pages/mall/mall' }); },
+  goSubscribe() { wx.navigateTo({ url: '/pages/subscribe/subscribe' }); },
 
   goOrders() { wx.navigateTo({ url: '/pages/orders/orders' }); },
 

@@ -129,7 +129,7 @@ def _product_id(client: TestClient, h: dict) -> int:
 
 
 def test_products_list_and_seed():
-    """商品列表：种子 399 团购卡存在；未登录 401。"""
+    """商品列表：3 档 AI 会员订阅种子存在；399 团购卡已下架；未登录 401。"""
     s = _setup()
     with TestClient(app) as client:
         r = client.get("/api/products")
@@ -138,9 +138,15 @@ def test_products_list_and_seed():
         assert r.status_code == 200, r.text
         items = r.json()
         names = [i["name"] for i in items]
-        assert "双十一399团购卡" in names, names
-        p = [i for i in items if i["name"] == "双十一399团购卡"][0]
-        assert p["price_cents"] == 39900
+        assert "双十一399团购卡" not in names, names
+        for name, price, days in [("AI 会员月卡", 2900, 30),
+                                  ("AI 会员季卡", 7900, 90),
+                                  ("AI 会员年卡", 29900, 365)]:
+            p = [i for i in items if i["name"] == name]
+            assert p, names
+            assert p[0]["price_cents"] == price, p[0]
+            assert p[0]["kind"] == "subscription", p[0]
+            assert p[0]["duration_days"] == days, p[0]
 
 
 def test_create_order_503_when_unconfigured():

@@ -24,7 +24,8 @@
     "pages/settings/settings",
     "pages/fields/fields",
     "pages/plan-detail/plan-detail",
-    "pages/mall/mall",
+    "pages/plans-admin/plans-admin",
+    "pages/subscribe/subscribe",
     "pages/orders/orders"
   ],
   "tabBar": {

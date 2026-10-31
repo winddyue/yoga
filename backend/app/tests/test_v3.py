@@ -26,6 +26,22 @@ from app import models  # noqa: E402
 from app.main import app  # noqa: E402
 from app.services import ai_gate  # noqa: E402
 
+import datetime  # noqa: E402
+
+
+def _grant_subscription(client_id: int, days: int = 30) -> None:
+    """直接给客户开通 AI 会员（测试用，绕过支付）。"""
+    db = SessionLocal()
+    try:
+        now = datetime.datetime.now()
+        db.add(models.ClientSubscription(
+            client_id=client_id, product_id=0, order_id=0,
+            started_at=now, expires_at=now + datetime.timedelta(days=days),
+            status="active"))
+        db.commit()
+    finally:
+        db.close()
+
 if os.path.exists("test_v3.db"):
     os.remove("test_v3.db")
 
@@ -166,7 +182,9 @@ def test_v3_flow():
 
         # ---- A6. 计划/饮食写接口 ----
         # v9.2 起：模板计划生成对客户开放自助（只能给自己），教练可用；
+        # v12 起：客户自助调用需有效 AI 会员订阅（无则 402）。
         # 手动改计划、饮食生成仍仅工作人员
+        _grant_subscription(cid_c)
         r = client.post(f"/api/clients/{cid_c}/plans/generate",
                         json={}, headers=stu_c)
         assert r.status_code == 200, r.text
