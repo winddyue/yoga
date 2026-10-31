@@ -1,0 +1,7 @@
+.order-head { display: flex; justify-content: space-between; align-items: center; }
+.status { font-size: 12px; padding: 3px 10px; border-radius: 10px; }
+.st-paid { background: #e3f2e6; color: #2e7d32; }
+.st-pending { background: #FFF3E0; color: #E65100; }
+.st-other { background: #F0F0F0; color: #8A917F; }
+.order-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.price { color: #C0392B; font-size: 17px; font-weight: 700; }

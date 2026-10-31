@@ -67,6 +67,22 @@ class Settings(BaseSettings):
     # 本接口的公网地址：用于拼微信 OAuth 回调地址，如 https://api.zytzml.cn
     PUBLIC_API_URL: str = ""
 
+    # 微信支付 v3（馆主商户号，C 端学员付钱给瑜伽馆）：
+    # AppID 需与小程序绑定同一主体（跨主体绑定由馆主在商户平台操作）。
+    # 注意：v3 接口要求每笔请求用商户 API 证书私钥签名，
+    # 因此除以下四项外，还必须提供 WXPAY_PRIVATE_KEY（PEM 私钥内容，
+    # \n 可写成字面量 \\n）与 WXPAY_CERT_SERIAL（证书序列号），
+    # 均在微信支付商户平台「API 安全」处申请/查看。
+    WXPAY_APPID: str = ""
+    WXPAY_MCHID: str = ""
+    WXPAY_APIV3_KEY: str = ""
+    WXPAY_NOTIFY_URL: str = ""   # 如 https://api.zytzml.cn/api/pay/notify
+    WXPAY_PRIVATE_KEY: str = ""
+    WXPAY_CERT_SERIAL: str = ""
+    # 微信支付平台证书（PEM）：用于验签支付回调。不填时自动从
+    # /v3/certificates 拉取并缓存（需上面私钥可签名）。
+    WXPAY_PLATFORM_CERT: str = ""
+
     class Config:
         env_file = ".env"  # 同时支持从 .env 文件读取
         extra = "ignore"

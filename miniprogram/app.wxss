@@ -126,3 +126,10 @@ page {
 /* 通知未读红点 */
 .menu-item .right { display: flex; align-items: center; gap: 12rpx; }
 .badge { min-width: 36rpx; height: 36rpx; padding: 0 10rpx; border-radius: 20rpx; background: #C0392B; color: #fff; font-size: 22rpx; display: flex; align-items: center; justify-content: center; }
+
+/* 团购推广卡片（mine 页顶部） */
+.promo-card { margin: 20rpx 0; padding: 28rpx; border-radius: 20rpx; background: linear-gradient(135deg, #6F8563, #4C6043); color: #fff; }
+.promo-tag { display: inline-block; font-size: 22rpx; background: rgba(255,255,255,.25); padding: 4rpx 16rpx; border-radius: 20rpx; margin-bottom: 12rpx; }
+.promo-title { font-size: 34rpx; font-weight: 700; }
+.promo-sub { font-size: 24rpx; opacity: .85; margin-top: 8rpx; line-height: 1.6; }
+.promo-go { margin-top: 14rpx; font-size: 28rpx; font-weight: 600; }

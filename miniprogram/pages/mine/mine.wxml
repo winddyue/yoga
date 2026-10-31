@@ -15,6 +15,14 @@
     <text wx:if="{{!user}}" class="go">登录 ›</text>
   </view>
 
+  <!-- 团购卡片：点进商城 -->
+  <view class="promo-card" bindtap="goMall">
+    <view class="promo-tag">限时团购</view>
+    <view class="promo-title">双十一 399 超级礼遇卡</view>
+    <view class="promo-sub">身体评估私教 ×1 · 器械私教 ×1 · 普拉提小班两周 · 瑜伽团课 14 天</view>
+    <view class="promo-go">立即抢购 ›</view>
+  </view>
+
   <!-- 未登录：直接给登录/注册入口 -->
   <view wx:if="{{!user && !loading}}" class="login-box">
     <button class="primary" bindtap="goLogin">登录 / 注册</button>
@@ -43,6 +51,10 @@
     -->
     <view wx:if="{{user.role === 'client'}}" class="menu-item" bindtap="goMeasure">
       <text>体测记录</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goOrders">
+      <text>我的订单</text>
       <text class="arrow">›</text>
     </view>
     <view class="menu-item" bindtap="goNotices">

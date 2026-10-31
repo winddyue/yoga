@@ -317,6 +317,37 @@ class DailyCheckin(Base):
     )
 
 
+class Product(Base):
+    """在售商品：如 399 团购卡。价格以分为单位，避免浮点误差。"""
+    __tablename__ = "products"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    price_cents: Mapped[int] = mapped_column(Integer, nullable=False)  # 分
+    description: Mapped[str] = mapped_column(Text, default="")
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+
+class Order(Base):
+    """订单：C 端学员付钱给瑜伽馆（馆主商户号）。状态机 pending → paid → refunded；closed 为过期关闭。"""
+    __tablename__ = "orders"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    out_trade_no: Mapped[str] = mapped_column(String(64), unique=True, index=True,
+                                             nullable=False)  # 商户订单号
+    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), index=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), index=True)
+    amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending/paid/refunded/closed
+    prepay_id: Mapped[str] = mapped_column(String(128), default="")
+    transaction_id: Mapped[str] = mapped_column(String(64), default="")  # 微信订单号
+    paid_at: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=_now)
+
+    product: Mapped["Product"] = relationship("Product")
+
+
 class PromoUser(Base):
     """拓客活动参与用户：通过微信网页授权 OAuth 建档，与系统账号体系独立。"""
     __tablename__ = "promo_users"

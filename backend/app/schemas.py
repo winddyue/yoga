@@ -344,3 +344,39 @@ class CheckinOut(BaseModel):
 class PlanRequestIn(BaseModel):
     kind: str = "training"    # training / diet
     message: str = ""
+
+
+# ---------- 微信支付 ----------
+class ProductOut(BaseModel):
+    id: int
+    name: str
+    price_cents: int
+    description: str = ""
+    active: bool = True
+
+
+class OrderCreateIn(BaseModel):
+    product_id: int
+
+
+def _dt_str(v):
+    if hasattr(v, "isoformat"):
+        return v.isoformat(sep=" ", timespec="seconds")
+    return v or ""
+
+
+class OrderOut(BaseModel):
+    id: int
+    out_trade_no: str
+    client_id: int
+    product_id: int
+    amount_cents: int
+    status: str
+    transaction_id: str = ""
+    paid_at: str = ""
+    created_at: str = ""
+
+    @field_validator("paid_at", "created_at", mode="before")
+    @classmethod
+    def _dt_to_str(cls, v):
+        return _dt_str(v)

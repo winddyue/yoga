@@ -1,0 +1,16 @@
+<view class="container t-{{theme}}">
+  <view class="title">我的订单</view>
+  <view wx:if="{{loading}}" class="tip">加载中…</view>
+  <view wx:elif="{{!orders.length}}" class="tip">暂无订单</view>
+  <view wx:else wx:for="{{orders}}" wx:key="id" class="card">
+    <view class="order-head">
+      <text class="t">{{item.product_name}}</text>
+      <text class="status {{item.statusCls}}">{{item.statusText}}</text>
+    </view>
+    <view class="sub">订单号 {{item.out_trade_no}}</view>
+    <view class="order-foot">
+      <text class="price">{{item.amountText}}</text>
+      <text class="sub">{{item.created_at}}</text>
+    </view>
+  </view>
+</view>

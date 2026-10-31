@@ -11,7 +11,7 @@ from . import models
 from .auth import hash_password
 from .config import settings, validate_prod
 from .database import Base, SessionLocal, engine
-from .routers import assessments, auth, bookings, checkins, clients, consents, custom_fields, dashboard, diets, exercises, files, intake, notifications, plans, promo, settings as settings_router, subscriptions, uploads
+from .routers import assessments, auth, bookings, checkins, clients, consents, custom_fields, dashboard, diets, exercises, files, intake, notifications, pay, plans, promo, settings as settings_router, subscriptions, uploads
 
 
 @asynccontextmanager
@@ -30,6 +30,7 @@ async def lifespan(app: FastAPI):
             db.commit()
         from .services import ai_gate
         ai_gate.ensure_default_plans(db)
+        pay.ensure_default_products(db)
         # 座位计数器自愈：老库已有预约数据但 booked_seats 未回填/过期时，
         # 按实际有效预约数（booked + checked_in）校准，保证预约关口
         # 不因计数器过期而超卖。幂等，多实例同时启动也安全。
@@ -87,6 +88,7 @@ app.include_router(files.router)
 app.include_router(checkins.router)
 app.include_router(uploads.router)
 app.include_router(promo.router)
+app.include_router(pay.router)
 
 
 @app.on_event("startup")

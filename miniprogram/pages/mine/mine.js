@@ -49,6 +49,10 @@ Page({
 
   goMeasure() { wx.navigateTo({ url: '/pages/measure/measure' }); },
 
+  goMall() { wx.navigateTo({ url: '/pages/mall/mall' }); },
+
+  goOrders() { wx.navigateTo({ url: '/pages/orders/orders' }); },
+
   async logout() {
     if (!await fb.confirm('确定退出登录吗？下次进入需重新登录。', '退出')) return;
     api.logout();
