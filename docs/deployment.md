@@ -53,3 +53,54 @@ export OCR_API_URL OCR_API_KEY AI_API_URL AI_API_KEY AI_MODEL ASR_API_URL ASR_AP
 - 关键写操作（客户/评估/计划/饮食/约课/签到/订阅/同意/设置）写入 `audit_logs` 表，
   含操作人、动作、对象、时间，可在出问题时追溯。
 - 应用日志不记录密码、密钥、手机号明文。
+
+## 重置管理员密码
+
+首次部署时 `deploy/install.sh` 会为管理员**随机生成强密码**（默认账号 `admin`，
+默认密码 `admin123` 仅在未覆盖环境变量时生效）。若忘记或需要重置，按以下任一方式操作。
+
+### 方式一：一键脚本（推荐）
+
+SSH 登录服务器后执行：
+
+```bash
+cd /opt/yoga
+sudo ./deploy/reset-admin.sh   # 普通用户加 sudo；root 可省略
+```
+
+脚本会打印新的管理员密码，记下即可。
+
+### 方式二：后端代码直写（脚本缺失时兜底）
+
+当 `deploy/reset-admin.sh` 不存在时（例如仓库开发线已清理部署脚本），
+直接在后端目录用虚拟环境重置：
+
+```bash
+cd /opt/yoga/backend
+source /opt/yoga/venv/bin/activate   # 虚拟环境路径以实际为准
+
+python - <<'PY'
+from app.database import SessionLocal
+from app import models
+from app.auth import hash_password
+
+db = SessionLocal()
+u = db.query(models.User).filter(models.User.username == "admin").first()
+if not u:
+    u = models.User(username="admin", role="owner", name="馆主")
+    db.add(u)
+u.password_hash = hash_password("YogaTest@2026")
+u.is_active = True
+db.commit()
+print("管理员 admin 密码已重置为：YogaTest@2026")
+PY
+```
+
+密码为直写数据库，一般无需重启；若登录异常再 `sudo systemctl restart yoga-backend`。
+
+### 说明
+
+- 密码使用 `passlib` 的 bcrypt 哈希，库内只存哈希值，不存明文。
+- 管理员角色为 `owner`，可进入馆主后台（订阅套餐管理、教练/客户管理等）。
+- 测试号 / 开发者工具自测时，须用「账号密码登录」；微信一键登录在测试号下不可用
+  （测试号 `wx.code` 与正式号 `WX_APPID/SECRET` 不匹配）。
